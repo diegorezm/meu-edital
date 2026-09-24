@@ -46,8 +46,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { width } = useWindowDimensions();
   const mobile = width < 760;
-  const { data } = useStore();
+  const { data, update } = useStore();
   const exam = data?.exams.find((e) => e.id === data.activeExamId);
+  const examSheet = useRef<BottomSheetHandle>(null);
+  const [examQuery, setExamQuery] = useState("");
+  const [visibleExams, setVisibleExams] = useState(20);
+  const filteredExams = (data?.exams || [])
+    .filter((item) =>
+      item.name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .includes(
+          examQuery
+            .trim()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase(),
+        ),
+    )
+    .sort((a, b) =>
+      a.id === data?.activeExamId
+        ? -1
+        : b.id === data?.activeExamId
+          ? 1
+          : a.name.localeCompare(b.name, "pt-BR"),
+    );
+  const openExamSelector = () => {
+    setExamQuery("");
+    setVisibleExams(20);
+    examSheet.current?.open();
+  };
+  const selectExam = (id: string) => {
+    if (id === data?.activeExamId) {
+      examSheet.current?.close();
+      return;
+    }
+    examSheet.current?.close(() => {
+      update((current) => ({ ...current, activeExamId: id })).then(() => {
+        if (path === "/estudar") router.replace("/");
+      });
+    });
+  };
   return (
     <SafeAreaView style={s.root}>
       <View style={[s.frame, mobile && s.mobileFrame]}>
@@ -62,6 +102,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Text>
             </View>
             <Text style={s.tagline}>Seu estudo no seu tempo ☁</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Trocar concurso. Atual: ${exam?.name || "nenhum"}`}
+              onPress={openExamSelector}
+              style={s.desktopExamSelector}
+            >
+              <View style={s.examSelectorText}>
+                <Text style={s.examSelectorCaption}>CONCURSO ATIVO</Text>
+                <Text style={s.examSelectorName} numberOfLines={1}>
+                  {exam?.name || "Escolher concurso"}
+                </Text>
+              </View>
+              <Text style={s.examSelectorArrow}>⌄</Text>
+            </Pressable>
             <View style={s.nav}>
               {links.map(({ href, label, icon }) => (
                 <Link key={href} href={href} asChild>
@@ -81,13 +135,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
             </View>
-            <View style={s.sidebarBottom}>
-              <Text style={s.miniLabel}>SEU OBJETIVO</Text>
-              <Text style={s.sidebarExam}>
-                {exam?.name || "Seu próximo edital"}
-              </Text>
-              <Text style={s.sidebarHint}>Um pouquinho a cada dia ✨</Text>
-            </View>
           </View>
         )}
         <View style={s.main}>
@@ -101,16 +148,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   meu edital<Text style={s.logoDot}>.</Text>
                 </Text>
               </View>
-              <Link href="/concursos" asChild>
-                <Pressable
-                  accessibilityLabel="Ver concursos"
-                  style={s.profileButton}
-                >
-                  <Text style={s.profileText}>
-                    {exam?.name?.slice(0, 1) || "M"}
-                  </Text>
-                </Pressable>
-              </Link>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Trocar concurso. Atual: ${exam?.name || "nenhum"}`}
+                onPress={openExamSelector}
+                style={s.mobileExamSelector}
+              >
+                <Text style={s.mobileExamName} numberOfLines={1}>
+                  {exam?.name || "Concurso"}
+                </Text>
+                <Text style={s.mobileExamArrow}>⌄</Text>
+              </Pressable>
             </View>
           )}
           <View style={s.contentArea}>{children}</View>
@@ -154,6 +202,78 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </View>
       </View>
+      <BottomSheet ref={examSheet} title="Trocar concurso">
+        <Text style={s.examSheetIntro}>
+          Escolha o edital em que você quer focar agora.
+        </Text>
+        {(data?.exams.length || 0) > 6 && (
+          <TextInput
+            value={examQuery}
+            onChangeText={(value) => {
+              setExamQuery(value);
+              setVisibleExams(20);
+            }}
+            placeholder="Buscar concurso"
+            placeholderTextColor={palette.muted}
+            accessibilityLabel="Buscar concurso"
+            style={s.examSearch}
+          />
+        )}
+        {filteredExams.slice(0, visibleExams).map((item) => {
+          const active = item.id === data?.activeExamId;
+          return (
+            <Pressable
+              key={item.id}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              onPress={() => selectExam(item.id)}
+              style={[s.examOption, active && s.examOptionActive]}
+            >
+              <View
+                style={[s.examOptionIcon, active && s.examOptionIconActive]}
+              >
+                <Text style={s.examOptionInitial}>
+                  {item.name.slice(0, 1).toUpperCase()}
+                </Text>
+              </View>
+              <View style={s.examOptionText}>
+                <Text style={s.examOptionName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={s.examOptionRole} numberOfLines={1}>
+                  {item.role}
+                </Text>
+              </View>
+              <Text style={s.examOptionCheck}>{active ? "✓" : "›"}</Text>
+            </Pressable>
+          );
+        })}
+        {!filteredExams.length && (
+          <Text style={s.examEmpty}>
+            {data?.exams.length
+              ? "Nenhum concurso encontrado."
+              : "Você ainda não cadastrou um concurso."}
+          </Text>
+        )}
+        {filteredExams.length > visibleExams && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setVisibleExams((count) => count + 20)}
+            style={s.examMore}
+          >
+            <Text style={s.examMoreText}>Mostrar mais concursos</Text>
+          </Pressable>
+        )}
+        <View style={s.examManage}>
+          <Button
+            title="Gerenciar editais  →"
+            secondary
+            onPress={() =>
+              examSheet.current?.close(() => router.push("/concursos"))
+            }
+          />
+        </View>
+      </BottomSheet>
     </SafeAreaView>
   );
 }
@@ -496,7 +616,31 @@ const s = StyleSheet.create({
   },
   logoDot: { color: "#8B75DB" },
   tagline: { color: palette.muted, marginTop: 10, fontSize: 12 },
-  nav: { marginTop: 54, gap: 7 },
+  desktopExamSelector: {
+    marginTop: 28,
+    backgroundColor: "#E7F1FF",
+    borderRadius: 17,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  examSelectorText: { flex: 1, minWidth: 0 },
+  examSelectorCaption: {
+    color: "#657BAD",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  examSelectorName: {
+    color: palette.text,
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 5,
+  },
+  examSelectorArrow: { color: palette.text, fontSize: 22, marginLeft: 8 },
+  nav: { marginTop: 32, gap: 7 },
   navItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -514,25 +658,6 @@ const s = StyleSheet.create({
   },
   navText: { color: palette.muted, fontSize: 14, fontWeight: "600" },
   navTextActive: { color: palette.dark },
-  sidebarBottom: {
-    marginTop: "auto",
-    backgroundColor: "#E7F1FF",
-    borderRadius: 20,
-    padding: 17,
-  },
-  miniLabel: {
-    color: "#657BAD",
-    fontSize: 10,
-    letterSpacing: 1.3,
-    fontWeight: "800",
-  },
-  sidebarExam: {
-    color: palette.text,
-    fontWeight: "800",
-    marginTop: 8,
-    fontSize: 15,
-  },
-  sidebarHint: { color: palette.muted, marginTop: 5, fontSize: 11 },
   main: { flex: 1, minWidth: 0 },
   contentArea: { flex: 1, minHeight: 0 },
   contentScroll: { flex: 1 },
@@ -549,19 +674,80 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 17,
   },
-  profileButton: {
+  mobileExamSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
+    minWidth: 75,
+    maxWidth: 155,
+    minHeight: 37,
+    borderRadius: 19,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.line,
+    paddingLeft: 12,
+    paddingRight: 9,
+  },
+  mobileExamName: {
+    color: palette.text,
+    fontSize: 11,
+    fontWeight: "800",
+    flexShrink: 1,
+  },
+  mobileExamArrow: { color: palette.text, fontSize: 17, marginLeft: 6 },
+  examSheetIntro: { color: palette.muted, fontSize: 13, marginBottom: 18 },
+  examSearch: {
+    backgroundColor: "#F7F7F2",
+    borderColor: palette.line,
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: palette.text,
+    marginBottom: 14,
+  },
+  examOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F7F7F2",
+    borderWidth: 1,
+    borderColor: palette.line,
+    borderRadius: 17,
+    minHeight: 67,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  examOptionActive: { backgroundColor: "#EDE9FF", borderColor: "#CBBDF5" },
+  examOptionIcon: {
     width: 38,
     height: 38,
-    borderRadius: 19,
-    backgroundColor: palette.peach,
+    borderRadius: 13,
+    backgroundColor: "#DDE7FB",
     alignItems: "center",
     justifyContent: "center",
+    marginRight: 11,
   },
-  profileText: { color: palette.dark, fontSize: 15, fontWeight: "800" },
+  examOptionIconActive: { backgroundColor: "#D6CAFC" },
+  examOptionInitial: { color: palette.text, fontSize: 14, fontWeight: "800" },
+  examOptionText: { flex: 1, minWidth: 0 },
+  examOptionName: { color: palette.text, fontSize: 13, fontWeight: "800" },
+  examOptionRole: { color: palette.muted, fontSize: 11, marginTop: 3 },
+  examOptionCheck: { color: palette.text, fontSize: 21, marginLeft: 9 },
+  examEmpty: {
+    color: palette.muted,
+    fontSize: 13,
+    textAlign: "center",
+    padding: 22,
+  },
+  examMore: { alignItems: "center", padding: 12 },
+  examMoreText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  examManage: { marginTop: 14, marginBottom: 4 },
   eyebrow: {
     color: "#8573CE",
     fontSize: 10,

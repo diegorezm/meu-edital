@@ -19,7 +19,7 @@ A experiência deve ser simples, rápida e focada em produtividade: próximo est
 
 ## Estrutura técnica
 
-Expo SDK 57, React Native, Expo Router e TypeScript. As telas ficam em `src/app`; entidades e regras em `src/domain`; persistência local em `src/data`; schemas, importadores e prompts em `src/interchange`. A interface `AIProvider` possui apenas o `ExternalCopyPasteProvider` hoje e permite acrescentar provedores de API no futuro. Os dados são salvos localmente com AsyncStorage; não há conta nem sincronização entre dispositivos.
+Expo SDK 57, React Native, Expo Router e TypeScript. `src/app` contém apenas as rotas e o layout. Cada pasta de `src/features` expõe sua tela em `index.ts` e mantém seus componentes e, conforme necessário, `utils`, `services` e `schemas`. `src/global` reúne componentes, estado, cores e utilidades usados por várias funcionalidades; `src/domain` guarda os modelos e cálculos de estudo compartilhados. Os imports entre essas áreas usam `@features/*`, `@global/*` e `@domain/*` definidos em `tsconfig.json`; imports dentro da própria funcionalidade usam caminhos relativos. A funcionalidade `ia` mantém o fluxo de importação por copiar e colar; a interface `AIProvider` permite acrescentar provedores no futuro. Os dados são salvos localmente com AsyncStorage; não há conta nem sincronização entre dispositivos.
 
 ## Executar e verificar
 

@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { AppShell } from "@/components/ui";
-import { StoreProvider } from "@/data/store";
+import { AppShell } from "@global/components/ui";
+import { StoreProvider } from "@global/store/store";
 
 export default function RootLayout() {
   return (

@@ -1,18 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createSeed } from "../src/domain/seed";
+import { examProgress } from "../src/domain/stats";
 import {
-  examProgress,
   recordSession,
   validateSession,
-} from "../src/domain/logic";
+} from "../src/features/estudar/services/sessionService";
 import { addDays, today } from "../src/domain/types";
 import {
-  importExam,
   parseExam,
   parseWeeklyPlan,
+} from "../src/features/ia/schemas/aiImportSchema";
+import {
+  importExam,
   resolveWeeklyPlan,
-} from "../src/interchange/schemas";
+} from "../src/features/ia/services/importService";
 
 test("importa JSON de edital com subassuntos sem duplicar registros", () => {
   let data = createSeed();

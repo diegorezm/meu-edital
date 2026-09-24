@@ -1,56 +1,49 @@
-# Welcome to your Expo app 👋
+# Meu Edital
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+O **Meu Edital** é um aplicativo de organização de estudos para concursos públicos. Sua função é transformar o conteúdo de um edital em matérias, assuntos e ações concretas de estudo, respondendo com clareza à pergunta: **“O que preciso estudar agora?”**
 
-## Get started
+## Filosofia do produto
 
-1. Install dependencies
+**A IA externa interpreta e sugere; o aplicativo organiza, registra e acompanha.** Nesta versão, o usuário copia um prompt gerado pelo app, envia o edital ou seus dados de estudo ao ChatGPT, Gemini, Claude, NotebookLM ou outra ferramenta e cola a resposta de volta. O app valida o JSON, mostra uma prévia e só importa após confirmação. Nenhum edital é enviado automaticamente e nenhuma API de IA é integrada. O conteúdo importado é tratado como dado não confiável, nunca como código.
 
-   ```bash
-   npm install
-   ```
+A experiência deve ser simples, rápida e focada em produtividade: próximo estudo em destaque, interface limpa, boa leitura em celular e desktop, tema escuro e pouca animação. Na dúvida, preferimos a solução mais simples que atende bem ao estudante.
 
-2. Start the app
+## O que o MVP oferece
 
-   ```bash
-   npx expo start
-   ```
+- Vários concursos, cada um com matérias, assuntos e subassuntos.
+- Dashboard com próximo estudo, progresso, revisões e resumo da semana.
+- Sessões com timer, duração, questões, acertos e observações.
+- Plano semanal, ciclo de estudos e revisões automáticas configuráveis (1, 7 e 30 dias por padrão).
+- Importação de edital e de plano semanal por respostas estruturadas de IA externa.
+- Dados de demonstração do concurso DETRAN-SP no primeiro uso.
 
-In the output, you'll find options to open the app in a
+## Estrutura técnica
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Expo SDK 57, React Native, Expo Router e TypeScript. As telas ficam em `src/app`; entidades e regras em `src/domain`; persistência local em `src/data`; schemas, importadores e prompts em `src/interchange`. A interface `AIProvider` possui apenas o `ExternalCopyPasteProvider` hoje e permite acrescentar provedores de API no futuro. Os dados são salvos localmente com AsyncStorage; não há conta nem sincronização entre dispositivos.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Executar e verificar
 
-## Get a fresh project
-
-When you're ready, run:
+Requer Node.js 22.13+ e npm.
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Android sem fila do EAS
 
-### Other setup steps
+Para criar e instalar o development build diretamente no emulador Android, com o Android SDK configurado no computador:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm run android:build
+```
 
-## Learn more
+Depois da primeira instalação, use `npm run android` para abrir o app no emulador. Para um celular físico que já tenha o development build instalado, execute `npm start` e leia o QR code com o celular. Alterações em JavaScript e TypeScript são carregadas pelo Metro sem repetir o build nativo. Execute `npm run android:build` novamente quando mudar dependências nativas ou a configuração nativa do app.
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx expo lint
+npx tsc --noEmit
+npm test
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+O escopo desta versão não inclui pagamentos, recursos sociais, gamificação complexa, notificações push ou APIs pagas de IA.

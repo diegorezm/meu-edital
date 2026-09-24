@@ -47,3 +47,7 @@ npm test
 ```
 
 O escopo desta versão não inclui pagamentos, recursos sociais, gamificação complexa, notificações push ou APIs pagas de IA.
+
+## Licença
+
+O código do Meu Edital é distribuído sob a [GNU GPL versão 3](LICENSE) (`GPL-3.0-only`). Quem distribuir uma versão que incorpore ou modifique esse código deve disponibilizar o código-fonte correspondente sob a mesma licença. O aviso de licença dos arquivos provenientes do template da Expo está preservado em [LICENSES/Expo-template-MIT.txt](LICENSES/Expo-template-MIT.txt). As dependências mantêm suas próprias licenças.

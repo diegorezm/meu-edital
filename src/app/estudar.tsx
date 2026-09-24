@@ -18,6 +18,22 @@ export default function StudyScreen() {
     planId?: string;
     cycleId?: string;
   }>();
+  return (
+    <StudySession
+      key={`${planId || ""}:${cycleId || ""}`}
+      planId={planId}
+      cycleId={cycleId}
+    />
+  );
+}
+
+function StudySession({
+  planId,
+  cycleId,
+}: {
+  planId?: string;
+  cycleId?: string;
+}) {
   const { data, update } = useStore();
   const plan = data?.planned.find((p) => p.id === planId);
   const cycleItem = data?.cycle.find((c) => c.id === cycleId);

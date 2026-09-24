@@ -45,8 +45,8 @@ export default function CycleScreen() {
         {next ? (
           <View
             style={{
-              backgroundColor: "#23372c",
-              borderRadius: 12,
+              backgroundColor: palette.blue,
+              borderRadius: 24,
               padding: 22,
             }}
           >

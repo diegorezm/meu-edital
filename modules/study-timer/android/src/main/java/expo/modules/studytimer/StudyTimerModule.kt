@@ -15,12 +15,12 @@ class StudyTimerModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("StudyTimer")
 
-    AsyncFunction("showRunning") { startedAt: Double, elapsedMs: Double, subject: String ->
-      showNotification(startedAt, elapsedMs, subject, true)
+    AsyncFunction("showRunning") { startedAt: Double, elapsedMs: Double, subject: String, url: String ->
+      showNotification(startedAt, elapsedMs, subject, url, true)
     }
 
-    AsyncFunction("showPaused") { elapsedMs: Double, subject: String ->
-      showNotification(0.0, elapsedMs, subject, false)
+    AsyncFunction("showPaused") { elapsedMs: Double, subject: String, url: String ->
+      showNotification(0.0, elapsedMs, subject, url, false)
     }
 
     AsyncFunction("clear") {
@@ -31,7 +31,7 @@ class StudyTimerModule : Module() {
   private fun manager(): NotificationManager? =
     appContext.reactContext?.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
-  private fun showNotification(startedAt: Double, elapsedMs: Double, subject: String, running: Boolean) {
+  private fun showNotification(startedAt: Double, elapsedMs: Double, subject: String, url: String, running: Boolean) {
     val context = appContext.reactContext ?: return
     val notificationManager = manager() ?: return
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -44,7 +44,7 @@ class StudyTimerModule : Module() {
       )
     }
 
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("meuedital://estudar")).apply {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
       setPackage(context.packageName)
       flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
     }

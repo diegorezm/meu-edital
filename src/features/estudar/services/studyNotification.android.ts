@@ -17,19 +17,21 @@ export async function showRunningNotification(
   startedAt: number,
   elapsedMs: number,
   subject: string,
+  url: string,
   requestPermission = false,
 ): Promise<boolean> {
   if (!(await canNotify(requestPermission))) return false;
-  await StudyTimerModule!.showRunning(startedAt, elapsedMs, subject);
+  await StudyTimerModule!.showRunning(startedAt, elapsedMs, subject, url);
   return true;
 }
 
 export async function showPausedNotification(
   elapsedMs: number,
   subject: string,
+  url: string,
 ): Promise<void> {
   if (await canNotify(false)) {
-    await StudyTimerModule!.showPaused(elapsedMs, subject);
+    await StudyTimerModule!.showPaused(elapsedMs, subject, url);
   }
 }
 

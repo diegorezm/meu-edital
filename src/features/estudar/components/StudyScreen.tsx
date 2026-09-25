@@ -22,15 +22,23 @@ const formatTime = (seconds: number) =>
     .join(":");
 
 export default function StudyScreen() {
-  const { planId, cycleId } = useLocalSearchParams<{
+  const { planId, cycleId, studyExamId, studySubjectId, studyTopicId, studyType } = useLocalSearchParams<{
     planId?: string;
     cycleId?: string;
+    studyExamId?: string;
+    studySubjectId?: string;
+    studyTopicId?: string;
+    studyType?: StudyType;
   }>();
   return (
     <StudySession
       key={`${planId || ""}:${cycleId || ""}`}
       planId={planId}
       cycleId={cycleId}
+      studyExamId={studyExamId}
+      studySubjectId={studySubjectId}
+      studyTopicId={studyTopicId}
+      studyType={studyType}
     />
   );
 }
@@ -38,18 +46,28 @@ export default function StudyScreen() {
 function StudySession({
   planId,
   cycleId,
+  studyExamId,
+  studySubjectId,
+  studyTopicId,
+  studyType,
 }: {
   planId?: string;
   cycleId?: string;
+  studyExamId?: string;
+  studySubjectId?: string;
+  studyTopicId?: string;
+  studyType?: StudyType;
 }) {
   const { data, update } = useStore();
   const plan = data?.planned.find((item) => item.id === planId);
   const cycleItem = data?.cycle.find((item) => item.id === cycleId);
   const target = plan || cycleItem;
-  const examId = data?.activeExamId || "";
-  const [selectedSubjectId, setSubjectId] = useState("");
-  const [selectedTopicId, setTopicId] = useState("");
-  const [selectedType, setType] = useState<StudyType | null>(null);
+  const examId = studyExamId || data?.activeExamId || "";
+  const [selectedSubjectId, setSubjectId] = useState(studySubjectId || "");
+  const [selectedTopicId, setTopicId] = useState(studyTopicId || "");
+  const [selectedType, setType] = useState<StudyType | null>(
+    studyType && studyTypes.includes(studyType) ? studyType : null,
+  );
   const [enteredMinutes, setMinutes] = useState("");
   const [minutesEdited, setMinutesEdited] = useState(false);
   const [questions, setQuestions] = useState("");
@@ -70,6 +88,18 @@ function StudySession({
   const subjectName =
     data?.subjects.find((item) => item.id === subjectId)?.name ||
     "Escolher matéria";
+  const notificationUrl =
+    "meuedital://estudar?" +
+    [
+      planId && `planId=${encodeURIComponent(planId)}`,
+      cycleId && `cycleId=${encodeURIComponent(cycleId)}`,
+      examId && `studyExamId=${encodeURIComponent(examId)}`,
+      subjectId && `studySubjectId=${encodeURIComponent(subjectId)}`,
+      topicId && `studyTopicId=${encodeURIComponent(topicId)}`,
+      `studyType=${encodeURIComponent(type)}`,
+    ]
+      .filter(Boolean)
+      .join("&");
   const {
     ready: timerReady,
     seconds,
@@ -78,7 +108,7 @@ function StudySession({
     toggle: toggleTimer,
     pause: pauseTimer,
     reset: resetTimer,
-  } = useStudyTimer(subjectName);
+  } = useStudyTimer(subjectName, notificationUrl);
   const suggestedMinutes = seconds
     ? Math.max(1, Math.round(seconds / 60))
     : plannedMinutes;

@@ -16,7 +16,7 @@ function getElapsedMs(timer: TimerState, now = Date.now()) {
   return timer.elapsedMs + (timer.startedAt ? Math.max(0, now - timer.startedAt) : 0);
 }
 
-export function useStudyTimer(subject: string) {
+export function useStudyTimer(subject: string, notificationUrl: string) {
   const [timer, setTimer] = useState<TimerState | null>(null);
   const timerRef = useRef<TimerState | null>(null);
   const [now, setNow] = useState(0);
@@ -75,8 +75,13 @@ export function useStudyTimer(subject: string) {
 
   useEffect(() => {
     if (!ready || !timer?.startedAt) return;
-    showRunningNotification(timer.startedAt, timer.elapsedMs, subject).catch(() => {});
-  }, [ready, timer?.startedAt, timer?.elapsedMs, subject]);
+    showRunningNotification(timer.startedAt, timer.elapsedMs, subject, notificationUrl).catch(() => {});
+  }, [ready, timer?.startedAt, timer?.elapsedMs, subject, notificationUrl]);
+
+  useEffect(() => {
+    if (!ready || !timer || timer.startedAt || timer.elapsedMs === 0) return;
+    showPausedNotification(timer.elapsedMs, subject, notificationUrl).catch(() => {});
+  }, [ready, timer, subject, notificationUrl]);
 
   const toggle = useCallback(async () => {
     if (!ready) return;
@@ -84,7 +89,7 @@ export function useStudyTimer(subject: string) {
     if (current?.startedAt) {
       const next = { elapsedMs: getElapsedMs(current), startedAt: null };
       await commit(next);
-      await showPausedNotification(next.elapsedMs, subject).catch(() => {});
+      await showPausedNotification(next.elapsedMs, subject, notificationUrl).catch(() => {});
     } else {
       const next = { elapsedMs: current?.elapsedMs || 0, startedAt: Date.now() };
       await commit(next);
@@ -93,11 +98,12 @@ export function useStudyTimer(subject: string) {
         next.startedAt,
         next.elapsedMs,
         subject,
+        notificationUrl,
         true,
       ).catch(() => false);
       setNotificationUnavailable(Platform.OS === "android" && !shown);
     }
-  }, [commit, ready, subject]);
+  }, [commit, ready, subject, notificationUrl]);
 
   const pause = useCallback(async () => {
     const current = timerRef.current;
@@ -106,9 +112,9 @@ export function useStudyTimer(subject: string) {
     }
     const next = { elapsedMs: getElapsedMs(current), startedAt: null };
     await commit(next);
-    await showPausedNotification(next.elapsedMs, subject).catch(() => {});
+    await showPausedNotification(next.elapsedMs, subject, notificationUrl).catch(() => {});
     return Math.floor(next.elapsedMs / 1000);
-  }, [commit, subject]);
+  }, [commit, subject, notificationUrl]);
 
   const reset = useCallback(async () => {
     await commit(null);

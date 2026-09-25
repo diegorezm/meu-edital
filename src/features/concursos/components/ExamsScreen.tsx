@@ -19,6 +19,8 @@ import { useStore } from "@global/store/store";
 import { examProgress } from "@domain/stats";
 import { Exam, Subject, today, Topic, uid } from "@domain/types";
 import { normalizeText } from "@global/utils/normalizeText";
+import ExamDateField from "./ExamDateField";
+import { displayExamDate, parseExamDate } from "../utils/examDate";
 import {
   removeExam as removeExamData,
   removeSubject as removeSubjectData,
@@ -145,7 +147,7 @@ export default function ExamsScreen() {
     setName(item?.name || "");
     setRole(item?.role || "");
     setBoard(item?.board || "");
-    setDate(item?.examDate || "");
+    setDate(displayExamDate(item?.examDate));
     setHours(String(item?.hoursPerWeek || 20));
     setExamError("");
     setConfirm(null);
@@ -153,15 +155,16 @@ export default function ExamsScreen() {
     if (!inSheet) examSheet.current?.open();
   };
   const saveExam = async () => {
+    const examDate = parseExamDate(date);
     if (
       !name.trim() ||
       !role.trim() ||
       !Number.isFinite(Number(hours)) ||
       Number(hours) <= 0 ||
-      (date && !/^\d{4}-\d{2}-\d{2}$/.test(date))
+      examDate === null
     ) {
       setExamError(
-        "Informe nome, cargo, horas válidas e data no formato AAAA-MM-DD.",
+        "Informe nome, cargo, horas válidas e uma data real em DD/MM/AAAA.",
       );
       return;
     }
@@ -176,7 +179,7 @@ export default function ExamsScreen() {
                   name: name.trim(),
                   role: role.trim(),
                   board: board.trim(),
-                  examDate: date || undefined,
+                  examDate: examDate || undefined,
                   hoursPerWeek: Number(hours),
                 }
               : item,
@@ -188,7 +191,7 @@ export default function ExamsScreen() {
               name: name.trim(),
               role: role.trim(),
               board: board.trim(),
-              examDate: date || undefined,
+              examDate: examDate || undefined,
               hoursPerWeek: Number(hours),
               createdAt: today(),
             },
@@ -355,7 +358,7 @@ export default function ExamsScreen() {
             <View style={s.heroMeta}>
               <Text style={s.heroTag}>{exam.hoursPerWeek}h por semana</Text>
               {exam.examDate && (
-                <Text style={s.heroTag}>Prova: {exam.examDate}</Text>
+                <Text style={s.heroTag}>Prova: {displayExamDate(exam.examDate)}</Text>
               )}
             </View>
             <Pressable
@@ -534,11 +537,7 @@ export default function ExamsScreen() {
               value={board}
               onChangeText={setBoard}
             />
-            <Field
-              label="Data da prova (AAAA-MM-DD)"
-              value={date}
-              onChangeText={setDate}
-            />
+            <ExamDateField value={date} onChange={setDate} />
             <Field
               label="Horas por semana"
               value={hours}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const name = z.string().trim().min(1, "O nome não pode ficar vazio.").max(120);
+const name = z.string().trim().min(1, "O nome não pode ficar vazio.").max(1024);
 const topicSchema: z.ZodType<{ name: string; subtopics?: { name: string }[] }> =
   z.strictObject({
     name,
@@ -30,15 +30,15 @@ export type ExamImport = z.infer<typeof ExamImportSchema>;
 export type WeeklyPlanImport = z.infer<typeof WeeklyPlanImportSchema>;
 
 function parseJson(text: string): unknown {
-  const clean = text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "");
+  const pasted = text.trim();
+  const codeBlock = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(pasted);
+  const clean = (codeBlock?.[1] || pasted).trim();
   try {
     return JSON.parse(clean);
-  } catch {
+  } catch (cause) {
+    const detail = cause instanceof Error ? ` Detalhe: ${cause.message}` : "";
     throw new Error(
-      "A resposta não é um JSON válido. Cole apenas o objeto JSON retornado pela IA.",
+      `A resposta não é um JSON válido. Confira o texto colado e as aspas duplas.${detail}`,
     );
   }
 }

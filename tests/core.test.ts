@@ -16,6 +16,62 @@ import {
   resolveWeeklyPlan,
 } from "../src/features/ia/services/importService";
 
+test("aceita nomes longos de resoluções na importação do edital", () => {
+  const title =
+    "Resolução CONTRAN nº 985/2022, com alterações das Resoluções nº 1.003/2023, nº 1.009/2024, nº 1.012/2024, nº 1.013/2024 e nº 1.031/2026";
+  const parsed = parseExam(
+    JSON.stringify({
+      exam: "DETRAN-SP",
+      role: "Agente",
+      subjects: [{ name: "Resoluções do CONTRAN", topics: [{ name: title }] }],
+    }),
+  );
+  assert.equal(parsed.subjects[0].topics[0].name, title);
+});
+
+test("aceita até 1024 caracteres nos campos de texto da IA", () => {
+  const longName = "a".repeat(1024);
+  const exam = {
+    exam: longName,
+    role: longName,
+    subjects: [
+      {
+        name: longName,
+        topics: [{ name: longName, subtopics: [{ name: longName }] }],
+      },
+    ],
+  };
+  assert.equal(
+    parseExam(JSON.stringify(exam)).subjects[0].topics[0].name,
+    longName,
+  );
+  assert.throws(
+    () => parseExam(JSON.stringify({ ...exam, role: `${longName}a` })),
+    /Formato inválido/,
+  );
+  assert.equal(
+    parseWeeklyPlan(
+      JSON.stringify({
+        sessions: [
+          {
+            day: "Seg",
+            subject: longName,
+            topic: longName,
+            type: "Teoria",
+            minutes: 60,
+          },
+        ],
+      }),
+    ).sessions[0].topic,
+    longName,
+  );
+});
+
+test("lê o plano semanal dentro de um bloco de código json", () => {
+  const response = `Aqui está o plano:\n\`\`\`json\n{"sessions":[{"day":"Dom","subject":"Código de Trânsito Brasileiro","topic":"Penalidades","type":"Teoria","minutes":60}]}\n\`\`\``;
+  assert.equal(parseWeeklyPlan(response).sessions[0].topic, "Penalidades");
+});
+
 test("importa JSON de edital com subassuntos sem duplicar registros", () => {
   let data = createSeed();
   const examId = data.activeExamId!;

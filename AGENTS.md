@@ -29,6 +29,17 @@ Run lint and typecheck before declaring any task done.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: https://docs.expo.dev/router/introduction.md
 
+## Feature-based structure
+
+- Organize code by functionality in `src/features/<feature>/`. Keep each feature self-contained and expose its screen through `index.ts`; route files in `src/app/` should only connect the route to that public entry point.
+- Add folders only when needed: `components/` for feature UI, `hooks/` for feature state, `services/` for integrations and workflows, `utils/` for pure helpers, `schemas/` or `types/` for feature data contracts, and `constants/` for feature values. Do not create empty folders or a generic `logic/` package.
+- Put code used by multiple features in `src/global/`: reusable UI in `components/`, shared state in `store/`, helpers in `utils/`, and app-wide values in `constants/`. Keep shared study models and calculations in `src/domain/`. Keep static assets in `assets/` according to `app.json` references.
+- Features must not import another feature's internal files. Communicate through the feature's `index.ts` public API, shared state, or shared domain code. Use relative imports within a feature and the `@features/*`, `@global/*`, and `@domain/*` aliases across boundaries (`tsconfig.json`).
+- Group external imports before internal imports. Name React components in PascalCase; name helpers and services descriptively in camelCase, and assets in kebab-case. Extract repeated code into shared modules only when it is genuinely shared.
+- Route groups `(name)` organize routes without changing URLs; `[param]` denotes a dynamic route. Add them only when the navigation needs them.
+
+Reference: https://ahmad2point0.medium.com/react-app-feature-based-folder-structure-guide-848ddc7447d5
+
 ## Building with EAS
 
 Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.

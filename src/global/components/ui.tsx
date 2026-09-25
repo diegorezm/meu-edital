@@ -21,14 +21,27 @@ import { normalizeText } from "@global/utils/normalizeText";
 
 export { palette } from "@global/constants/colors";
 
-const links = [
+const primaryLinks = [
   { href: "/", label: "Início", icon: "⌂" },
   { href: "/plano", label: "Semana", icon: "▦" },
   { href: "/estudar", label: "Estudar", icon: "▷" },
-  { href: "/revisoes", label: "Revisões", icon: "↻" },
-  { href: "/concursos", label: "Editais", icon: "▤" },
-  { href: "/ciclo", label: "Ciclo", icon: "◌" },
-  { href: "/ia", label: "IA", icon: "✦" },
+] as const;
+
+const moreGroups = [
+  {
+    title: "Acompanhar",
+    links: [
+      { href: "/revisoes", label: "Revisões", icon: "↻" },
+      { href: "/ciclo", label: "Ciclo", icon: "◌" },
+    ],
+  },
+  {
+    title: "Organizar",
+    links: [
+      { href: "/concursos", label: "Editais", icon: "▤" },
+      { href: "/ia", label: "Planejar com IA", icon: "✦" },
+    ],
+  },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -38,6 +51,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data, update } = useStore();
   const exam = data?.exams.find((e) => e.id === data.activeExamId);
   const examSheet = useRef<BottomSheetHandle>(null);
+  const moreSheet = useRef<BottomSheetHandle>(null);
+  const secondaryActive = moreGroups.some((group) =>
+    group.links.some((link) => link.href === path),
+  );
+  const [moreExpanded, setMoreExpanded] = useState(secondaryActive);
   const [examQuery, setExamQuery] = useState("");
   const [visibleExams, setVisibleExams] = useState(20);
   const filteredExams = (data?.exams || [])
@@ -96,9 +114,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Text style={s.examSelectorArrow}>⌄</Text>
             </Pressable>
             <View style={s.nav}>
-              {links.map(({ href, label, icon }) => (
+              {primaryLinks.map(({ href, label, icon }) => (
                 <Link key={href} href={href} asChild>
                   <Pressable
+                    accessibilityRole="link"
+                    accessibilityState={{ selected: path === href }}
                     style={StyleSheet.flatten([
                       s.navItem,
                       path === href && s.navActive,
@@ -113,6 +133,69 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Pressable>
                 </Link>
               ))}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{
+                  expanded: moreExpanded,
+                  selected: secondaryActive,
+                }}
+                onPress={() => setMoreExpanded((expanded) => !expanded)}
+                style={[s.navItem, secondaryActive && s.navActive]}
+              >
+                <Text style={[s.navIcon, secondaryActive && s.navTextActive]}>
+                  ⋯
+                </Text>
+                <Text
+                  style={[
+                    s.navText,
+                    secondaryActive && s.navTextActive,
+                    s.navMoreText,
+                  ]}
+                >
+                  Mais
+                </Text>
+                <Text
+                  style={[s.navChevron, secondaryActive && s.navTextActive]}
+                >
+                  {moreExpanded ? "⌃" : "⌄"}
+                </Text>
+              </Pressable>
+              {moreExpanded &&
+                moreGroups.map((group) => (
+                  <View key={group.title} style={s.navSubgroup}>
+                    <Text style={s.navGroupTitle}>{group.title}</Text>
+                    {group.links.map(({ href, label, icon }) => (
+                      <Link key={href} href={href} asChild>
+                        <Pressable
+                          accessibilityRole="link"
+                          accessibilityState={{ selected: path === href }}
+                          style={[
+                            s.navItem,
+                            s.navSubitem,
+                            path === href && s.navActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              s.navIcon,
+                              path === href && s.navTextActive,
+                            ]}
+                          >
+                            {icon}
+                          </Text>
+                          <Text
+                            style={[
+                              s.navText,
+                              path === href && s.navTextActive,
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </Pressable>
+                      </Link>
+                    ))}
+                  </View>
+                ))}
             </View>
           </View>
         )}
@@ -143,15 +226,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <View style={s.contentArea}>{children}</View>
           {mobile && (
             <View style={s.bottomNavWrap}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={s.bottomNav}
-              >
-                {links.map(({ href, label, icon }) => (
+              <View style={s.bottomNav}>
+                {primaryLinks.map(({ href, label, icon }) => (
                   <Link key={href} href={href} asChild>
                     <Pressable
+                      accessibilityRole="link"
                       accessibilityLabel={label}
+                      accessibilityState={{ selected: path === href }}
                       style={StyleSheet.flatten([
                         s.mobileNavItem,
                         path === href && s.mobileNavActive,
@@ -176,7 +257,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </Pressable>
                   </Link>
                 ))}
-              </ScrollView>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Mais opções"
+                  accessibilityState={{ selected: secondaryActive }}
+                  onPress={() => moreSheet.current?.open()}
+                  style={[
+                    s.mobileNavItem,
+                    secondaryActive && s.mobileNavActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.mobileNavIcon,
+                      secondaryActive && s.mobileNavIconActive,
+                    ]}
+                  >
+                    ⋯
+                  </Text>
+                  <Text
+                    style={[
+                      s.mobileNavText,
+                      secondaryActive && s.mobileNavTextActive,
+                    ]}
+                  >
+                    Mais
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           )}
         </View>
@@ -252,6 +360,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             }
           />
         </View>
+      </BottomSheet>
+      <BottomSheet ref={moreSheet} title="Mais opções">
+        {moreGroups.map((group) => (
+          <View key={group.title} style={s.moreGroup}>
+            <Text style={s.moreGroupTitle}>{group.title}</Text>
+            {group.links.map(({ href, label, icon }) => (
+              <Pressable
+                key={href}
+                accessibilityRole="link"
+                accessibilityState={{ selected: path === href }}
+                onPress={() =>
+                  moreSheet.current?.close(() => router.push(href))
+                }
+                style={[s.moreOption, path === href && s.moreOptionActive]}
+              >
+                <Text style={s.moreOptionIcon}>{icon}</Text>
+                <Text style={s.moreOptionLabel}>{label}</Text>
+                <Text style={s.moreOptionArrow}>›</Text>
+              </Pressable>
+            ))}
+          </View>
+        ))}
       </BottomSheet>
     </SafeAreaView>
   );
@@ -637,6 +767,18 @@ const s = StyleSheet.create({
   },
   navText: { color: palette.muted, fontSize: 14, fontWeight: "600" },
   navTextActive: { color: palette.dark },
+  navMoreText: { flex: 1 },
+  navChevron: { color: palette.muted, fontSize: 19 },
+  navSubgroup: { marginLeft: 13, marginTop: 8 },
+  navGroupTitle: {
+    color: palette.muted,
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginLeft: 14,
+    marginBottom: 4,
+  },
+  navSubitem: { paddingVertical: 10 },
   main: { flex: 1, minWidth: 0 },
   contentArea: { flex: 1, minHeight: 0 },
   contentScroll: { flex: 1 },
@@ -727,6 +869,32 @@ const s = StyleSheet.create({
   examMore: { alignItems: "center", padding: 12 },
   examMoreText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
   examManage: { marginTop: 14, marginBottom: 4 },
+  moreGroup: { marginBottom: 16 },
+  moreGroupTitle: {
+    color: palette.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginBottom: 9,
+  },
+  moreOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 56,
+    paddingHorizontal: 14,
+    marginBottom: 7,
+    borderRadius: 15,
+    backgroundColor: "#F7F7F2",
+  },
+  moreOptionActive: { backgroundColor: "#EDE9FF" },
+  moreOptionIcon: { color: palette.text, fontSize: 21, width: 33 },
+  moreOptionLabel: {
+    color: palette.text,
+    fontSize: 14,
+    fontWeight: "700",
+    flex: 1,
+  },
+  moreOptionArrow: { color: palette.muted, fontSize: 23 },
   eyebrow: {
     color: "#8573CE",
     fontSize: 10,
@@ -900,6 +1068,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.bg,
   },
   bottomNav: {
+    flexDirection: "row",
     backgroundColor: palette.dark,
     borderRadius: 24,
     alignItems: "center",
@@ -910,7 +1079,8 @@ const s = StyleSheet.create({
     justifyContent: "space-around",
   },
   mobileNavItem: {
-    minWidth: 52,
+    flex: 1,
+    minWidth: 0,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 4,

@@ -13,6 +13,7 @@ import { useStore } from "@global/store/store";
 import { SearchablePicker } from "@global/components/shared/SearchablePicker";
 import { studyTypes } from "@global/constants/studyOptions";
 import { recordSession, validateSession } from "../services/sessionService";
+import { useStudyTimer } from "../hooks/useStudyTimer";
 import { StudyType } from "@domain/types";
 
 const formatTime = (seconds: number) =>
@@ -54,8 +55,6 @@ function StudySession({
   const [questions, setQuestions] = useState("");
   const [correct, setCorrect] = useState("");
   const [note, setNote] = useState("");
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [picker, setPicker] = useState<"subject" | "topic" | null>(null);
   const [pickerProgress] = useState(() => new Animated.Value(1));
@@ -68,12 +67,21 @@ function StudySession({
     selectedTopicId || (subjectId === target?.subjectId ? target.topicId : "");
   const type = selectedType || target?.type || "Teoria";
   const plannedMinutes = target?.minutes || 0;
-  const suggestedMinutes = seconds
-    ? Math.max(1, Math.round(seconds / 60))
-    : plannedMinutes;
   const subjectName =
     data?.subjects.find((item) => item.id === subjectId)?.name ||
     "Escolher matéria";
+  const {
+    ready: timerReady,
+    seconds,
+    running,
+    notificationUnavailable,
+    toggle: toggleTimer,
+    pause: pauseTimer,
+    reset: resetTimer,
+  } = useStudyTimer(subjectName);
+  const suggestedMinutes = seconds
+    ? Math.max(1, Math.round(seconds / 60))
+    : plannedMinutes;
   const topicName =
     data?.topics.find((item) => item.id === topicId)?.name ||
     "Escolher assunto";
@@ -90,11 +98,6 @@ function StudySession({
     ? Math.min(100, (seconds / (plannedMinutes * 60)) * 100)
     : 0;
 
-  useEffect(() => {
-    if (!running) return;
-    const timer = setInterval(() => setSeconds((value) => value + 1), 1000);
-    return () => clearInterval(timer);
-  }, [running]);
   useEffect(() => {
     if (!changingPicker.current) return;
     Animated.timing(pickerProgress, {
@@ -146,15 +149,18 @@ function StudySession({
       });
     }
   };
-  const openFinish = () => {
+  const openFinish = async () => {
     if (!subjectId || !topicId) {
       openSettings();
       return;
     }
-    setRunning(false);
+    const elapsedSeconds = await pauseTimer();
     setError("");
     if (!minutesEdited) {
-      setMinutes(suggestedMinutes ? String(suggestedMinutes) : "");
+      const minutes = elapsedSeconds
+        ? Math.max(1, Math.round(elapsedSeconds / 60))
+        : plannedMinutes;
+      setMinutes(minutes ? String(minutes) : "");
     }
     finishSheet.current?.open();
   };
@@ -186,6 +192,7 @@ function StudySession({
           }
         : next;
     });
+    await resetTimer();
     router.replace(cycleId ? "/ciclo" : "/");
   };
 
@@ -256,7 +263,8 @@ function StudySession({
           )}
           <Pressable
             accessibilityRole="button"
-            onPress={() => setRunning((value) => !value)}
+            disabled={!timerReady}
+            onPress={toggleTimer}
             style={({ pressed }) => [s.timerButton, pressed && s.pressed]}
           >
             <Text style={s.timerButtonText}>
@@ -267,10 +275,15 @@ function StudySession({
                   : "▶  Começar estudo"}
             </Text>
           </Pressable>
+          {notificationUnavailable && (
+            <Text style={s.notificationHint}>
+              Permita notificações para acompanhar o tempo na barra do Android.
+            </Text>
+          )}
           {seconds > 0 && !running && (
             <Pressable
               accessibilityRole="button"
-              onPress={() => setSeconds(0)}
+              onPress={resetTimer}
               style={s.resetButton}
             >
               <Text style={s.resetText}>Zerar cronômetro</Text>
@@ -614,6 +627,12 @@ const s = StyleSheet.create({
   timerButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   resetButton: { paddingHorizontal: 15, paddingVertical: 11, marginTop: 4 },
   resetText: { color: palette.muted, fontSize: 11, fontWeight: "700" },
+  notificationHint: {
+    color: palette.muted,
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 10,
+  },
   finishArea: { marginTop: 22, marginBottom: 25 },
   finishHint: {
     color: palette.muted,

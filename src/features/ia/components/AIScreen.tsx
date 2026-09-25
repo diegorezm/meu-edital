@@ -10,6 +10,7 @@ import {
   palette,
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
+import { weeklyAllocation, weeklyPlanBalance } from "@domain/weeklyAllocation";
 import { ExternalCopyPasteProvider } from "../services/externalCopyPasteProvider";
 import {
   ExamImport,
@@ -70,6 +71,13 @@ export default function AIScreen() {
         ? ExternalCopyPasteProvider.examPrompt(data, examId)
         : ExternalCopyPasteProvider.weeklyPrompt(data, examId)
       : "";
+  const balance =
+    mode === "week" && preview && data
+      ? weeklyPlanBalance(
+          weeklyAllocation(data, examId),
+          resolveWeeklyPlan(data, examId, preview as WeeklyPlanImport),
+        )
+      : null;
   const changeMode = (next: "exam" | "week") => {
     setMode(next);
     setInput("");
@@ -280,6 +288,11 @@ export default function AIScreen() {
                       <Text style={s.previewRowTitle}>{item.name}</Text>
                       <Text style={s.previewRowMeta}>
                         {item.topics.length} assuntos
+                        {item.questions && item.pointsPerQuestion
+                          ? ` · ${item.questions} questões × ${item.pointsPerQuestion} pontos`
+                          : item.weight
+                            ? ` · peso ${item.weight}`
+                            : " · peso padrão"}
                       </Text>
                     </View>
                   ))
@@ -291,6 +304,33 @@ export default function AIScreen() {
                       </Text>
                     </View>
                   ))}
+              {balance && (
+                <View style={s.balanceCard}>
+                  <Text style={s.previewRowTitle}>Tempo por matéria</Text>
+                  <Text style={s.previewRowMeta}>
+                    Planejado {balance.plannedTotal} min de{" "}
+                    {balance.targetTotal} min disponíveis
+                  </Text>
+                  {balance.rows.map((row) => (
+                    <Text
+                      key={row.subjectId}
+                      style={[
+                        s.balanceRow,
+                        row.outsideTarget && s.balanceWarning,
+                      ]}
+                    >
+                      {row.name}: {row.plannedMinutes} min / {row.minutes} min
+                      sugeridos
+                    </Text>
+                  ))}
+                  {balance.outsideTarget && (
+                    <Text style={s.balanceWarning}>
+                      A distribuição se afastou do peso sugerido. Revise a
+                      resposta antes de importar.
+                    </Text>
+                  )}
+                </View>
+              )}
               {mode === "week" && (
                 <Text style={s.replaceNote}>
                   Esta importação substitui o plano atual desta semana.
@@ -468,4 +508,12 @@ const s = StyleSheet.create({
     fontSize: 12,
     marginTop: 11,
   },
+  balanceCard: {
+    backgroundColor: "#F7F7F2",
+    borderRadius: 14,
+    padding: 13,
+    marginTop: 10,
+  },
+  balanceRow: { color: palette.text, fontSize: 12, marginTop: 8 },
+  balanceWarning: { color: palette.danger, fontSize: 12, marginTop: 8 },
 });

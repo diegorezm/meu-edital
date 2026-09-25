@@ -28,8 +28,35 @@ export function importExam(
       (s) => s.name.toLocaleLowerCase() === item.name.toLocaleLowerCase(),
     );
     if (!subject) {
-      subject = { id: uid(), examId, name: item.name };
+      subject = {
+        id: uid(),
+        examId,
+        name: item.name,
+        weight: item.weight,
+        questions: item.questions,
+        pointsPerQuestion: item.pointsPerQuestion,
+      };
       subjects.push(subject);
+    } else {
+      const subjectId = subject.id;
+      const index = existing.findIndex((entry) => entry.id === subjectId);
+      if (index >= 0) {
+        existing[index] = {
+          ...subject,
+          weight:
+            item.questions && item.pointsPerQuestion
+              ? undefined
+              : (item.weight ?? subject.weight),
+          questions:
+            item.weight && !item.questions
+              ? undefined
+              : (item.questions ?? subject.questions),
+          pointsPerQuestion:
+            item.weight && !item.pointsPerQuestion
+              ? undefined
+              : (item.pointsPerQuestion ?? subject.pointsPerQuestion),
+        };
+      }
     }
     for (const entry of item.topics) {
       const exists = [...data.topics, ...topics].find(
@@ -65,7 +92,12 @@ export function importExam(
   }
   return {
     ...data,
-    subjects: [...data.subjects, ...subjects],
+    subjects: [
+      ...data.subjects.map(
+        (item) => existing.find((entry) => entry.id === item.id) || item,
+      ),
+      ...subjects,
+    ],
     topics: [...data.topics, ...topics],
   };
 }

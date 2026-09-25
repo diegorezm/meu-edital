@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const name = z.string().trim().min(1, "O nome não pode ficar vazio.").max(1024);
+const positive = z.number().finite().positive();
 const topicSchema: z.ZodType<{ name: string; subtopics?: { name: string }[] }> =
   z.strictObject({
     name,
@@ -10,7 +11,15 @@ export const ExamImportSchema = z.strictObject({
   exam: name,
   role: name,
   subjects: z
-    .array(z.strictObject({ name, topics: z.array(topicSchema).min(1) }))
+    .array(
+      z.strictObject({
+        name,
+        questions: z.number().int().positive().optional(),
+        pointsPerQuestion: positive.optional(),
+        weight: positive.optional(),
+        topics: z.array(topicSchema).min(1),
+      }),
+    )
     .min(1),
 });
 export const WeeklyPlanImportSchema = z.strictObject({

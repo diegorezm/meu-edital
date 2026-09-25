@@ -10,7 +10,15 @@ export type Exam = {
   hoursPerWeek: number;
   createdAt: string;
 };
-export type Subject = { id: string; examId: string; name: string };
+export type Subject = {
+  id: string;
+  examId: string;
+  name: string;
+  /** Total de pontos ou proporção, quando o edital não detalha questões. */
+  weight?: number;
+  questions?: number;
+  pointsPerQuestion?: number;
+};
 export type Topic = {
   id: string;
   subjectId: string;

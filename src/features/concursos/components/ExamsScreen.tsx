@@ -17,6 +17,7 @@ import {
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
 import { examProgress } from "@domain/stats";
+import { subjectWeight } from "@domain/weeklyAllocation";
 import { Exam, Subject, today, Topic, uid } from "@domain/types";
 import { normalizeText } from "@global/utils/normalizeText";
 import ExamDateField from "./ExamDateField";
@@ -54,6 +55,9 @@ export default function ExamsScreen() {
   const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
   const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
   const [subjectName, setSubjectName] = useState("");
+  const [subjectQuestions, setSubjectQuestions] = useState("");
+  const [subjectPoints, setSubjectPoints] = useState("");
+  const [subjectWeightInput, setSubjectWeightInput] = useState("");
   const [topicName, setTopicName] = useState("");
   const [parentId, setParentId] = useState<string | undefined>();
   const [catalogError, setCatalogError] = useState("");
@@ -119,6 +123,9 @@ export default function ExamsScreen() {
     if (view === "subjectForm") {
       setEditingSubjectId(null);
       setSubjectName("");
+      setSubjectQuestions("");
+      setSubjectPoints("");
+      setSubjectWeightInput("");
     }
     catalogSheet.current?.open();
   };
@@ -211,11 +218,38 @@ export default function ExamsScreen() {
     transitionCatalog("subjectForm", () => {
       setEditingSubjectId(item?.id || null);
       setSubjectName(item?.name || "");
+      setSubjectQuestions(item?.questions ? String(item.questions) : "");
+      setSubjectPoints(
+        item?.pointsPerQuestion ? String(item.pointsPerQuestion) : "",
+      );
+      setSubjectWeightInput(item?.weight ? String(item.weight) : "");
     });
   const saveSubject = async () => {
     const value = subjectName.trim();
     if (!value) {
       setCatalogError("Informe o nome da matéria.");
+      return;
+    }
+    const questions = subjectQuestions.trim()
+      ? Number(subjectQuestions)
+      : undefined;
+    const pointsPerQuestion = subjectPoints.trim()
+      ? Number(subjectPoints.replace(",", "."))
+      : undefined;
+    const weight = subjectWeightInput.trim()
+      ? Number(subjectWeightInput.replace(",", "."))
+      : undefined;
+    if (
+      (questions !== undefined &&
+        (!Number.isInteger(questions) || questions <= 0)) ||
+      (pointsPerQuestion !== undefined &&
+        (!Number.isFinite(pointsPerQuestion) || pointsPerQuestion <= 0)) ||
+      (weight !== undefined && (!Number.isFinite(weight) || weight <= 0)) ||
+      (questions === undefined) !== (pointsPerQuestion === undefined)
+    ) {
+      setCatalogError(
+        "Informe questões e pontos por questão juntos, ou um peso relativo positivo.",
+      );
       return;
     }
     if (
@@ -233,9 +267,21 @@ export default function ExamsScreen() {
       ...current,
       subjects: editingSubjectId
         ? current.subjects.map((item) =>
-            item.id === id ? { ...item, name: value } : item,
+            item.id === id
+              ? { ...item, name: value, questions, pointsPerQuestion, weight }
+              : item,
           )
-        : [...current.subjects, { id, examId: exam!.id, name: value }],
+        : [
+            ...current.subjects,
+            {
+              id,
+              examId: exam!.id,
+              name: value,
+              questions,
+              pointsPerQuestion,
+              weight,
+            },
+          ],
     }));
     transitionCatalog("subject", () => {
       setSelectedSubjectId(id);
@@ -358,7 +404,9 @@ export default function ExamsScreen() {
             <View style={s.heroMeta}>
               <Text style={s.heroTag}>{exam.hoursPerWeek}h por semana</Text>
               {exam.examDate && (
-                <Text style={s.heroTag}>Prova: {displayExamDate(exam.examDate)}</Text>
+                <Text style={s.heroTag}>
+                  Prova: {displayExamDate(exam.examDate)}
+                </Text>
               )}
             </View>
             <Pressable
@@ -672,6 +720,7 @@ export default function ExamsScreen() {
                   <Text style={s.listTitle} numberOfLines={2}>
                     {item.name}
                   </Text>
+                  <Text style={s.summaryMeta}>Peso {subjectWeight(item)}</Text>
                   <Text style={s.rowArrow}>›</Text>
                 </Pressable>
               ))}
@@ -709,6 +758,15 @@ export default function ExamsScreen() {
                 <Text style={s.summaryMeta}>
                   {subjectTopics.filter((item) => item.studied).length} de{" "}
                   {subjectTopics.length} assuntos estudados
+                </Text>
+                <Text style={s.summaryMeta}>
+                  Peso {subjectWeight(selectedSubject)}
+                  {selectedSubject.questions &&
+                  selectedSubject.pointsPerQuestion
+                    ? ` · ${selectedSubject.questions} questões × ${selectedSubject.pointsPerQuestion} pontos`
+                    : selectedSubject.weight
+                      ? " · informado no edital"
+                      : " · padrão"}
                 </Text>
               </View>
               <View style={s.inlineActions}>
@@ -848,6 +906,33 @@ export default function ExamsScreen() {
                 value={subjectName}
                 onChangeText={setSubjectName}
                 placeholder="Ex.: Direito Constitucional"
+              />
+              <Text style={s.sheetIntro}>
+                Para definir a prioridade no plano, informe questões e pontos
+                por questão. Se o edital trouxer só um peso ou pontuação total,
+                use o último campo. Sem esses dados, todas as matérias têm peso
+                igual.
+              </Text>
+              <Field
+                label="Questões no edital"
+                value={subjectQuestions}
+                onChangeText={setSubjectQuestions}
+                keyboardType="numeric"
+                placeholder="Ex.: 10"
+              />
+              <Field
+                label="Pontos por questão"
+                value={subjectPoints}
+                onChangeText={setSubjectPoints}
+                keyboardType="numeric"
+                placeholder="Ex.: 2"
+              />
+              <Field
+                label="Peso relativo ou pontos totais"
+                value={subjectWeightInput}
+                onChangeText={setSubjectWeightInput}
+                keyboardType="numeric"
+                placeholder="Se não houver os dois dados acima"
               />
               {catalogError ? (
                 <Text style={s.error}>{catalogError}</Text>

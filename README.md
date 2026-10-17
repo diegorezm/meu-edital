@@ -60,7 +60,9 @@ O mesmo pacote (`@meu-edital/agent-context`) já gera mensagens + schema para um
 Expo SDK 57, React Native, Expo Router, TypeScript, Zod e Supabase, num monorepo com npm workspaces e Turborepo.
 
 ```text
-apps/app                 App Expo (Android, iOS e web)
+apps/app                 App Expo (Android, iOS e web): o dashboard de estudo
+apps/site                Site de divulgação (Astro, HTML estático)
+packages/brand           Cores da marca, usadas pelo app e pelo site
 packages/domain          Modelos e regras de estudo (TypeScript puro)
 packages/agent-context   Contrato de contexto, tarefas e propostas para IA externa
 supabase/migrations      Esquema do banco com RLS
@@ -73,6 +75,7 @@ Requer Node.js 22.13+ e npm. Rode os comandos na raiz.
 ```bash
 npm install
 npm run web     # app no navegador
+npm run site    # site de divulgação em http://localhost:4321
 npm run dev     # Metro para o development build no Android/iOS
 npm run check   # lint, typecheck e testes de todo o monorepo
 ```
@@ -101,7 +104,17 @@ npm run deploy:web          # exporta e publica em produção
 npm run deploy:web:preview  # publica uma prévia com URL própria
 ```
 
-As variáveis `EXPO_PUBLIC_*` entram no build, então `apps/app/.env.local` precisa existir na máquina que publica. Depois do primeiro deploy, configure o endereço em **Supabase → Authentication → URL Configuration → Site URL**.
+As variáveis `EXPO_PUBLIC_*` entram no build, então `apps/app/.env.local` precisa existir na máquina que publica. Depois do primeiro deploy, configure o endereço do app (não o do site) em **Supabase → Authentication → URL Configuration → Site URL**. Preencha também `EXPO_PUBLIC_SITE_URL` para o link "Voltar ao site".
+
+### Publicar o site
+
+O site (`apps/site`) é HTML e CSS estáticos, sem JavaScript. Funciona em qualquer hospedagem estática, como Cloudflare Pages ou Netlify (ambos têm plano gratuito).
+
+- Comando de build: `npm run build:site` (na raiz)
+- Pasta publicada: `apps/site/dist`
+- Variável: `PUBLIC_APP_URL` com o endereço do app. Os botões "Criar conta" e "Entrar" levam para `PUBLIC_APP_URL/?conta=criar` e `?conta=entrar`.
+
+Para rodar localmente com outro endereço, copie `apps/site/.env.example` para `apps/site/.env`.
 
 ### Android
 

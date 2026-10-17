@@ -8,7 +8,9 @@ Turborepo monorepo (npm workspaces) for an Expo/React Native app that ships to A
 
 | Path | Package | What goes there |
 | --- | --- | --- |
-| `apps/app` | `@meu-edital/app` | Expo app: routes, screens, UI, store, sync, native module. |
+| `apps/app` | `@meu-edital/app` | Expo app (the study dashboard): routes, screens, UI, store, sync, native module. |
+| `apps/site` | `@meu-edital/site` | Marketing site in Astro: static HTML and CSS, no app logic. |
+| `packages/brand` | `@meu-edital/brand` | Brand colors shared by the app and the site. |
 | `packages/domain` | `@meu-edital/domain` | Study models and rules: cycle, weight allocation, sessions, reviews, weekly tracking, catalog removal. |
 | `packages/agent-context` | `@meu-edital/agent-context` | `StudyContext` contract, agent tasks, change proposals, response parsing. |
 | `supabase/migrations` | — | Database schema and RLS policies. |
@@ -24,6 +26,8 @@ npm run check               # lint + typecheck + tests in every workspace (Turbo
 npm run web                 # app in the browser (local mode without Supabase env)
 npm run dev                 # Metro dev server for the development build
 npm run build:web           # export the web SPA to apps/app/dist
+npm run site                # marketing site at http://localhost:4321
+npm run build:site          # build the site to apps/site/dist
 ```
 
 Inside `apps/app`:
@@ -44,11 +48,13 @@ Decide by what the code depends on:
 
 1. **Pure study logic** (no React, React Native or Expo imports) → `packages/domain`. Screens call these functions; they never reimplement rules.
 2. **Anything an external agent reads, returns or proposes** → `packages/agent-context`. It depends only on the domain and Zod.
-3. **App code** → `apps/app/src`:
+3. **Marketing pages** (landing, pricing, anything a signed-out visitor reads before creating an account) → `apps/site`. Keep it static: no Supabase, no store. It links to the app with `?conta=criar` or `?conta=entrar`. The app's signed-out screen is sign-in and sign-up only.
+4. **Brand colors** → `packages/brand`. The app re-exports them as `palette`; the site turns them into CSS variables.
+5. **App code** → `apps/app/src`:
    - `app/` — Expo Router routes only. Each route file re-exports a feature: `export { default } from "@features/semana";`.
    - `features/<feature>/` — one folder per screen, public entry in `index.ts`. Add `components/`, `hooks/`, `services/`, `utils/`, `schemas/`, `constants/` only when needed. No empty folders, no generic `logic/`.
    - `global/` — shared by several features: `components/` (UI kit in `ui.tsx`), `store/` (auth, store, repository, sync), `services/` (Supabase client), `utils/`, `constants/`.
-4. **Hand-written native code** → local Expo module in `apps/app/modules` (see `study-timer`).
+6. **Hand-written native code** → local Expo module in `apps/app/modules` (see `study-timer`).
 
 Import rules:
 

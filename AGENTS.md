@@ -1,70 +1,127 @@
-This is a Turborepo monorepo (npm workspaces) for an Expo/React Native app that ships to Android, iOS and the web. Prioritize mobile-first patterns, performance, and cross-platform compatibility; the web version is used as much as mobile.
+# AGENTS.md
 
-## Monorepo layout
+How to work on this codebase. For what the app is and does (concepts, screens, product rules), read [README.md](README.md) first.
 
-- `apps/app` — the Expo app (`@meu-edital/app`). Paths below such as `src/app/` are relative to it.
-- `packages/domain` — `@meu-edital/domain`: study models and rules (cycle, weight allocation, sessions, reviews, weekly tracking). Pure TypeScript: no React, React Native or Expo imports.
-- `packages/agent-context` — `@meu-edital/agent-context`: the versioned `StudyContext` contract for external agents, tasks (`AgentTask`), change proposals and response validation. Depends only on the domain and Zod.
-- `supabase/migrations` — database schema with RLS. Every table has `user_id` and an owner-only policy; add new tables the same way and update `apps/app/src/global/store/remoteSchema.ts`.
-- Workspace packages are consumed as TypeScript source (`main: ./src/index.ts`); there is no build step.
+## Project at a glance
 
-## Expo has changed — do not trust your training data
+Turborepo monorepo (npm workspaces) for an Expo/React Native app that ships to Android, iOS and the web. The web version is used as much as mobile: every screen must work on a phone and in a desktop browser.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+| Path | Package | What goes there |
+| --- | --- | --- |
+| `apps/app` | `@meu-edital/app` | Expo app: routes, screens, UI, store, sync, native module. |
+| `packages/domain` | `@meu-edital/domain` | Study models and rules: cycle, weight allocation, sessions, reviews, weekly tracking, catalog removal. |
+| `packages/agent-context` | `@meu-edital/agent-context` | `StudyContext` contract, agent tasks, change proposals, response parsing. |
+| `supabase/migrations` | — | Database schema and RLS policies. |
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+Workspace packages are consumed as TypeScript source (`main: ./src/index.ts`). There is no build step.
 
 ## Commands
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
-
-Run from the repository root unless noted:
+Use `bunx` instead of `npx` if a `bun.lock` appears. Run from the repository root unless noted.
 
 ```bash
-npm run check               # lint, typecheck and tests of every workspace (Turborepo)
-npm run web                 # start the app in the browser
-npm run dev                 # start the Metro dev server
+npm run check               # lint + typecheck + tests in every workspace (Turborepo)
+npm run web                 # app in the browser (local mode without Supabase env)
+npm run dev                 # Metro dev server for the development build
+npm run build:web           # export the web SPA to apps/app/dist
 ```
 
 Inside `apps/app`:
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm add for the app — resolves SDK-compatible versions
+npx expo install <package>  # ALWAYS use this to add app dependencies (SDK-compatible versions)
 npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npx expo install --fix      # fix incompatible versions
 ```
 
-Dependencies of `packages/*` are plain npm dependencies (`npm install <pkg> --workspace=@meu-edital/domain`). Run `npm run check` before declaring any task done.
+Dependencies of `packages/*` are plain npm dependencies: `npm install <pkg> --workspace=@meu-edital/domain`.
 
-## Navigation & Routing
+**Definition of done:** `npm run check` passes. For UI changes, also open the screen with `npm run web` and check both a phone width (< 760 px) and a desktop width.
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+## Where code goes
 
-## Feature-based structure
+Decide by what the code depends on:
 
-- Organize code by functionality in `src/features/<feature>/`. Keep each feature self-contained and expose its screen through `index.ts`; route files in `src/app/` should only connect the route to that public entry point.
-- Add folders only when needed: `components/` for feature UI, `hooks/` for feature state, `services/` for integrations and workflows, `utils/` for pure helpers, `schemas/` or `types/` for feature data contracts, and `constants/` for feature values. Do not create empty folders or a generic `logic/` package.
-- Put code used by multiple features in `src/global/`: reusable UI in `components/`, shared state in `store/`, helpers in `utils/`, and app-wide values in `constants/`. Keep study models and calculations in `packages/domain` and everything agents read or propose in `packages/agent-context`; screens call them instead of reimplementing rules. Keep static assets in `assets/` according to `app.json` references.
-- Features must not import another feature's internal files. Communicate through the feature's `index.ts` public API, shared state, or shared domain code. Use relative imports within a feature, the `@features/*` and `@global/*` aliases across app boundaries (`apps/app/tsconfig.json`), and the `@meu-edital/*` package names for shared packages.
-- Group external imports before internal imports. Name React components in PascalCase; name helpers and services descriptively in camelCase, and assets in kebab-case. Extract repeated code into shared modules only when it is genuinely shared.
-- Route groups `(name)` organize routes without changing URLs; `[param]` denotes a dynamic route. Add them only when the navigation needs them.
+1. **Pure study logic** (no React, React Native or Expo imports) → `packages/domain`. Screens call these functions; they never reimplement rules.
+2. **Anything an external agent reads, returns or proposes** → `packages/agent-context`. It depends only on the domain and Zod.
+3. **App code** → `apps/app/src`:
+   - `app/` — Expo Router routes only. Each route file re-exports a feature: `export { default } from "@features/semana";`.
+   - `features/<feature>/` — one folder per screen, public entry in `index.ts`. Add `components/`, `hooks/`, `services/`, `utils/`, `schemas/`, `constants/` only when needed. No empty folders, no generic `logic/`.
+   - `global/` — shared by several features: `components/` (UI kit in `ui.tsx`), `store/` (auth, store, repository, sync), `services/` (Supabase client), `utils/`, `constants/`.
+4. **Hand-written native code** → local Expo module in `apps/app/modules` (see `study-timer`).
 
-Reference: https://ahmad2point0.medium.com/react-app-feature-based-folder-structure-guide-848ddc7447d5
+Import rules:
 
-## Building with EAS
+- A feature never imports another feature's internals. Share through domain, `global/` or the feature's `index.ts`.
+- Relative imports inside a feature; `@features/*` and `@global/*` aliases across the app; `@meu-edital/domain` and `@meu-edital/agent-context` for packages.
+- External imports first, then internal ones. Components in PascalCase, helpers and services in camelCase, assets in kebab-case.
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+## Domain rules (do not break)
 
-## Rules
+- **Study is cyclic.** `CycleItem` is subject + minutes. The cycle is the only source of "what to study next". There is no day-by-day plan; do not add one back.
+- The topic is chosen per session. Use `suggestNextTopic`: first unstudied topic in syllabus order, then the one studied longest ago.
+- `recordSession` is the only way to save a study session. It marks the topic studied, schedules reviews, completes due reviews on a review session and advances the cycle when `cycleItemId` is set.
+- One cycle lap equals the weekly target (`weeklyAllocation`). Change allocation rules only with tests.
+- Dates are local `YYYY-MM-DD` strings (`today`, `addDays`, `weekStartOf`). Never use `toISOString()` for dates: it shifts the day in Brazil's time zone.
+- Ids come from `uid()`. Their alphabetical order is creation order; the sync relies on it to keep syllabus order.
+- Domain functions are pure: `(data: AppData, ...) => AppData`. No mutation, no I/O.
 
-- Study is cyclic: the cycle (`CycleItem` = subject + minutes) is the source of "what to study next"; there is no day-by-day weekly plan. The topic is chosen per session (`suggestNextTopic`).
-- External AI output is untrusted data: validate it with the task's Zod schema, show a preview, and apply only after the user confirms. Never write agent output directly to storage.
-- `StudyContext` is a public contract: use readable names, not ids, and bump `STUDY_CONTEXT_VERSION` on breaking changes.
-- If `apps/app/ios/` and `apps/app/android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins. Hand-written native code belongs in local Expo modules under `apps/app/modules`.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+## External agents (`packages/agent-context`)
+
+- Agent output is **untrusted data**. Parse it with the task's Zod schema (`parseTaskResponse`), show a preview (`previewChanges`) and apply only after the user confirms. Never write agent output straight to storage.
+- `StudyContext` is a public, versioned contract. Use readable names, never ids. Breaking changes bump `STUDY_CONTEXT_VERSION`; additive optional fields do not.
+- A new agent capability is a new `AgentTask` (instructions + context slice + response schema + example) or a new `ChangeSchema` operation with a matching case in `previewChanges` and `applyChanges`. Add a test for each.
+- Keep the transport separate: `renderPrompt` for copy and paste, `taskRequest` for API or MCP use. Do not add a paid AI API call to the app.
+
+## Data, sync and Supabase
+
+The store (`global/store/store.tsx`) keeps `AppData` in memory. Screens change it only through `update(current => next)` with domain functions. The repository saves it:
+
+- **Local mode** (no `EXPO_PUBLIC_SUPABASE_*` env): AsyncStorage, demo seed on first run.
+- **Remote mode:** device cache + outbox of `SyncOp`s computed by `diffData(prev, next)`. Upserts go parents first and deletes children first, to respect foreign keys.
+
+To add or change a persisted field:
+
+1. Change the type in `packages/domain/src/types.ts`.
+2. Add a **new** migration in `supabase/migrations` (`YYYYMMDDHHMMSS_description.sql`). Never edit a migration that may already be applied.
+3. Update `toRow` and `fromRow` in `apps/app/src/global/store/remoteSchema.ts`.
+4. Run the round-trip test in `apps/app/tests/sync.test.ts`.
+
+Every new table has `user_id uuid default auth.uid()`, RLS enabled, the owner-only policy and grants to `authenticated`, like the existing ones. Never ship a table without RLS. The publishable key is public by design; RLS is the protection.
+
+## UI conventions
+
+- Build screens with the kit in `global/components/ui.tsx`: `Page`, `Section`, `Button`, `Field`, `BottomSheet`, `BottomDrawer`, `Empty`, `InlineLink`. Colors come from `palette` (`global/constants/colors.ts`).
+- Layout switches at `width < 760` (mobile: top bar + bottom nav; desktop: sidebar). Content columns use a `maxWidth` around 680–760 and `alignSelf: "center"`.
+- All user-facing text is in Brazilian Portuguese, short and friendly. Follow the language of the file you are in for comments.
+- Keep animation minimal. Format time with `formatDuration` and dates with `formatShortDate`.
+- Platform-specific code uses file suffixes (`.native.tsx`, `.android.ts`) next to a web-safe default file.
+
+## Expo: check the docs, not your memory
+
+Expo ships breaking changes every SDK release. Before writing code that touches an Expo, EAS or React Native API:
+
+1. Read the `expo` major version in `apps/app/package.json`.
+2. Read the versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`.
+3. For anything else, start at https://docs.expo.dev/llms.txt and follow its links.
+
+Rules:
+
+- Navigation is Expo Router only. Import `Link`, `router` and `useLocalSearchParams` from `expo-router`. Docs: https://docs.expo.dev/router/introduction.md
+- `apps/app/ios` and `apps/app/android` are generated (Continuous Native Generation). Never create or edit them by hand; configure native behavior in `app.json` and config plugins.
+- Expo Go only has its bundled native modules. A new native dependency needs a development build (`npx expo run:android|ios` or `npx eas-cli@latest build --profile development`).
+- Prefer Expo modules over third-party libraries, and check your available skills before adding a dependency.
+- The web build is a SPA (`web.output: "single"`), deployed with `npm run deploy:web` to EAS Hosting. `EXPO_PUBLIC_*` variables are inlined at build time.
+- Run EAS CLI as `npx eas-cli@latest <command>` (or `bunx eas-cli` in Bun projects). Docs: https://docs.expo.dev/eas/index.md
+
+## Tests
+
+- Node's test runner via `tsx`: each workspace has `tests/*.test.ts`, run by `npm run check` (or `npm test --workspace=<name>`).
+- Domain and agent-context changes need tests. Test pure functions; build data with `createSeed()` and adjust it.
+- Tests must not import React Native. Keep logic you want to test out of components.
+
+## Git
+
+- Work on a branch, not on `main`. Commit only when asked.
+- Commit messages in Portuguese, present tense, third person, describing the change: `Adiciona cronômetro persistente com notificação no Android`.
+- Never commit `.env.local`, generated native folders, `dist/` or `.turbo/`.

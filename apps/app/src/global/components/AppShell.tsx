@@ -1,6 +1,14 @@
 import React, { useRef, useState } from "react";
 import { Link, router, usePathname } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  ViewStyle,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { palette } from "@global/constants/colors";
 import { useAuth } from "@global/store/auth";
@@ -99,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Text style={s.mobileExamName} numberOfLines={1}>
                 {exam?.name || "Concurso"}
               </Text>
-              <Text style={s.mobileExamArrow}>⌄</Text>
+              <Chevron color={palette.text} style={s.mobileExamArrow} />
             </Pressable>
           </View>
           <View style={s.contentArea}>{children}</View>
@@ -183,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </Text>
                   ) : null}
                 </View>
-                <Text style={s.examPickerArrow}>⌄</Text>
+                <Chevron color={palette.muted} style={s.examPickerArrow} />
               </Pressable>
               <SyncChip />
             </View>
@@ -292,6 +300,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Account />
       </BottomSheet>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Seta para baixo desenhada com bordas: o caractere "⌄" fica abaixo do centro
+ * em várias fontes e desalinha do texto ao lado.
+ */
+function Chevron({
+  color,
+  style,
+}: {
+  color: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[s.chevronBox, style]}>
+      <View style={[s.chevron, { borderColor: color }]} />
+    </View>
   );
 }
 
@@ -484,7 +510,22 @@ const s = StyleSheet.create({
   examPickerText: { flexShrink: 1, minWidth: 0 },
   examPickerName: { color: palette.text, fontSize: 14, fontWeight: "800" },
   examPickerRole: { color: palette.muted, fontSize: 11, marginTop: 1 },
-  examPickerArrow: { color: palette.muted, fontSize: 18, marginLeft: 2 },
+  examPickerArrow: { marginLeft: 4 },
+  chevronBox: {
+    width: 10,
+    height: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  // Girado, o quadrado pesa para baixo; subir um pouco centraliza a seta.
+  chevron: {
+    width: 7,
+    height: 7,
+    borderRightWidth: 1.8,
+    borderBottomWidth: 1.8,
+    marginTop: -3,
+    transform: [{ rotate: "45deg" }],
+  },
 
   syncChip: {
     flexDirection: "row",
@@ -562,7 +603,7 @@ const s = StyleSheet.create({
     fontWeight: "800",
     flexShrink: 1,
   },
-  mobileExamArrow: { color: palette.text, fontSize: 17, marginLeft: 6 },
+  mobileExamArrow: { marginLeft: 8 },
   bottomNavWrap: {
     paddingHorizontal: 10,
     paddingTop: 7,

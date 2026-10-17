@@ -54,6 +54,21 @@ npm run build:web  # exporta a versão web para apps/app/dist
 3. Em **Authentication → Email Templates → Magic Link**, inclua o código `{{ .Token }}` no texto do e-mail: o app faz login digitando esse código.
 4. Copie `apps/app/.env.example` para `apps/app/.env.local` e preencha `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_KEY` (chave publicável, em Project Settings → API).
 
+### Publicar a versão web (EAS Hosting)
+
+A web é publicada no [EAS Hosting](https://docs.expo.dev/eas/hosting/introduction/) como SPA (`web.output: "single"`). O plano gratuito oferece um endereço `*.expo.app`; domínio próprio exige plano pago.
+
+1. Faça login uma vez: `npx eas-cli@latest login`.
+2. Garanta que `apps/app/.env.local` tenha as variáveis do Supabase: as `EXPO_PUBLIC_*` são embutidas no build, na sua máquina.
+3. Publique:
+
+```bash
+npm run deploy:web          # exporta e publica em produção
+npm run deploy:web:preview  # exporta e publica uma prévia com URL própria
+```
+
+Na primeira vez o CLI pede para escolher o subdomínio. No Supabase, configure **Authentication → URL Configuration → Site URL** com o endereço publicado.
+
 ### Android sem fila do EAS
 
 Para criar e instalar o development build no emulador, com o Android SDK configurado:

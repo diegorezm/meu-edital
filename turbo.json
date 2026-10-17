@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalEnv": ["EXPO_PUBLIC_SUPABASE_URL", "EXPO_PUBLIC_SUPABASE_KEY"],
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build:web": {
+      "dependsOn": ["^typecheck"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {},
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^typecheck"]
+    }
+  }
+}

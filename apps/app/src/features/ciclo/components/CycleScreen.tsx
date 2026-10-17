@@ -363,6 +363,17 @@ export default function CycleScreen() {
     );
 
   const detail = items.find((item) => item.id === selectedId) || next;
+  const legend = subjects
+    .map((subject) => {
+      const own = items.filter((item) => item.subjectId === subject.id);
+      return {
+        subjectId: subject.id,
+        blocks: own.length,
+        minutes: own.reduce((sum, item) => sum + item.minutes, 0),
+      };
+    })
+    .filter((row) => row.blocks > 0)
+    .sort((a, b) => b.minutes - a.minutes);
   const detailIndex = detail
     ? items.findIndex((item) => item.id === detail.id)
     : -1;
@@ -423,37 +434,54 @@ export default function CycleScreen() {
                 value={`${formatDuration(state.lapMinutes)} de ${formatDuration(weeklyMinutes)}`}
               />
             </View>
-            <View style={s.table}>
+            <View style={s.legend}>
+              {legend.map((row) => (
+                <View key={row.subjectId} style={s.legendItem}>
+                  <View
+                    style={[
+                      s.legendDot,
+                      { backgroundColor: colorOf(row.subjectId) },
+                    ]}
+                  />
+                  <Text style={s.legendName} numberOfLines={1}>
+                    {subjectName(row.subjectId)}
+                  </Text>
+                  <Text style={s.legendMeta}>
+                    {row.blocks}× · {formatDuration(row.minutes)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View style={s.grid}>
               {items.map((item, index) => {
                 const active = item.id === detail?.id;
                 const current = index === state.position;
+                const done = index < state.position;
                 return (
                   <Pressable
                     key={item.id}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
-                    accessibilityLabel={`Bloco ${index + 1}: ${subjectName(item.subjectId)}`}
+                    accessibilityLabel={`Bloco ${index + 1}: ${subjectName(item.subjectId)}${current ? ", próximo" : done ? ", feito nesta volta" : ""}`}
                     onPress={() => setSelectedId(item.id)}
                     style={[
-                      s.row,
-                      index > 0 && s.rowBorder,
-                      active && s.rowActive,
+                      s.tile,
+                      { backgroundColor: colorOf(item.subjectId) },
+                      done && s.tileDone,
+                      current && s.tileCurrent,
+                      active && s.tileActive,
                     ]}
                   >
-                    <Text style={s.rowNumber}>
-                      {String(index + 1).padStart(2, "0")}
-                    </Text>
-                    <View
-                      style={[
-                        s.rowDot,
-                        { backgroundColor: colorOf(item.subjectId) },
-                      ]}
-                    />
-                    <Text style={s.rowName} numberOfLines={1}>
+                    <View style={s.tileTop}>
+                      <Text style={s.tileNumber}>
+                        {String(index + 1).padStart(2, "0")}
+                      </Text>
+                      {done ? <Text style={s.tileCheck}>✓</Text> : null}
+                    </View>
+                    <Text style={s.tileName} numberOfLines={2}>
                       {subjectName(item.subjectId)}
                     </Text>
-                    {current && <Text style={s.rowTag}>próximo</Text>}
-                    <Text style={s.rowMinutes}>
+                    <Text style={s.tileMinutes}>
                       {formatDuration(item.minutes)}
                     </Text>
                   </Pressable>
@@ -790,45 +818,56 @@ const s = StyleSheet.create({
     fontWeight: "800",
     marginTop: 4,
   },
-  table: {
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 14,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 18,
-    overflow: "hidden",
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    height: 46,
-    paddingHorizontal: 16,
-  },
-  rowBorder: { borderTopWidth: 1, borderTopColor: palette.line },
-  rowActive: { backgroundColor: "#EDE9FF" },
-  rowNumber: {
-    color: palette.muted,
-    fontSize: 12,
-    fontWeight: "800",
-    width: 22,
-  },
-  rowDot: { width: 12, height: 12, borderRadius: 4 },
-  rowName: { color: palette.text, fontSize: 13, fontWeight: "700", flex: 1 },
-  rowTag: {
+  legendDot: { width: 9, height: 9, borderRadius: 3 },
+  legendName: {
     color: palette.text,
-    fontSize: 10,
-    fontWeight: "800",
-    backgroundColor: "#DDE7FB",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  rowMinutes: {
-    color: palette.muted,
     fontSize: 12,
-    width: 48,
-    textAlign: "right",
+    fontWeight: "700",
+    maxWidth: 160,
   },
+  legendMeta: { color: palette.muted, fontSize: 11 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  tile: {
+    flexGrow: 1,
+    flexBasis: 110,
+    maxWidth: 160,
+    height: 82,
+    borderRadius: 14,
+    padding: 10,
+    justifyContent: "space-between",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  tileDone: { opacity: 0.45 },
+  tileCurrent: { borderColor: palette.dark },
+  tileActive: { borderColor: "#7A64D0" },
+  tileTop: { flexDirection: "row", justifyContent: "space-between" },
+  tileNumber: { color: "#59636A", fontSize: 10, fontWeight: "800" },
+  tileCheck: { color: palette.text, fontSize: 11, fontWeight: "800" },
+  tileName: {
+    color: palette.text,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+  },
+  tileMinutes: { color: "#59636A", fontSize: 11 },
   panel: {
     backgroundColor: "#DDE7FB",
     borderRadius: 22,

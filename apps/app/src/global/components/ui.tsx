@@ -63,12 +63,15 @@ export function Button({
   secondary = false,
   danger = false,
   disabled = false,
+  full = false,
 }: {
   title: string;
   onPress: () => void;
   secondary?: boolean;
   danger?: boolean;
   disabled?: boolean;
+  /** Ocupa toda a largura disponível. */
+  full?: boolean;
 }) {
   return (
     <Pressable
@@ -79,6 +82,7 @@ export function Button({
         s.button,
         secondary && s.buttonSecondary,
         danger && s.buttonDanger,
+        full && s.buttonFull,
         (pressed || disabled) && s.pressed,
       ]}
     >
@@ -96,13 +100,19 @@ export function Field({
   placeholder,
   multiline = false,
   keyboardType,
+  autoComplete,
+  autoFocus,
+  onSubmitEditing,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
   multiline?: boolean;
-  keyboardType?: "numeric" | "default";
+  keyboardType?: "numeric" | "default" | "email-address";
+  autoComplete?: "email" | "one-time-code" | "off";
+  autoFocus?: boolean;
+  onSubmitEditing?: () => void;
 }) {
   return (
     <View style={s.field}>
@@ -114,6 +124,12 @@ export function Field({
         placeholderTextColor={palette.muted}
         multiline={multiline}
         keyboardType={keyboardType}
+        autoComplete={autoComplete}
+        autoCapitalize={keyboardType === "email-address" ? "none" : undefined}
+        autoCorrect={keyboardType === "email-address" ? false : undefined}
+        autoFocus={autoFocus}
+        onSubmitEditing={onSubmitEditing}
+        submitBehavior={onSubmitEditing ? "blurAndSubmit" : undefined}
         style={[s.input, multiline && s.multiline]}
       />
     </View>
@@ -494,6 +510,7 @@ const s = StyleSheet.create({
   },
   buttonSecondaryText: { color: palette.text },
   buttonDanger: { backgroundColor: palette.danger },
+  buttonFull: { alignSelf: "stretch" },
   pressed: { opacity: 0.65 },
   field: { marginBottom: 18 },
   label: {

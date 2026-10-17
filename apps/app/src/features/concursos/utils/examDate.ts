@@ -8,7 +8,8 @@ export function parseExamDate(value: string): string | null {
     date.getFullYear() !== Number(year) ||
     date.getMonth() !== Number(month) - 1 ||
     date.getDate() !== Number(day)
-  ) return null;
+  )
+    return null;
   return `${year}-${month}-${day}`;
 }
 

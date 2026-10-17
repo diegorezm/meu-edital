@@ -16,7 +16,9 @@ export default function ExamDateField({ value, onChange }: Props) {
       <Text style={styles.label}>Data da prova (opcional)</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={value ? `Data da prova: ${value}` : "Selecionar data da prova"}
+        accessibilityLabel={
+          value ? `Data da prova: ${value}` : "Selecionar data da prova"
+        }
         onPress={() => setOpen(true)}
         style={styles.input}
       >
@@ -42,14 +44,25 @@ export default function ExamDateField({ value, onChange }: Props) {
             onDismiss={() => setOpen(false)}
           />
           {Platform.OS === "ios" && (
-            <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={styles.done}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setOpen(false)}
+              style={styles.done}
+            >
               <Text style={styles.doneText}>Concluir</Text>
             </Pressable>
           )}
         </View>
       )}
       {!!value && (
-        <Pressable accessibilityRole="button" onPress={() => { onChange(""); setOpen(false); }} style={styles.clear}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            onChange("");
+            setOpen(false);
+          }}
+          style={styles.clear}
+        >
           <Text style={styles.clearText}>Remover data</Text>
         </Pressable>
       )}
@@ -59,8 +72,23 @@ export default function ExamDateField({ value, onChange }: Props) {
 
 const styles = StyleSheet.create({
   field: { marginBottom: 15 },
-  label: { color: palette.text, fontSize: 12, fontWeight: "700", marginBottom: 7 },
-  input: { minHeight: 48, backgroundColor: "#F7F7F2", borderWidth: 1, borderColor: palette.line, borderRadius: 16, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  label: {
+    color: palette.text,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 7,
+  },
+  input: {
+    minHeight: 48,
+    backgroundColor: "#F7F7F2",
+    borderWidth: 1,
+    borderColor: palette.line,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   value: { color: palette.text, fontSize: 15 },
   placeholder: { color: palette.muted, fontSize: 15 },
   icon: { color: palette.muted, fontSize: 20 },

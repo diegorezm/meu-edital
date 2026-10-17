@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   addDays,
+  emptyData,
+  GENERAL_TOPIC,
+  startExam,
   AppData,
   buildCycle,
   createSeed,
@@ -258,4 +261,32 @@ test("agrupa desempenho por assunto", () => {
   assert.equal(row?.accuracy, 60);
   assert.equal(row?.sessions, 2);
   assert.equal(row?.lastStudied, "2026-09-21");
+});
+
+test("startExam cria concurso ativo com assuntos e ciclo do tamanho da meta", () => {
+  const data = startExam(emptyData(), {
+    name: "  TRT  ",
+    hoursPerWeek: 10,
+    subjects: [
+      { name: "Português", topics: ["Crase", " "] },
+      { name: "português" },
+      { name: "Informática" },
+      { name: "  " },
+    ],
+  });
+  const exam = data.exams[0];
+  assert.equal(exam.name, "TRT");
+  assert.equal(data.activeExamId, exam.id);
+  assert.deepEqual(
+    data.subjects.map((item) => item.name),
+    ["Português", "Informática"],
+  );
+  assert.deepEqual(
+    data.topics.map((item) => item.name),
+    ["Crase", GENERAL_TOPIC],
+  );
+  const { items, lapMinutes, next } = cycleState(data, exam.id);
+  assert.ok(items.length > 0);
+  assert.equal(lapMinutes, 600);
+  assert.ok(suggestNextTopic(data, next!.subjectId));
 });

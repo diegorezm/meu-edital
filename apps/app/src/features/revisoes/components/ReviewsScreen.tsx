@@ -7,6 +7,8 @@ import {
   Field,
   Page,
   palette,
+  Section,
+  useLayout,
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
 import { Review, today } from "@meu-edital/domain";
@@ -26,8 +28,10 @@ const formatDate = (value: string) =>
 
 export default function ReviewsScreen() {
   const { data, update } = useStore();
+  const { mobile } = useLayout();
   const [offsets, setOffsets] = useState("");
   const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
   const settingsSheet = useRef<BottomSheetHandle>(null);
   const upcomingSheet = useRef<BottomSheetHandle>(null);
   const reviews = data ? getOpenReviews(data) : [];
@@ -46,6 +50,7 @@ export default function ReviewsScreen() {
     setOffsets("");
     setError("");
     settingsSheet.current?.close();
+    setSaved(true);
   };
   const reviewCard = (item: Review, future = false) => (
     <View key={item.id} style={[s.reviewCard, future && s.futureCard]}>
@@ -68,6 +73,88 @@ export default function ReviewsScreen() {
       </Pressable>
     </View>
   );
+
+  if (!mobile)
+    return (
+      <Page eyebrow="MEMÓRIA" title="Revisões">
+        <View style={s.desktop}>
+          <View style={s.mainColumn}>
+            <View style={[s.hero, s.heroDesktop]}>
+              <View>
+                <Text style={s.heroEyebrow}>NO SEU RITMO</Text>
+                <Text style={s.heroTitle}>
+                  {due.length === 1
+                    ? "revisão espera por você"
+                    : "revisões esperam por você"}
+                </Text>
+                <Text style={s.heroHint}>
+                  Um pouco hoje ajuda a lembrar amanhã. ✦
+                </Text>
+              </View>
+              <Text style={s.heroNumber}>{due.length}</Text>
+            </View>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>Para hoje</Text>
+              <Text style={s.sectionCount}>{due.length} pendentes</Text>
+            </View>
+            {due.length ? (
+              due.map((item) => reviewCard(item))
+            ) : (
+              <View style={s.emptyCard}>
+                <Text style={s.emptyIcon}>☁</Text>
+                <Text style={s.emptyTitle}>Tudo em dia por aqui</Text>
+                <Text style={s.emptyHint}>
+                  Aproveite esse respiro ou siga o seu ciclo.
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={s.sideColumn}>
+            <Section
+              title="Próximas revisões"
+              aside={`${later.length} ${later.length === 1 ? "agendada" : "agendadas"}`}
+            >
+              {later.length ? (
+                later.slice(0, 12).map((item) => reviewCard(item, true))
+              ) : (
+                <Text style={s.sheetEmpty}>
+                  Nenhuma revisão agendada por enquanto.
+                </Text>
+              )}
+              {later.length > 12 && (
+                <Text style={s.sheetIntro}>
+                  + {later.length - 12} depois destas
+                </Text>
+              )}
+            </Section>
+            <Section
+              title="Intervalos de revisão"
+              aside={`${data?.reviewOffsets.join(", ") || "—"} dias`}
+            >
+              <Text style={s.sheetIntro}>
+                Valem para os assuntos estudados daqui para frente.
+              </Text>
+              <Field
+                label="Dias separados por vírgula"
+                value={offsets}
+                onChangeText={(value) => {
+                  setOffsets(value);
+                  setSaved(false);
+                }}
+                placeholder={data?.reviewOffsets.join(", ") || "1, 7, 30"}
+              />
+              {error ? <Text style={s.error}>{error}</Text> : null}
+              {saved ? <Text style={s.saved}>Intervalos salvos.</Text> : null}
+              <Button
+                title="Salvar intervalos"
+                onPress={saveOffsets}
+                disabled={!offsets.trim()}
+              />
+            </Section>
+          </View>
+        </View>
+      </Page>
+    );
 
   return (
     <Page eyebrow="MEMÓRIA" title="Revisões">
@@ -163,6 +250,16 @@ export default function ReviewsScreen() {
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 720, alignSelf: "center" },
+  desktop: { flexDirection: "row", alignItems: "flex-start", gap: 20 },
+  mainColumn: { flex: 3, minWidth: 0 },
+  sideColumn: { flex: 2, minWidth: 0 },
+  heroDesktop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 22,
+  },
+  saved: { color: "#508363", fontSize: 12, marginBottom: 12 },
   hero: {
     backgroundColor: "#DDEBD5",
     borderRadius: 25,

@@ -8,6 +8,7 @@ import {
   Field,
   Page,
   palette,
+  useLayout,
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
 import { SearchablePicker } from "@global/components/shared/SearchablePicker";
@@ -28,12 +29,12 @@ const formatTime = (seconds: number) =>
 export default function StudyScreen() {
   const { cycleId, studyExamId, studySubjectId, studyTopicId, studyType } =
     useLocalSearchParams<{
-    cycleId?: string;
-    studyExamId?: string;
-    studySubjectId?: string;
-    studyTopicId?: string;
-    studyType?: StudyType;
-  }>();
+      cycleId?: string;
+      studyExamId?: string;
+      studySubjectId?: string;
+      studyTopicId?: string;
+      studyType?: StudyType;
+    }>();
   return (
     <StudySession
       key={cycleId || ""}
@@ -60,6 +61,7 @@ function StudySession({
   studyType?: StudyType;
 }) {
   const { data, update } = useStore();
+  const { mobile } = useLayout();
   const cycleItem = data?.cycle.find((item) => item.id === cycleId);
   const examId = studyExamId || data?.activeExamId || "";
   const [selectedSubjectId, setSubjectId] = useState(studySubjectId || "");
@@ -219,111 +221,119 @@ function StudySession({
     );
   };
 
+  const finishArea = (
+    <View style={s.finishArea}>
+      <Text style={s.finishHint}>
+        Terminou por hoje? Seu progresso fica registrado aqui.
+      </Text>
+      <Button
+        title={
+          subjectId && topicId
+            ? "Concluir e registrar  →"
+            : "Escolher o que estudar  →"
+        }
+        onPress={openFinish}
+      />
+    </View>
+  );
+
   return (
     <Page eyebrow="SEU MOMENTO" title="Hora de focar.">
-      <View style={s.content}>
-        <Text style={s.intro}>Respire fundo e siga no seu ritmo. ☁</Text>
+      <View style={[s.content, !mobile && s.contentDesktop]}>
+        <View style={!mobile && s.focusColumn}>
+          <Text style={s.intro}>Respire fundo e siga no seu ritmo. ☁</Text>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Ajustar matéria, assunto e tipo de estudo"
-          onPress={openSettings}
-          style={s.subjectCard}
-        >
-          <View style={s.subjectCardTop}>
-            <Text style={s.cardEyebrow}>
-              {cycleItem
-                ? "DO SEU CICLO"
-                : "ESTUDO LIVRE"}
-            </Text>
-            <Text style={s.editPill}>Editar ↗</Text>
-          </View>
-          <Text style={s.topicTitle} numberOfLines={2}>
-            {topicName}
-          </Text>
-          <Text style={s.subjectName} numberOfLines={1}>
-            {subjectName}
-          </Text>
-          <View style={s.cardTags}>
-            <View style={s.cardTag}>
-              <Text style={s.cardTagText}>{type}</Text>
-            </View>
-            {plannedMinutes > 0 && (
-              <View style={s.cardTag}>
-                <Text style={s.cardTagText}>
-                  {plannedMinutes} min no ciclo
-                </Text>
-              </View>
-            )}
-          </View>
-        </Pressable>
-
-        <View style={s.timerCard}>
-          <Text style={s.timerEyebrow}>SEU TEMPO DE FOCO</Text>
-          <View style={s.timerCircle}>
-            <View style={s.timerCircleInner}>
-              <Text style={s.timerTime}>{formatTime(seconds)}</Text>
-              <Text style={s.timerStatus}>
-                {running
-                  ? "Você está no seu momento ✦"
-                  : seconds
-                    ? "Pausado. Volte quando quiser."
-                    : "Pronto quando você estiver"}
-              </Text>
-            </View>
-          </View>
-          {plannedMinutes > 0 && (
-            <View style={s.progressWrap}>
-              <View style={s.progressTrack}>
-                <View
-                  style={[s.progressFill, { width: `${timerProgress}%` }]}
-                />
-              </View>
-              <Text style={s.progressText}>Meta: {plannedMinutes} min</Text>
-            </View>
-          )}
           <Pressable
             accessibilityRole="button"
-            disabled={!timerReady}
-            onPress={toggleTimer}
-            style={({ pressed }) => [s.timerButton, pressed && s.pressed]}
+            accessibilityLabel="Ajustar matéria, assunto e tipo de estudo"
+            onPress={openSettings}
+            style={s.subjectCard}
           >
-            <Text style={s.timerButtonText}>
-              {running
-                ? "Ⅱ  Pausar"
-                : seconds
-                  ? "▶  Continuar"
-                  : "▶  Começar estudo"}
+            <View style={s.subjectCardTop}>
+              <Text style={s.cardEyebrow}>
+                {cycleItem ? "DO SEU CICLO" : "ESTUDO LIVRE"}
+              </Text>
+              <Text style={s.editPill}>Editar ↗</Text>
+            </View>
+            <Text style={s.topicTitle} numberOfLines={2}>
+              {topicName}
             </Text>
+            <Text style={s.subjectName} numberOfLines={1}>
+              {subjectName}
+            </Text>
+            <View style={s.cardTags}>
+              <View style={s.cardTag}>
+                <Text style={s.cardTagText}>{type}</Text>
+              </View>
+              {plannedMinutes > 0 && (
+                <View style={s.cardTag}>
+                  <Text style={s.cardTagText}>
+                    {plannedMinutes} min no ciclo
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
-          {notificationUnavailable && (
-            <Text style={s.notificationHint}>
-              Permita notificações para acompanhar o tempo na barra do Android.
-            </Text>
-          )}
-          {seconds > 0 && !running && (
+
+          {!mobile && finishArea}
+        </View>
+        <View style={!mobile && s.timerColumn}>
+          <View style={s.timerCard}>
+            <Text style={s.timerEyebrow}>SEU TEMPO DE FOCO</Text>
+            <View style={s.timerCircle}>
+              <View style={s.timerCircleInner}>
+                <Text style={s.timerTime}>{formatTime(seconds)}</Text>
+                <Text style={s.timerStatus}>
+                  {running
+                    ? "Você está no seu momento ✦"
+                    : seconds
+                      ? "Pausado. Volte quando quiser."
+                      : "Pronto quando você estiver"}
+                </Text>
+              </View>
+            </View>
+            {plannedMinutes > 0 && (
+              <View style={s.progressWrap}>
+                <View style={s.progressTrack}>
+                  <View
+                    style={[s.progressFill, { width: `${timerProgress}%` }]}
+                  />
+                </View>
+                <Text style={s.progressText}>Meta: {plannedMinutes} min</Text>
+              </View>
+            )}
             <Pressable
               accessibilityRole="button"
-              onPress={resetTimer}
-              style={s.resetButton}
+              disabled={!timerReady}
+              onPress={toggleTimer}
+              style={({ pressed }) => [s.timerButton, pressed && s.pressed]}
             >
-              <Text style={s.resetText}>Zerar cronômetro</Text>
+              <Text style={s.timerButtonText}>
+                {running
+                  ? "Ⅱ  Pausar"
+                  : seconds
+                    ? "▶  Continuar"
+                    : "▶  Começar estudo"}
+              </Text>
             </Pressable>
-          )}
-        </View>
+            {notificationUnavailable && (
+              <Text style={s.notificationHint}>
+                Permita notificações para acompanhar o tempo na barra do
+                Android.
+              </Text>
+            )}
+            {seconds > 0 && !running && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={resetTimer}
+                style={s.resetButton}
+              >
+                <Text style={s.resetText}>Zerar cronômetro</Text>
+              </Pressable>
+            )}
+          </View>
 
-        <View style={s.finishArea}>
-          <Text style={s.finishHint}>
-            Terminou por hoje? Seu progresso fica registrado aqui.
-          </Text>
-          <Button
-            title={
-              subjectId && topicId
-                ? "Concluir e registrar  →"
-                : "Escolher o que estudar  →"
-            }
-            onPress={openFinish}
-          />
+          {mobile && finishArea}
         </View>
       </View>
 
@@ -532,6 +542,14 @@ function StudySession({
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 680, alignSelf: "center" },
+  contentDesktop: {
+    maxWidth: 1040,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 22,
+  },
+  focusColumn: { flex: 1, minWidth: 0 },
+  timerColumn: { width: 400, flexShrink: 0 },
   intro: { color: palette.muted, fontSize: 13, marginBottom: 21 },
   subjectCard: {
     backgroundColor: "#DDE7FB",

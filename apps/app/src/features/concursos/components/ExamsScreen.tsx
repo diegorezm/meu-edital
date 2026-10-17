@@ -14,6 +14,7 @@ import {
   Field,
   Page,
   palette,
+  useLayout,
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
 import {
@@ -26,18 +27,20 @@ import {
   subjectWeight,
   today,
   Topic,
+  topicsInOrder,
   uid,
 } from "@meu-edital/domain";
 import { normalizeText } from "@global/utils/normalizeText";
 import ExamDateField from "./ExamDateField";
 import { displayExamDate, parseExamDate } from "../utils/examDate";
 
-
 type CatalogView = "list" | "subject" | "topic" | "subjectForm" | "topicForm";
 const colors = ["#DAEACD", "#DAE3F7", "#F8DDD0", "#E9DDF2", "#D7E9EA"];
 
 export default function ExamsScreen() {
   const { data, update } = useStore();
+  const { mobile } = useLayout();
+  const [deskSubjectId, setDeskSubjectId] = useState<string | null>(null);
   const exam = data?.exams.find((item) => item.id === data.activeExamId);
   const subjects = useMemo(
     () => data?.subjects.filter((item) => item.examId === exam?.id) || [],
@@ -372,6 +375,20 @@ export default function ExamsScreen() {
     setConfirm(null);
     setCatalogView("subject");
   };
+  const deskSubject =
+    subjects.find((item) => item.id === deskSubjectId) ||
+    [...subjects].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))[0];
+  const deskTopics =
+    data && deskSubject ? topicsInOrder(data, deskSubject.id) : [];
+  const deskDepth = (item: Topic) => {
+    let depth = 0;
+    let parent = item.parentId;
+    while (parent && depth < 4) {
+      depth += 1;
+      parent = deskTopics.find((topic) => topic.id === parent)?.parentId;
+    }
+    return depth;
+  };
   const topicRow = (item: Topic) => (
     <Pressable
       key={item.id}
@@ -393,170 +410,416 @@ export default function ExamsScreen() {
 
   return (
     <Page eyebrow="SEU OBJETIVO" title="Meus editais">
-      <View style={s.content}>
-        {exam ? (
-          <View style={s.hero}>
-            <View style={s.heroTop}>
-              <Text style={s.heroEyebrow}>CONCURSO ATIVO</Text>
-              <Text style={s.heroProgress}>
-                {data ? examProgress(data, exam.id) : 0}%
+      {mobile ? (
+        <View style={s.content}>
+          {exam ? (
+            <View style={s.hero}>
+              <View style={s.heroTop}>
+                <Text style={s.heroEyebrow}>CONCURSO ATIVO</Text>
+                <Text style={s.heroProgress}>
+                  {data ? examProgress(data, exam.id) : 0}%
+                </Text>
+              </View>
+              <Text style={s.heroTitle} numberOfLines={2}>
+                {exam.name}
               </Text>
-            </View>
-            <Text style={s.heroTitle} numberOfLines={2}>
-              {exam.name}
-            </Text>
-            <Text style={s.heroRole}>{exam.role}</Text>
-            <View style={s.heroMeta}>
-              <Text style={s.heroTag}>{exam.hoursPerWeek}h por semana</Text>
-              {exam.examDate && (
-                <Text style={s.heroTag}>
-                  Prova: {displayExamDate(exam.examDate)}
-                </Text>
-              )}
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                setExamTargetId(exam.id);
-                setExamView("actions");
-                setConfirm(null);
-                examSheet.current?.open();
-              }}
-              style={s.heroAction}
-            >
-              <Text style={s.heroActionText}>Ajustar concurso ›</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <View style={s.emptyHero}>
-            <Text style={s.emptyTitle}>Seu próximo objetivo começa aqui.</Text>
-            <Text style={s.emptyHint}>
-              Cadastre um concurso para organizar matérias e estudos.
-            </Text>
-            <Button
-              title="Criar meu primeiro concurso"
-              onPress={() => openExamForm()}
-            />
-          </View>
-        )}
-
-        {exam && (
-          <>
-            <View style={s.sectionHeader}>
-              <View>
-                <Text style={s.sectionTitle}>Matérias</Text>
-                <Text style={s.sectionSubtitle}>
-                  {subjects.length} no seu edital
-                </Text>
+              <Text style={s.heroRole}>{exam.role}</Text>
+              <View style={s.heroMeta}>
+                <Text style={s.heroTag}>{exam.hoursPerWeek}h por semana</Text>
+                {exam.examDate && (
+                  <Text style={s.heroTag}>
+                    Prova: {displayExamDate(exam.examDate)}
+                  </Text>
+                )}
               </View>
               <Pressable
                 accessibilityRole="button"
-                onPress={() => openCatalog("subjectForm")}
-                style={s.addButton}
-              >
-                <Text style={s.addText}>+ Adicionar</Text>
-              </Pressable>
-            </View>
-            {subjects.slice(0, 6).map((item, index) => {
-              const topics =
-                data?.topics.filter((topic) => topic.subjectId === item.id) ||
-                [];
-              return (
-                <Pressable
-                  key={item.id}
-                  accessibilityRole="button"
-                  onPress={() => openCatalog("subject", item.id)}
-                  style={[
-                    s.subjectCard,
-                    { backgroundColor: colors[index % colors.length] },
-                  ]}
-                >
-                  <View style={s.subjectBadge}>
-                    <Text style={s.subjectBadgeText}>
-                      {String(index + 1).padStart(2, "0")}
-                    </Text>
-                  </View>
-                  <View style={s.subjectBody}>
-                    <Text style={s.subjectTitle} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-                    <Text style={s.subjectMeta}>
-                      {topics.filter((topic) => topic.studied).length} de{" "}
-                      {topics.length} assuntos estudados
-                    </Text>
-                  </View>
-                  <Text style={s.rowArrow}>›</Text>
-                </Pressable>
-              );
-            })}
-            {!subjects.length && (
-              <Text style={s.emptyList}>
-                Adicione sua primeira matéria para montar o edital.
-              </Text>
-            )}
-            {subjects.length > 6 && (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => openCatalog("list")}
-                style={s.allButton}
-              >
-                <Text style={s.allText}>
-                  Ver todas as {subjects.length} matérias →
-                </Text>
-              </Pressable>
-            )}
-          </>
-        )}
-
-        <View style={s.sectionHeader}>
-          <View>
-            <Text style={s.sectionTitle}>Outros concursos</Text>
-            <Text style={s.sectionSubtitle}>Alterne quando quiser</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => openExamForm()}
-            style={s.addButton}
-          >
-            <Text style={s.addText}>+ Novo</Text>
-          </Pressable>
-        </View>
-        {data?.exams
-          .filter((item) => item.id !== exam?.id)
-          .map((item) => (
-            <View key={item.id} style={s.otherCard}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Ativar ${item.name}`}
-                onPress={() =>
-                  update((current) => ({ ...current, activeExamId: item.id }))
-                }
-                style={s.otherMain}
-              >
-                <Text style={s.otherTitle} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                <Text style={s.otherMeta}>
-                  {item.role} · {data ? examProgress(data, item.id) : 0}%
-                  concluído
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Opções de ${item.name}`}
                 onPress={() => {
-                  setExamTargetId(item.id);
+                  setExamTargetId(exam.id);
                   setExamView("actions");
                   setConfirm(null);
                   examSheet.current?.open();
                 }}
-                style={s.moreButton}
+                style={s.heroAction}
               >
-                <Text style={s.moreText}>⋯</Text>
+                <Text style={s.heroActionText}>Ajustar concurso ›</Text>
               </Pressable>
             </View>
-          ))}
-      </View>
+          ) : (
+            <View style={s.emptyHero}>
+              <Text style={s.emptyTitle}>
+                Seu próximo objetivo começa aqui.
+              </Text>
+              <Text style={s.emptyHint}>
+                Cadastre um concurso para organizar matérias e estudos.
+              </Text>
+              <Button
+                title="Criar meu primeiro concurso"
+                onPress={() => openExamForm()}
+              />
+            </View>
+          )}
+
+          {exam && (
+            <>
+              <View style={s.sectionHeader}>
+                <View>
+                  <Text style={s.sectionTitle}>Matérias</Text>
+                  <Text style={s.sectionSubtitle}>
+                    {subjects.length} no seu edital
+                  </Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => openCatalog("subjectForm")}
+                  style={s.addButton}
+                >
+                  <Text style={s.addText}>+ Adicionar</Text>
+                </Pressable>
+              </View>
+              {subjects.slice(0, 6).map((item, index) => {
+                const topics =
+                  data?.topics.filter((topic) => topic.subjectId === item.id) ||
+                  [];
+                return (
+                  <Pressable
+                    key={item.id}
+                    accessibilityRole="button"
+                    onPress={() => openCatalog("subject", item.id)}
+                    style={[
+                      s.subjectCard,
+                      { backgroundColor: colors[index % colors.length] },
+                    ]}
+                  >
+                    <View style={s.subjectBadge}>
+                      <Text style={s.subjectBadgeText}>
+                        {String(index + 1).padStart(2, "0")}
+                      </Text>
+                    </View>
+                    <View style={s.subjectBody}>
+                      <Text style={s.subjectTitle} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                      <Text style={s.subjectMeta}>
+                        {topics.filter((topic) => topic.studied).length} de{" "}
+                        {topics.length} assuntos estudados
+                      </Text>
+                    </View>
+                    <Text style={s.rowArrow}>›</Text>
+                  </Pressable>
+                );
+              })}
+              {!subjects.length && (
+                <Text style={s.emptyList}>
+                  Adicione sua primeira matéria para montar o edital.
+                </Text>
+              )}
+              {subjects.length > 6 && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => openCatalog("list")}
+                  style={s.allButton}
+                >
+                  <Text style={s.allText}>
+                    Ver todas as {subjects.length} matérias →
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+
+          <View style={s.sectionHeader}>
+            <View>
+              <Text style={s.sectionTitle}>Outros concursos</Text>
+              <Text style={s.sectionSubtitle}>Alterne quando quiser</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => openExamForm()}
+              style={s.addButton}
+            >
+              <Text style={s.addText}>+ Novo</Text>
+            </Pressable>
+          </View>
+          {data?.exams
+            .filter((item) => item.id !== exam?.id)
+            .map((item) => (
+              <View key={item.id} style={s.otherCard}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ativar ${item.name}`}
+                  onPress={() =>
+                    update((current) => ({ ...current, activeExamId: item.id }))
+                  }
+                  style={s.otherMain}
+                >
+                  <Text style={s.otherTitle} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  <Text style={s.otherMeta}>
+                    {item.role} · {data ? examProgress(data, item.id) : 0}%
+                    concluído
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Opções de ${item.name}`}
+                  onPress={() => {
+                    setExamTargetId(item.id);
+                    setExamView("actions");
+                    setConfirm(null);
+                    examSheet.current?.open();
+                  }}
+                  style={s.moreButton}
+                >
+                  <Text style={s.moreText}>⋯</Text>
+                </Pressable>
+              </View>
+            ))}
+        </View>
+      ) : (
+        <View style={s.desktop}>
+          <View style={s.desktopSide}>
+            {exam ? (
+              <View style={s.hero}>
+                <View style={s.heroTop}>
+                  <Text style={s.heroEyebrow}>CONCURSO ATIVO</Text>
+                  <Text style={s.heroProgress}>
+                    {data ? examProgress(data, exam.id) : 0}%
+                  </Text>
+                </View>
+                <Text style={s.heroTitle} numberOfLines={2}>
+                  {exam.name}
+                </Text>
+                <Text style={s.heroRole}>{exam.role}</Text>
+                <View style={s.heroMeta}>
+                  <Text style={s.heroTag}>{exam.hoursPerWeek}h por semana</Text>
+                  {exam.examDate && (
+                    <Text style={s.heroTag}>
+                      Prova: {displayExamDate(exam.examDate)}
+                    </Text>
+                  )}
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setExamTargetId(exam.id);
+                    setExamView("actions");
+                    setConfirm(null);
+                    examSheet.current?.open();
+                  }}
+                  style={s.heroAction}
+                >
+                  <Text style={s.heroActionText}>Ajustar concurso ›</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={s.emptyHero}>
+                <Text style={s.emptyTitle}>
+                  Seu próximo objetivo começa aqui.
+                </Text>
+                <Text style={s.emptyHint}>
+                  Cadastre um concurso para organizar matérias e estudos.
+                </Text>
+                <Button
+                  title="Criar meu primeiro concurso"
+                  onPress={() => openExamForm()}
+                />
+              </View>
+            )}
+
+            <View style={s.sectionHeader}>
+              <View>
+                <Text style={s.sectionTitle}>Outros concursos</Text>
+                <Text style={s.sectionSubtitle}>Alterne quando quiser</Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => openExamForm()}
+                style={s.addButton}
+              >
+                <Text style={s.addText}>+ Novo</Text>
+              </Pressable>
+            </View>
+            {data?.exams
+              .filter((item) => item.id !== exam?.id)
+              .map((item) => (
+                <View key={item.id} style={s.otherCard}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ativar ${item.name}`}
+                    onPress={() =>
+                      update((current) => ({
+                        ...current,
+                        activeExamId: item.id,
+                      }))
+                    }
+                    style={s.otherMain}
+                  >
+                    <Text style={s.otherTitle} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                    <Text style={s.otherMeta}>
+                      {item.role} · {data ? examProgress(data, item.id) : 0}%
+                      concluído
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Opções de ${item.name}`}
+                    onPress={() => {
+                      setExamTargetId(item.id);
+                      setExamView("actions");
+                      setConfirm(null);
+                      examSheet.current?.open();
+                    }}
+                    style={s.moreButton}
+                  >
+                    <Text style={s.moreText}>⋯</Text>
+                  </Pressable>
+                </View>
+              ))}
+          </View>
+          {exam && (
+            <View style={s.desktopMain}>
+              <View style={s.panel}>
+                <View style={s.panelHeader}>
+                  <View>
+                    <Text style={s.sectionTitle}>Matérias</Text>
+                    <Text style={s.sectionSubtitle}>
+                      {subjects.length} no seu edital
+                    </Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => openCatalog("subjectForm")}
+                    style={s.addButton}
+                  >
+                    <Text style={s.addText}>+ Matéria</Text>
+                  </Pressable>
+                </View>
+                {[...subjects]
+                  .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+                  .map((item) => {
+                    const topics =
+                      data?.topics.filter(
+                        (topic) => topic.subjectId === item.id,
+                      ) || [];
+                    const active = item.id === deskSubject?.id;
+                    return (
+                      <Pressable
+                        key={item.id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        onPress={() => setDeskSubjectId(item.id)}
+                        style={[s.deskRow, active && s.deskRowActive]}
+                      >
+                        <Text style={s.deskRowTitle} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        <Text style={s.deskRowMeta}>
+                          peso {subjectWeight(item)}
+                        </Text>
+                        <Text style={s.deskRowMeta}>
+                          {topics.filter((topic) => topic.studied).length}/
+                          {topics.length}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                {!subjects.length && (
+                  <Text style={s.emptyList}>
+                    Adicione sua primeira matéria ou importe o edital com a IA
+                    externa.
+                  </Text>
+                )}
+              </View>
+              <View style={[s.panel, s.topicsPanel]}>
+                {deskSubject ? (
+                  <>
+                    <View style={s.panelHeader}>
+                      <View style={s.panelTitleWrap}>
+                        <Text style={s.sectionTitle} numberOfLines={1}>
+                          {deskSubject.name}
+                        </Text>
+                        <Text style={s.sectionSubtitle}>
+                          Peso {subjectWeight(deskSubject)}
+                          {deskSubject.questions &&
+                          deskSubject.pointsPerQuestion
+                            ? ` · ${deskSubject.questions} questões × ${deskSubject.pointsPerQuestion} pontos`
+                            : ""}
+                        </Text>
+                      </View>
+                      <View style={s.panelActions}>
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => openCatalog("subject", deskSubject.id)}
+                          style={s.addButton}
+                        >
+                          <Text style={s.addText}>Editar</Text>
+                        </Pressable>
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => {
+                            setEditingTopicId(null);
+                            setTopicName("");
+                            setParentId(undefined);
+                            openCatalog("topicForm", deskSubject.id);
+                          }}
+                          style={s.addButton}
+                        >
+                          <Text style={s.addText}>+ Assunto</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                    {deskTopics.map((item) => (
+                      <View
+                        key={item.id}
+                        style={[
+                          s.deskTopic,
+                          { paddingLeft: 12 + deskDepth(item) * 18 },
+                        ]}
+                      >
+                        <Pressable
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: item.studied }}
+                          accessibilityLabel={`Marcar ${item.name} como estudado`}
+                          onPress={() => toggleStudied(item.id)}
+                          style={[s.topicMark, item.studied && s.topicMarkDone]}
+                        >
+                          <Text style={s.topicMarkText}>
+                            {item.studied ? "✓" : "○"}
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            openCatalog("topic", deskSubject.id, item.id)
+                          }
+                          style={s.deskTopicName}
+                        >
+                          <Text style={s.topicRowTitle} numberOfLines={2}>
+                            {item.name}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                    {!deskTopics.length && (
+                      <Text style={s.emptyList}>
+                        Esta matéria ainda não tem assuntos.
+                      </Text>
+                    )}
+                  </>
+                ) : (
+                  <Text style={s.emptyList}>
+                    Escolha uma matéria para ver os assuntos.
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
 
       <BottomSheet
         ref={examSheet}
@@ -997,6 +1260,65 @@ export default function ExamsScreen() {
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 760, alignSelf: "center" },
+  desktop: { flexDirection: "row", alignItems: "flex-start", gap: 20 },
+  desktopSide: { width: 320, flexShrink: 0 },
+  desktopMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 16,
+  },
+  panel: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.line,
+    borderRadius: 20,
+    padding: 16,
+  },
+  topicsPanel: { flex: 1.4 },
+  panelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 12,
+  },
+  panelTitleWrap: { flex: 1, minWidth: 0 },
+  panelActions: { flexDirection: "row", gap: 6 },
+  deskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    height: 40,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  deskRowActive: { backgroundColor: "#EDE9FF" },
+  deskRowTitle: {
+    color: palette.text,
+    fontSize: 13,
+    fontWeight: "700",
+    flex: 1,
+  },
+  deskRowMeta: {
+    color: palette.muted,
+    fontSize: 11,
+    minWidth: 34,
+    textAlign: "right",
+  },
+  deskTopic: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 6,
+    paddingRight: 8,
+    borderTopWidth: 1,
+    borderTopColor: palette.line,
+  },
+  deskTopicName: { flex: 1, minWidth: 0, paddingVertical: 4 },
   hero: {
     backgroundColor: "#DDE7FB",
     borderRadius: 25,

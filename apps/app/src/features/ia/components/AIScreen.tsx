@@ -23,6 +23,8 @@ import {
   Field,
   Page,
   palette,
+  Section,
+  useLayout,
 } from "@global/components/ui";
 import { useStore } from "@global/store/store";
 
@@ -53,6 +55,7 @@ const taskCards = [
 export default function AIScreen() {
   const params = useLocalSearchParams<{ task?: string }>();
   const { data, update } = useStore();
+  const { mobile } = useLayout();
   const examId = data?.activeExamId || "";
   const exam = data?.exams.find((item) => item.id === examId);
   const [task, setTask] = useState<TaskId>(
@@ -110,7 +113,9 @@ export default function AIScreen() {
       await update((current) => importSyllabus(current, examId, preview.value));
       setMessage("Matérias e assuntos importados.");
     } else {
-      const selected = preview.value.changes.filter((_, index) => accepted[index]);
+      const selected = preview.value.changes.filter(
+        (_, index) => accepted[index],
+      );
       if (selected.length)
         await update((current) => applyChanges(current, examId, selected));
       setMessage(
@@ -119,105 +124,381 @@ export default function AIScreen() {
           : "Análise lida. Nenhum ajuste aplicado.",
       );
     }
-    importSheet.current?.close(() => {
+    const reset = () => {
       setInput("");
       setPreview(null);
-    });
+    };
+    if (mobile) importSheet.current?.close(reset);
+    else reset();
   };
 
-  return (
-    <Page eyebrow="AGENTES EXTERNOS" title="IA externa">
-      <View style={s.content}>
-        <View style={s.hero}>
-          <Text style={s.heroEyebrow}>A IA SUGERE, VOCÊ DECIDE</Text>
-          <Text style={s.heroTitle}>Leve seu contexto para qualquer IA. ✦</Text>
-          <Text style={s.heroText}>
-            O app prepara um pedido com seus dados de estudo e o formato exato
-            da resposta. Nada é aplicado sem a sua confirmação.
+  const importContent = (
+    <>
+      {preview ? (
+        <View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setPreview(null)}
+            style={s.backButton}
+          >
+            <Text style={s.backText}>← Editar resposta</Text>
+          </Pressable>
+          {preview.task === "importar-edital" ? (
+            <>
+              <View style={s.previewCard}>
+                <Text style={s.previewCount}>
+                  {preview.value.subjects.length}
+                </Text>
+                <Text style={s.previewLabel}>matérias encontradas</Text>
+              </View>
+              {preview.value.subjects.map((item, index) => (
+                <View key={`${item.name}-${index}`} style={s.previewRow}>
+                  <Text style={s.previewRowTitle}>{item.name}</Text>
+                  <Text style={s.previewRowMeta}>
+                    {item.topics.length} assuntos
+                    {item.questions && item.pointsPerQuestion
+                      ? ` · ${item.questions} questões × ${item.pointsPerQuestion} pontos`
+                      : item.weight
+                        ? ` · peso ${item.weight}`
+                        : " · peso padrão"}
+                  </Text>
+                </View>
+              ))}
+            </>
+          ) : (
+            <>
+              <View style={s.previewCard}>
+                <Text style={s.previewSummary}>{preview.value.summary}</Text>
+              </View>
+              {preview.value.recommendations.map((item, index) => (
+                <Text key={index} style={s.recommendation}>
+                  • {item}
+                </Text>
+              ))}
+              <Text style={[s.sectionTitle, s.changesTitle]}>
+                {preview.changes.length
+                  ? "Ajustes sugeridos"
+                  : "Nenhum ajuste sugerido"}
+              </Text>
+              {preview.changes.map((change, index) => (
+                <Pressable
+                  key={index}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: accepted[index] }}
+                  onPress={() =>
+                    setAccepted((current) =>
+                      current.map((value, i) => (i === index ? !value : value)),
+                    )
+                  }
+                  style={[
+                    s.previewRow,
+                    s.changeRow,
+                    !accepted[index] && s.changeOff,
+                  ]}
+                >
+                  <Text style={s.check}>{accepted[index] ? "☑" : "☐"}</Text>
+                  <View style={s.changeText}>
+                    <Text style={s.previewRowTitle}>{change.title}</Text>
+                    <Text style={s.previewRowMeta}>
+                      {change.before} → {change.after}
+                    </Text>
+                    {change.reason ? (
+                      <Text style={s.previewRowMeta}>{change.reason}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              ))}
+            </>
+          )}
+          <View style={s.sheetAction}>
+            <Button
+              title={
+                preview.task === "importar-edital"
+                  ? "Confirmar importação"
+                  : "Aplicar ajustes marcados"
+              }
+              onPress={confirm}
+            />
+          </View>
+        </View>
+      ) : (
+        <View>
+          <Text style={s.sheetIntro}>
+            Cole o JSON recebido. Vamos conferir tudo antes de salvar.
+          </Text>
+          <Field
+            label="Resposta em JSON"
+            value={input}
+            onChangeText={(value) => {
+              setInput(value);
+              setError("");
+            }}
+            multiline
+            placeholder={
+              task === syllabusTask.id
+                ? '{"exam":"...","role":"...","subjects":[...]}'
+                : '{"summary":"...","recommendations":[...],"changes":[...]}'
+            }
+          />
+          {error ? <Text style={s.error}>{error}</Text> : null}
+          <View style={s.sheetAction}>
+            <Button
+              title="Validar e ver prévia  →"
+              onPress={validate}
+              disabled={!input.trim()}
+            />
+          </View>
+        </View>
+      )}
+    </>
+  );
+
+  if (mobile)
+    return (
+      <Page eyebrow="AGENTES EXTERNOS" title="IA externa">
+        <View style={s.content}>
+          <View style={s.hero}>
+            <Text style={s.heroEyebrow}>A IA SUGERE, VOCÊ DECIDE</Text>
+            <Text style={s.heroTitle}>
+              Leve seu contexto para qualquer IA. ✦
+            </Text>
+            <Text style={s.heroText}>
+              O app prepara um pedido com seus dados de estudo e o formato exato
+              da resposta. Nada é aplicado sem a sua confirmação.
+            </Text>
+          </View>
+
+          <Text style={s.sectionTitle}>O que vamos fazer?</Text>
+          <View style={s.modeRow}>
+            {taskCards.map((card) => (
+              <Pressable
+                key={card.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: task === card.id }}
+                onPress={() => changeTask(card.id)}
+                style={[s.modeCard, task === card.id && s.modeActive]}
+              >
+                <Text style={s.modeIcon}>{card.icon}</Text>
+                <Text style={s.modeTitle}>{card.title}</Text>
+                <Text style={s.modeHint}>{card.hint}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View style={s.stepsCard}>
+            <Step
+              number="01"
+              text={`Copie o pedido preparado para ${exam?.name || "seu concurso"}.`}
+            />
+            <Step
+              number="02"
+              text={
+                task === syllabusTask.id
+                  ? "Cole na IA junto com o PDF ou o texto do edital."
+                  : "Cole na IA que você usa e pegue a resposta em JSON."
+              }
+            />
+            <Step
+              number="03"
+              text="Cole a resposta aqui e revise a prévia antes de aplicar."
+            />
+          </View>
+
+          <View style={s.actions}>
+            <Button
+              title="Copiar pedido  ↗"
+              onPress={() =>
+                copy(
+                  prompt,
+                  "Pedido copiado. Agora cole na IA de sua preferência.",
+                )
+              }
+              disabled={!prompt}
+            />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => promptSheet.current?.open()}
+              style={s.secondaryAction}
+            >
+              <Text style={s.secondaryActionText}>Ver o pedido completo</Text>
+            </Pressable>
+            <Button
+              title="Colar resposta da IA  →"
+              secondary
+              onPress={() => {
+                setError("");
+                importSheet.current?.open();
+              }}
+              disabled={!prompt}
+            />
+            <Pressable
+              accessibilityRole="button"
+              disabled={!data || !exam}
+              onPress={() =>
+                data &&
+                exam &&
+                copy(
+                  JSON.stringify(buildStudyContext(data, examId), null, 2),
+                  "Contexto copiado em JSON (versão 1). Use-o com qualquer agente.",
+                )
+              }
+              style={s.secondaryAction}
+            >
+              <Text style={s.secondaryActionText}>
+                Copiar só o contexto (JSON)
+              </Text>
+            </Pressable>
+          </View>
+          {message ? <Text style={s.message}>{message}</Text> : null}
+          {!exam && (
+            <Text style={s.noExam}>
+              Cadastre um concurso em Editais para começar.
+            </Text>
+          )}
+          <Text style={s.privacyNote}>
+            Você escolhe onde usar a IA; nada é enviado automaticamente. A
+            resposta é tratada como dado: o app valida o formato, confere os
+            nomes das matérias e mostra cada alteração antes de salvar.
           </Text>
         </View>
 
-        <Text style={s.sectionTitle}>O que vamos fazer?</Text>
-        <View style={s.modeRow}>
-          {taskCards.map((card) => (
+        <BottomSheet ref={promptSheet} title="Pedido para a IA">
+          <Text style={s.sheetIntro}>
+            Copie este texto e envie à IA de sua preferência.
+          </Text>
+          <Text selectable style={s.promptText}>
+            {prompt || "Selecione um concurso primeiro."}
+          </Text>
+          <View style={s.sheetAction}>
+            <Button
+              title="Copiar pedido"
+              onPress={() => copy(prompt, "Pedido copiado.")}
+              disabled={!prompt}
+            />
+          </View>
+        </BottomSheet>
+
+        <BottomSheet
+          ref={importSheet}
+          contentKey={preview ? "preview" : "input"}
+          title={preview ? "Revise antes de aplicar" : "Resposta da IA"}
+        >
+          {importContent}
+        </BottomSheet>
+      </Page>
+    );
+
+  return (
+    <Page eyebrow="AGENTES EXTERNOS" title="IA externa">
+      <View style={s.desktop}>
+        <View style={s.desktopSide}>
+          <View style={s.hero}>
+            <Text style={s.heroEyebrow}>A IA SUGERE, VOCÊ DECIDE</Text>
+            <Text style={s.heroTitle}>
+              Leve seu contexto para qualquer IA. ✦
+            </Text>
+            <Text style={s.heroText}>
+              O app prepara um pedido com seus dados de estudo e o formato exato
+              da resposta. Nada é aplicado sem a sua confirmação.
+            </Text>
+          </View>
+
+          <Text style={s.sectionTitle}>O que vamos fazer?</Text>
+          <View style={s.modeRow}>
+            {taskCards.map((card) => (
+              <Pressable
+                key={card.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: task === card.id }}
+                onPress={() => changeTask(card.id)}
+                style={[s.modeCard, task === card.id && s.modeActive]}
+              >
+                <Text style={s.modeIcon}>{card.icon}</Text>
+                <Text style={s.modeTitle}>{card.title}</Text>
+                <Text style={s.modeHint}>{card.hint}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View style={s.stepsCard}>
+            <Step
+              number="01"
+              text={`Copie o pedido preparado para ${exam?.name || "seu concurso"}.`}
+            />
+            <Step
+              number="02"
+              text={
+                task === syllabusTask.id
+                  ? "Cole na IA junto com o PDF ou o texto do edital."
+                  : "Cole na IA que você usa e pegue a resposta em JSON."
+              }
+            />
+            <Step
+              number="03"
+              text="Cole a resposta aqui e revise a prévia antes de aplicar."
+            />
+          </View>
+
+          <View style={s.actions}>
+            <Button
+              title="Copiar pedido  ↗"
+              onPress={() =>
+                copy(
+                  prompt,
+                  "Pedido copiado. Agora cole na IA de sua preferência.",
+                )
+              }
+              disabled={!prompt}
+            />
             <Pressable
-              key={card.id}
               accessibilityRole="button"
-              accessibilityState={{ selected: task === card.id }}
-              onPress={() => changeTask(card.id)}
-              style={[s.modeCard, task === card.id && s.modeActive]}
+              onPress={() => promptSheet.current?.open()}
+              style={s.secondaryAction}
             >
-              <Text style={s.modeIcon}>{card.icon}</Text>
-              <Text style={s.modeTitle}>{card.title}</Text>
-              <Text style={s.modeHint}>{card.hint}</Text>
+              <Text style={s.secondaryActionText}>Ver o pedido completo</Text>
             </Pressable>
-          ))}
+            <Pressable
+              accessibilityRole="button"
+              disabled={!data || !exam}
+              onPress={() =>
+                data &&
+                exam &&
+                copy(
+                  JSON.stringify(buildStudyContext(data, examId), null, 2),
+                  "Contexto copiado em JSON (versão 1). Use-o com qualquer agente.",
+                )
+              }
+              style={s.secondaryAction}
+            >
+              <Text style={s.secondaryActionText}>
+                Copiar só o contexto (JSON)
+              </Text>
+            </Pressable>
+          </View>
+          {message ? <Text style={s.message}>{message}</Text> : null}
+          {!exam && (
+            <Text style={s.noExam}>
+              Cadastre um concurso em Editais para começar.
+            </Text>
+          )}
+          <Text style={s.privacyNote}>
+            Você escolhe onde usar a IA; nada é enviado automaticamente. A
+            resposta é tratada como dado: o app valida o formato, confere os
+            nomes das matérias e mostra cada alteração antes de salvar.
+          </Text>
         </View>
-
-        <View style={s.stepsCard}>
-          <Step number="01" text={`Copie o pedido preparado para ${exam?.name || "seu concurso"}.`} />
-          <Step
-            number="02"
-            text={
-              task === syllabusTask.id
-                ? "Cole na IA junto com o PDF ou o texto do edital."
-                : "Cole na IA que você usa e pegue a resposta em JSON."
-            }
-          />
-          <Step number="03" text="Cole a resposta aqui e revise a prévia antes de aplicar." />
-        </View>
-
-        <View style={s.actions}>
-          <Button
-            title="Copiar pedido  ↗"
-            onPress={() => copy(prompt, "Pedido copiado. Agora cole na IA de sua preferência.")}
-            disabled={!prompt}
-          />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => promptSheet.current?.open()}
-            style={s.secondaryAction}
+        <View style={s.desktopMain}>
+          <Section
+            title={preview ? "Revise antes de aplicar" : "Resposta da IA"}
           >
-            <Text style={s.secondaryActionText}>Ver o pedido completo</Text>
-          </Pressable>
-          <Button
-            title="Colar resposta da IA  →"
-            secondary
-            onPress={() => {
-              setError("");
-              importSheet.current?.open();
-            }}
-            disabled={!prompt}
-          />
-          <Pressable
-            accessibilityRole="button"
-            disabled={!data || !exam}
-            onPress={() =>
-              data &&
-              exam &&
-              copy(
-                JSON.stringify(buildStudyContext(data, examId), null, 2),
-                "Contexto copiado em JSON (versão 1). Use-o com qualquer agente.",
-              )
-            }
-            style={s.secondaryAction}
-          >
-            <Text style={s.secondaryActionText}>Copiar só o contexto (JSON)</Text>
-          </Pressable>
+            {importContent}
+          </Section>
         </View>
-        {message ? <Text style={s.message}>{message}</Text> : null}
-        {!exam && (
-          <Text style={s.noExam}>Cadastre um concurso em Editais para começar.</Text>
-        )}
-        <Text style={s.privacyNote}>
-          Você escolhe onde usar a IA; nada é enviado automaticamente. A resposta
-          é tratada como dado: o app valida o formato, confere os nomes das
-          matérias e mostra cada alteração antes de salvar.
-        </Text>
       </View>
-
       <BottomSheet ref={promptSheet} title="Pedido para a IA">
-        <Text style={s.sheetIntro}>Copie este texto e envie à IA de sua preferência.</Text>
+        <Text style={s.sheetIntro}>
+          Copie este texto e envie à IA de sua preferência.
+        </Text>
         <Text selectable style={s.promptText}>
           {prompt || "Selecione um concurso primeiro."}
         </Text>
@@ -228,123 +509,6 @@ export default function AIScreen() {
             disabled={!prompt}
           />
         </View>
-      </BottomSheet>
-
-      <BottomSheet
-        ref={importSheet}
-        contentKey={preview ? "preview" : "input"}
-        title={preview ? "Revise antes de aplicar" : "Resposta da IA"}
-      >
-        {preview ? (
-          <View>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setPreview(null)}
-              style={s.backButton}
-            >
-              <Text style={s.backText}>← Editar resposta</Text>
-            </Pressable>
-            {preview.task === "importar-edital" ? (
-              <>
-                <View style={s.previewCard}>
-                  <Text style={s.previewCount}>{preview.value.subjects.length}</Text>
-                  <Text style={s.previewLabel}>matérias encontradas</Text>
-                </View>
-                {preview.value.subjects.map((item, index) => (
-                  <View key={`${item.name}-${index}`} style={s.previewRow}>
-                    <Text style={s.previewRowTitle}>{item.name}</Text>
-                    <Text style={s.previewRowMeta}>
-                      {item.topics.length} assuntos
-                      {item.questions && item.pointsPerQuestion
-                        ? ` · ${item.questions} questões × ${item.pointsPerQuestion} pontos`
-                        : item.weight
-                          ? ` · peso ${item.weight}`
-                          : " · peso padrão"}
-                    </Text>
-                  </View>
-                ))}
-              </>
-            ) : (
-              <>
-                <View style={s.previewCard}>
-                  <Text style={s.previewSummary}>{preview.value.summary}</Text>
-                </View>
-                {preview.value.recommendations.map((item, index) => (
-                  <Text key={index} style={s.recommendation}>
-                    • {item}
-                  </Text>
-                ))}
-                <Text style={[s.sectionTitle, s.changesTitle]}>
-                  {preview.changes.length
-                    ? "Ajustes sugeridos"
-                    : "Nenhum ajuste sugerido"}
-                </Text>
-                {preview.changes.map((change, index) => (
-                  <Pressable
-                    key={index}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: accepted[index] }}
-                    onPress={() =>
-                      setAccepted((current) =>
-                        current.map((value, i) => (i === index ? !value : value)),
-                      )
-                    }
-                    style={[s.previewRow, s.changeRow, !accepted[index] && s.changeOff]}
-                  >
-                    <Text style={s.check}>{accepted[index] ? "☑" : "☐"}</Text>
-                    <View style={s.changeText}>
-                      <Text style={s.previewRowTitle}>{change.title}</Text>
-                      <Text style={s.previewRowMeta}>
-                        {change.before} → {change.after}
-                      </Text>
-                      {change.reason ? (
-                        <Text style={s.previewRowMeta}>{change.reason}</Text>
-                      ) : null}
-                    </View>
-                  </Pressable>
-                ))}
-              </>
-            )}
-            <View style={s.sheetAction}>
-              <Button
-                title={
-                  preview.task === "importar-edital"
-                    ? "Confirmar importação"
-                    : "Aplicar ajustes marcados"
-                }
-                onPress={confirm}
-              />
-            </View>
-          </View>
-        ) : (
-          <View>
-            <Text style={s.sheetIntro}>
-              Cole o JSON recebido. Vamos conferir tudo antes de salvar.
-            </Text>
-            <Field
-              label="Resposta em JSON"
-              value={input}
-              onChangeText={(value) => {
-                setInput(value);
-                setError("");
-              }}
-              multiline
-              placeholder={
-                task === syllabusTask.id
-                  ? '{"exam":"...","role":"...","subjects":[...]}'
-                  : '{"summary":"...","recommendations":[...],"changes":[...]}'
-              }
-            />
-            {error ? <Text style={s.error}>{error}</Text> : null}
-            <View style={s.sheetAction}>
-              <Button
-                title="Validar e ver prévia  →"
-                onPress={validate}
-                disabled={!input.trim()}
-              />
-            </View>
-          </View>
-        )}
       </BottomSheet>
     </Page>
   );
@@ -361,6 +525,9 @@ function Step({ number, text }: { number: string; text: string }) {
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 720, alignSelf: "center" },
+  desktop: { flexDirection: "row", alignItems: "flex-start", gap: 22 },
+  desktopSide: { width: 400, flexShrink: 0 },
+  desktopMain: { flex: 1, minWidth: 0 },
   hero: {
     backgroundColor: "#DFD6FA",
     borderRadius: 25,

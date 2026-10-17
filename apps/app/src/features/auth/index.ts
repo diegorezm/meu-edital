@@ -1,1 +1,1 @@
-export { default } from "./components/LoginScreen";
+export { default } from "./components/PublicScreen";

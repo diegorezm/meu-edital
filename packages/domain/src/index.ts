@@ -6,3 +6,4 @@ export * from "./topics";
 export * from "./tracking";
 export * from "./seed";
 export * from "./catalog";
+export * from "./onboarding";

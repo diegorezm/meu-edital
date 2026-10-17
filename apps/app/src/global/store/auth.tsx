@@ -7,10 +7,17 @@ type Auth = {
   enabled: boolean;
   status: "loading" | "signedOut" | "signedIn";
   session: Session | null;
-  sendCode: (email: string) => Promise<void>;
+  /** `signUp` cria a conta se o e-mail for novo; `signIn` só aceita contas existentes. */
+  sendCode: (email: string, mode: "signIn" | "signUp") => Promise<void>;
   verifyCode: (email: string, code: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
+
+export class AccountNotFoundError extends Error {
+  constructor() {
+    super("Não encontramos uma conta com esse e-mail.");
+  }
+}
 
 const Context = createContext<Auth | null>(null);
 
@@ -34,12 +41,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     enabled: Boolean(supabase),
     status: loading ? "loading" : session ? "signedIn" : "signedOut",
     session,
-    async sendCode(email) {
+    async sendCode(email, mode) {
       const { error } = await supabase!.auth.signInWithOtp({
         email: email.trim(),
-        options: { shouldCreateUser: true },
+        options: { shouldCreateUser: mode === "signUp" },
       });
-      if (error) throw new Error(error.message);
+      if (!error) return;
+      // Sem permissão para criar conta, o Supabase recusa e-mails desconhecidos.
+      if (
+        mode === "signIn" &&
+        /signups? not allowed|not found/i.test(error.message)
+      )
+        throw new AccountNotFoundError();
+      throw new Error(error.message);
     },
     async verifyCode(email, code) {
       const { error } = await supabase!.auth.verifyOtp({

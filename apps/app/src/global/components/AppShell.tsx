@@ -6,6 +6,7 @@ import { palette } from "@global/constants/colors";
 import { useAuth } from "@global/store/auth";
 import { useStore } from "@global/store/store";
 import { normalizeText } from "@global/utils/normalizeText";
+import { Brand } from "./Brand";
 import { BottomSheet, BottomSheetHandle, Button, useLayout } from "./ui";
 
 type NavLink = { href: "/" | `/${string}`; label: string; icon: string };
@@ -294,19 +295,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Brand() {
-  return (
-    <View style={s.brandRow}>
-      <View style={s.brandMark}>
-        <Text style={s.brandMarkText}>m.</Text>
-      </View>
-      <Text style={s.logo}>
-        meu edital<Text style={s.logoDot}>.</Text>
-      </Text>
-    </View>
-  );
-}
-
 /** Link com asChild não aceita estilo em função; o hover fica em estado local. */
 function DesktopNavItem({ link, active }: { link: NavLink; active: boolean }) {
   const [hovered, setHovered] = useState(false);
@@ -419,28 +407,6 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: palette.bg },
   contentArea: { flex: 1, minHeight: 0 },
 
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  brandMark: {
-    width: 32,
-    height: 32,
-    borderRadius: 11,
-    backgroundColor: palette.lavender,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandMarkText: {
-    color: palette.dark,
-    fontSize: 16,
-    fontWeight: "900",
-    letterSpacing: -1.5,
-  },
-  logo: {
-    color: palette.text,
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: -0.8,
-  },
-  logoDot: { color: "#8B75DB" },
 
   desktopFrame: { flex: 1, flexDirection: "row" },
   sidebar: {

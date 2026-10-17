@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Href, Link, router, usePathname } from "expo-router";
+import { Href, Link, router } from "expo-router";
 import {
   Animated,
   Modal,
@@ -11,425 +11,16 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { useAuth } from "@global/store/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "@global/store/store";
 import { palette } from "@global/constants/colors";
-import { normalizeText } from "@global/utils/normalizeText";
 
 export { palette } from "@global/constants/colors";
 
-const primaryLinks = [
-  { href: "/", label: "Início", icon: "⌂" },
-  { href: "/ciclo", label: "Ciclo", icon: "◌" },
-  { href: "/estudar", label: "Estudar", icon: "▷" },
-  { href: "/semana", label: "Semana", icon: "▦" },
-] as const;
-
-const moreGroups = [
-  {
-    title: "Acompanhar",
-    links: [
-      { href: "/revisoes", label: "Revisões", icon: "↻" },
-    ],
-  },
-  {
-    title: "Organizar",
-    links: [
-      { href: "/concursos", label: "Editais", icon: "▤" },
-      { href: "/ia", label: "IA externa", icon: "✦" },
-    ],
-  },
-] as const;
-
-export function AppShell({ children }: { children: React.ReactNode }) {
-  const path = usePathname();
+/** Pontos de quebra: celular abaixo de 760px; colunas largas a partir de 1100px. */
+export function useLayout() {
   const { width } = useWindowDimensions();
-  const mobile = width < 760;
-  const { data, update } = useStore();
-  const exam = data?.exams.find((e) => e.id === data.activeExamId);
-  const examSheet = useRef<BottomSheetHandle>(null);
-  const moreSheet = useRef<BottomSheetHandle>(null);
-  const secondaryActive = moreGroups.some((group) =>
-    group.links.some((link) => link.href === path),
-  );
-  const [moreExpanded, setMoreExpanded] = useState(secondaryActive);
-  const [examQuery, setExamQuery] = useState("");
-  const [visibleExams, setVisibleExams] = useState(20);
-  const filteredExams = (data?.exams || [])
-    .filter((item) =>
-      normalizeText(item.name).includes(normalizeText(examQuery.trim())),
-    )
-    .sort((a, b) =>
-      a.id === data?.activeExamId
-        ? -1
-        : b.id === data?.activeExamId
-          ? 1
-          : a.name.localeCompare(b.name, "pt-BR"),
-    );
-  const openExamSelector = () => {
-    setExamQuery("");
-    setVisibleExams(20);
-    examSheet.current?.open();
-  };
-  const selectExam = (id: string) => {
-    if (id === data?.activeExamId) {
-      examSheet.current?.close();
-      return;
-    }
-    examSheet.current?.close(() => {
-      update((current) => ({ ...current, activeExamId: id })).then(() => {
-        if (path === "/estudar") router.replace("/");
-      });
-    });
-  };
-  return (
-    <SafeAreaView style={s.root}>
-      <View style={[s.frame, mobile && s.mobileFrame]}>
-        {!mobile && (
-          <View style={s.sidebar}>
-            <View style={s.brandRow}>
-              <View style={s.brandMark}>
-                <Text style={s.brandMarkText}>m.</Text>
-              </View>
-              <Text style={s.logo}>
-                meu edital<Text style={s.logoDot}>.</Text>
-              </Text>
-            </View>
-            <Text style={s.tagline}>Seu estudo no seu tempo ☁</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Trocar concurso. Atual: ${exam?.name || "nenhum"}`}
-              onPress={openExamSelector}
-              style={s.desktopExamSelector}
-            >
-              <View style={s.examSelectorText}>
-                <Text style={s.examSelectorCaption}>CONCURSO ATIVO</Text>
-                <Text style={s.examSelectorName} numberOfLines={1}>
-                  {exam?.name || "Escolher concurso"}
-                </Text>
-              </View>
-              <Text style={s.examSelectorArrow}>⌄</Text>
-            </Pressable>
-            <View style={s.nav}>
-              {primaryLinks.map(({ href, label, icon }) => (
-                <Link key={href} href={href} asChild>
-                  <Pressable
-                    accessibilityRole="link"
-                    accessibilityState={{ selected: path === href }}
-                    style={StyleSheet.flatten([
-                      s.navItem,
-                      path === href && s.navActive,
-                    ])}
-                  >
-                    <Text style={[s.navIcon, path === href && s.navTextActive]}>
-                      {icon}
-                    </Text>
-                    <Text style={[s.navText, path === href && s.navTextActive]}>
-                      {label}
-                    </Text>
-                  </Pressable>
-                </Link>
-              ))}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{
-                  expanded: moreExpanded,
-                  selected: secondaryActive,
-                }}
-                onPress={() => setMoreExpanded((expanded) => !expanded)}
-                style={[s.navItem, secondaryActive && s.navActive]}
-              >
-                <Text style={[s.navIcon, secondaryActive && s.navTextActive]}>
-                  ⋯
-                </Text>
-                <Text
-                  style={[
-                    s.navText,
-                    secondaryActive && s.navTextActive,
-                    s.navMoreText,
-                  ]}
-                >
-                  Mais
-                </Text>
-                <Text
-                  style={[s.navChevron, secondaryActive && s.navTextActive]}
-                >
-                  {moreExpanded ? "⌃" : "⌄"}
-                </Text>
-              </Pressable>
-              {moreExpanded &&
-                moreGroups.map((group) => (
-                  <View key={group.title} style={s.navSubgroup}>
-                    <Text style={s.navGroupTitle}>{group.title}</Text>
-                    {group.links.map(({ href, label, icon }) => (
-                      <Link key={href} href={href} asChild>
-                        <Pressable
-                          accessibilityRole="link"
-                          accessibilityState={{ selected: path === href }}
-                          style={[
-                            s.navItem,
-                            s.navSubitem,
-                            path === href && s.navActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              s.navIcon,
-                              path === href && s.navTextActive,
-                            ]}
-                          >
-                            {icon}
-                          </Text>
-                          <Text
-                            style={[
-                              s.navText,
-                              path === href && s.navTextActive,
-                            ]}
-                          >
-                            {label}
-                          </Text>
-                        </Pressable>
-                      </Link>
-                    ))}
-                  </View>
-                ))}
-            </View>
-            <View style={s.sidebarFooter}>
-              <AccountStatus />
-            </View>
-          </View>
-        )}
-        <View style={s.main}>
-          {mobile && (
-            <View style={s.mobileTop}>
-              <View style={s.brandRow}>
-                <View style={s.brandMark}>
-                  <Text style={s.brandMarkText}>m.</Text>
-                </View>
-                <Text style={s.logo}>
-                  meu edital<Text style={s.logoDot}>.</Text>
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Trocar concurso. Atual: ${exam?.name || "nenhum"}`}
-                onPress={openExamSelector}
-                style={s.mobileExamSelector}
-              >
-                <Text style={s.mobileExamName} numberOfLines={1}>
-                  {exam?.name || "Concurso"}
-                </Text>
-                <Text style={s.mobileExamArrow}>⌄</Text>
-              </Pressable>
-            </View>
-          )}
-          <View style={s.contentArea}>{children}</View>
-          {mobile && (
-            <View style={s.bottomNavWrap}>
-              <View style={s.bottomNav}>
-                {primaryLinks.map(({ href, label, icon }) => (
-                  <Link key={href} href={href} asChild>
-                    <Pressable
-                      accessibilityRole="link"
-                      accessibilityLabel={label}
-                      accessibilityState={{ selected: path === href }}
-                      style={StyleSheet.flatten([
-                        s.mobileNavItem,
-                        path === href && s.mobileNavActive,
-                      ])}
-                    >
-                      <Text
-                        style={[
-                          s.mobileNavIcon,
-                          path === href && s.mobileNavIconActive,
-                        ]}
-                      >
-                        {icon}
-                      </Text>
-                      <Text
-                        style={[
-                          s.mobileNavText,
-                          path === href && s.mobileNavTextActive,
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  </Link>
-                ))}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Mais opções"
-                  accessibilityState={{ selected: secondaryActive }}
-                  onPress={() => moreSheet.current?.open()}
-                  style={[
-                    s.mobileNavItem,
-                    secondaryActive && s.mobileNavActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      s.mobileNavIcon,
-                      secondaryActive && s.mobileNavIconActive,
-                    ]}
-                  >
-                    ⋯
-                  </Text>
-                  <Text
-                    style={[
-                      s.mobileNavText,
-                      secondaryActive && s.mobileNavTextActive,
-                    ]}
-                  >
-                    Mais
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
-        </View>
-      </View>
-      <BottomSheet ref={examSheet} title="Trocar concurso">
-        <Text style={s.examSheetIntro}>
-          Escolha o edital em que você quer focar agora.
-        </Text>
-        {(data?.exams.length || 0) > 6 && (
-          <TextInput
-            value={examQuery}
-            onChangeText={(value) => {
-              setExamQuery(value);
-              setVisibleExams(20);
-            }}
-            placeholder="Buscar concurso"
-            placeholderTextColor={palette.muted}
-            accessibilityLabel="Buscar concurso"
-            style={s.examSearch}
-          />
-        )}
-        {filteredExams.slice(0, visibleExams).map((item) => {
-          const active = item.id === data?.activeExamId;
-          return (
-            <Pressable
-              key={item.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              onPress={() => selectExam(item.id)}
-              style={[s.examOption, active && s.examOptionActive]}
-            >
-              <View
-                style={[s.examOptionIcon, active && s.examOptionIconActive]}
-              >
-                <Text style={s.examOptionInitial}>
-                  {item.name.slice(0, 1).toUpperCase()}
-                </Text>
-              </View>
-              <View style={s.examOptionText}>
-                <Text style={s.examOptionName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={s.examOptionRole} numberOfLines={1}>
-                  {item.role}
-                </Text>
-              </View>
-              <Text style={s.examOptionCheck}>{active ? "✓" : "›"}</Text>
-            </Pressable>
-          );
-        })}
-        {!filteredExams.length && (
-          <Text style={s.examEmpty}>
-            {data?.exams.length
-              ? "Nenhum concurso encontrado."
-              : "Você ainda não cadastrou um concurso."}
-          </Text>
-        )}
-        {filteredExams.length > visibleExams && (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setVisibleExams((count) => count + 20)}
-            style={s.examMore}
-          >
-            <Text style={s.examMoreText}>Mostrar mais concursos</Text>
-          </Pressable>
-        )}
-        <View style={s.examManage}>
-          <Button
-            title="Gerenciar editais  →"
-            secondary
-            onPress={() =>
-              examSheet.current?.close(() => router.push("/concursos"))
-            }
-          />
-        </View>
-      </BottomSheet>
-      <BottomSheet ref={moreSheet} title="Mais opções">
-        {moreGroups.map((group) => (
-          <View key={group.title} style={s.moreGroup}>
-            <Text style={s.moreGroupTitle}>{group.title}</Text>
-            {group.links.map(({ href, label, icon }) => (
-              <Pressable
-                key={href}
-                accessibilityRole="link"
-                accessibilityState={{ selected: path === href }}
-                onPress={() =>
-                  moreSheet.current?.close(() => router.push(href))
-                }
-                style={[s.moreOption, path === href && s.moreOptionActive]}
-              >
-                <Text style={s.moreOptionIcon}>{icon}</Text>
-                <Text style={s.moreOptionLabel}>{label}</Text>
-                <Text style={s.moreOptionArrow}>›</Text>
-              </Pressable>
-            ))}
-          </View>
-        ))}
-        <AccountStatus />
-      </BottomSheet>
-    </SafeAreaView>
-  );
-}
-
-/** Estado da sincronização e saída da conta; não aparece no modo local. */
-function AccountStatus() {
-  const { enabled, session, signOut } = useAuth();
-  const { sync, syncNow } = useStore();
-  if (!enabled || !session) return null;
-  const label = sync.syncing
-    ? "Sincronizando..."
-    : sync.error
-      ? sync.error
-      : sync.pending
-        ? `${sync.pending} ${sync.pending === 1 ? "alteração pendente" : "alterações pendentes"}`
-        : "Tudo sincronizado";
-  return (
-    <View style={s.account}>
-      <Text style={s.accountEmail} numberOfLines={1}>
-        {session.user.email}
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Sincronizar agora"
-        onPress={syncNow}
-      >
-        <Text
-          style={[s.accountStatus, sync.error && s.accountError]}
-          numberOfLines={3}
-        >
-          {label}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        onPress={signOut}
-        style={s.accountSignOut}
-      >
-        <Text style={s.accountSignOutText}>Sair da conta</Text>
-      </Pressable>
-    </View>
-  );
+  return { mobile: width < 760, wide: width >= 1100 };
 }
 
 export function Page({
@@ -443,8 +34,7 @@ export function Page({
   children: React.ReactNode;
   action?: React.ReactNode;
 }) {
-  const { width } = useWindowDimensions();
-  const mobile = width < 760;
+  const { mobile } = useLayout();
   const { data, error } = useStore();
   return (
     <ScrollView
@@ -591,28 +181,29 @@ export const BottomSheet = React.forwardRef<
 >(function BottomSheet({ title, children, contentKey }, ref) {
   const [visible, setVisible] = useState(false);
   const { height } = useWindowDimensions();
+  const { mobile } = useLayout();
   const insets = useSafeAreaInsets();
-  const [slideY] = useState(() => new Animated.Value(height));
+  const [progress] = useState(() => new Animated.Value(0));
   const closing = useRef(false);
   useEffect(() => {
     if (!visible) return;
-    Animated.timing(slideY, {
-      toValue: 0,
-      duration: 260,
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: mobile ? 260 : 160,
       useNativeDriver: true,
     }).start();
-    return () => slideY.stopAnimation();
-  }, [visible, slideY]);
+    return () => progress.stopAnimation();
+  }, [visible, progress, mobile]);
   const open = () => {
-    slideY.setValue(height);
+    progress.setValue(0);
     setVisible(true);
   };
   const close = (afterClose?: () => void) => {
     if (closing.current || !visible) return;
     closing.current = true;
-    Animated.timing(slideY, {
-      toValue: height,
-      duration: 210,
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: mobile ? 210 : 120,
       useNativeDriver: true,
     }).start(({ finished }) => {
       closing.current = false;
@@ -633,24 +224,49 @@ export const BottomSheet = React.forwardRef<
       navigationBarTranslucent
       onRequestClose={() => close()}
     >
-      <View style={s.drawerOverlay}>
+      <View style={[s.drawerOverlay, !mobile && s.dialogOverlay]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Fechar painel"
           onPress={() => close()}
           style={s.drawerBackdrop}
-        />
+        >
+          <Animated.View style={[s.backdropFill, { opacity: progress }]} />
+        </Pressable>
         <Animated.View
           style={[
             s.drawerPanel,
-            {
-              maxHeight: height * 0.82,
-              paddingBottom: Math.max(insets.bottom, 18),
-              transform: [{ translateY: slideY }],
-            },
+            mobile
+              ? {
+                  maxHeight: height * 0.82,
+                  paddingBottom: Math.max(insets.bottom, 18),
+                  transform: [
+                    {
+                      translateY: progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [height, 0],
+                      }),
+                    },
+                  ],
+                }
+              : [
+                  s.dialogPanel,
+                  {
+                    maxHeight: height * 0.86,
+                    opacity: progress,
+                    transform: [
+                      {
+                        translateY: progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [12, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ],
           ]}
         >
-          <View style={s.drawerHandle} />
+          {mobile && <View style={s.drawerHandle} />}
           <View style={s.drawerHeading}>
             <Text style={s.drawerTitle}>{title}</Text>
             <Pressable
@@ -731,113 +347,6 @@ export function InlineLink({ href, label }: { href: string; label: string }) {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: palette.bg },
-  frame: {
-    flex: 1,
-    flexDirection: "row",
-    width: "100%",
-    maxWidth: 1500,
-    alignSelf: "center",
-  },
-  mobileFrame: { flexDirection: "column" },
-  sidebar: {
-    width: 252,
-    padding: 26,
-    backgroundColor: "#FFFFFF",
-    borderRightWidth: 1,
-    borderRightColor: palette.line,
-  },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  brandMark: {
-    width: 36,
-    height: 36,
-    borderRadius: 13,
-    backgroundColor: palette.lavender,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandMarkText: {
-    color: palette.dark,
-    fontSize: 18,
-    fontWeight: "900",
-    letterSpacing: -1.5,
-  },
-  logo: {
-    color: palette.text,
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.9,
-  },
-  logoDot: { color: "#8B75DB" },
-  tagline: { color: palette.muted, marginTop: 10, fontSize: 12 },
-  desktopExamSelector: {
-    marginTop: 28,
-    backgroundColor: "#E7F1FF",
-    borderRadius: 17,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 62,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  examSelectorText: { flex: 1, minWidth: 0 },
-  examSelectorCaption: {
-    color: "#657BAD",
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1,
-  },
-  examSelectorName: {
-    color: palette.text,
-    fontSize: 13,
-    fontWeight: "800",
-    marginTop: 5,
-  },
-  examSelectorArrow: { color: palette.text, fontSize: 22, marginLeft: 8 },
-  nav: { marginTop: 32, gap: 7 },
-  sidebarFooter: { marginTop: "auto", paddingTop: 20 },
-  account: {
-    borderTopWidth: 1,
-    borderTopColor: palette.line,
-    paddingTop: 14,
-    marginTop: 8,
-  },
-  accountEmail: { color: palette.text, fontSize: 12, fontWeight: "700" },
-  accountStatus: { color: palette.muted, fontSize: 11, marginTop: 4 },
-  accountError: { color: palette.danger },
-  accountSignOut: { alignSelf: "flex-start", paddingVertical: 8, marginTop: 4 },
-  accountSignOutText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    borderRadius: 15,
-  },
-  navActive: { backgroundColor: "#EDE9FF" },
-  navIcon: {
-    color: palette.muted,
-    fontSize: 21,
-    width: 23,
-    textAlign: "center",
-  },
-  navText: { color: palette.muted, fontSize: 14, fontWeight: "600" },
-  navTextActive: { color: palette.dark },
-  navMoreText: { flex: 1 },
-  navChevron: { color: palette.muted, fontSize: 19 },
-  navSubgroup: { marginLeft: 13, marginTop: 8 },
-  navGroupTitle: {
-    color: palette.muted,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
-    marginLeft: 14,
-    marginBottom: 4,
-  },
-  navSubitem: { paddingVertical: 10 },
-  main: { flex: 1, minWidth: 0 },
-  contentArea: { flex: 1, minHeight: 0 },
   contentScroll: { flex: 1 },
   scroll: {
     width: "100%",
@@ -848,110 +357,6 @@ const s = StyleSheet.create({
     paddingBottom: 80,
   },
   mobileScroll: { paddingHorizontal: 20, paddingTop: 13, paddingBottom: 32 },
-  mobileTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 17,
-  },
-  mobileExamSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 1,
-    minWidth: 75,
-    maxWidth: 155,
-    minHeight: 37,
-    borderRadius: 19,
-    backgroundColor: palette.panel,
-    borderWidth: 1,
-    borderColor: palette.line,
-    paddingLeft: 12,
-    paddingRight: 9,
-  },
-  mobileExamName: {
-    color: palette.text,
-    fontSize: 11,
-    fontWeight: "800",
-    flexShrink: 1,
-  },
-  mobileExamArrow: { color: palette.text, fontSize: 17, marginLeft: 6 },
-  examSheetIntro: { color: palette.muted, fontSize: 13, marginBottom: 18 },
-  examSearch: {
-    backgroundColor: "#F7F7F2",
-    borderColor: palette.line,
-    borderWidth: 1,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 11,
-    fontSize: 14,
-    color: palette.text,
-    marginBottom: 14,
-  },
-  examOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F7F7F2",
-    borderWidth: 1,
-    borderColor: palette.line,
-    borderRadius: 17,
-    minHeight: 67,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  examOptionActive: { backgroundColor: "#EDE9FF", borderColor: "#CBBDF5" },
-  examOptionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    backgroundColor: "#DDE7FB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-  examOptionIconActive: { backgroundColor: "#D6CAFC" },
-  examOptionInitial: { color: palette.text, fontSize: 14, fontWeight: "800" },
-  examOptionText: { flex: 1, minWidth: 0 },
-  examOptionName: { color: palette.text, fontSize: 13, fontWeight: "800" },
-  examOptionRole: { color: palette.muted, fontSize: 11, marginTop: 3 },
-  examOptionCheck: { color: palette.text, fontSize: 21, marginLeft: 9 },
-  examEmpty: {
-    color: palette.muted,
-    fontSize: 13,
-    textAlign: "center",
-    padding: 22,
-  },
-  examMore: { alignItems: "center", padding: 12 },
-  examMoreText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
-  examManage: { marginTop: 14, marginBottom: 4 },
-  moreGroup: { marginBottom: 16 },
-  moreGroupTitle: {
-    color: palette.muted,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-    marginBottom: 9,
-  },
-  moreOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 56,
-    paddingHorizontal: 14,
-    marginBottom: 7,
-    borderRadius: 15,
-    backgroundColor: "#F7F7F2",
-  },
-  moreOptionActive: { backgroundColor: "#EDE9FF" },
-  moreOptionIcon: { color: palette.text, fontSize: 21, width: 33 },
-  moreOptionLabel: {
-    color: palette.text,
-    fontSize: 14,
-    fontWeight: "700",
-    flex: 1,
-  },
-  moreOptionArrow: { color: palette.muted, fontSize: 23 },
   eyebrow: {
     color: "#8573CE",
     fontSize: 10,
@@ -1016,14 +421,15 @@ const s = StyleSheet.create({
   drawerTriggerSummary: { color: palette.muted, fontSize: 12, marginTop: 4 },
   drawerTriggerArrow: { color: palette.muted, fontSize: 25, lineHeight: 25 },
   drawerOverlay: { flex: 1, justifyContent: "flex-end" },
+  dialogOverlay: { justifyContent: "center", padding: 24 },
   drawerBackdrop: {
     position: "absolute",
     top: 0,
     right: 0,
     bottom: 0,
     left: 0,
-    backgroundColor: "rgba(25, 30, 42, 0.42)",
   },
+  backdropFill: { flex: 1, backgroundColor: "rgba(25, 30, 42, 0.42)" },
   drawerPanel: {
     width: "100%",
     maxWidth: 660,
@@ -1033,6 +439,12 @@ const s = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingTop: 9,
     paddingHorizontal: 22,
+  },
+  dialogPanel: {
+    maxWidth: 560,
+    borderRadius: 22,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   drawerHandle: {
     width: 38,
@@ -1118,40 +530,4 @@ const s = StyleSheet.create({
   chipText: { color: palette.muted, fontSize: 12, fontWeight: "700" },
   chipTextActive: { color: palette.dark },
   inlineLink: { color: "#6D5BB8", fontWeight: "800", fontSize: 13 },
-  bottomNavWrap: {
-    paddingHorizontal: 10,
-    paddingTop: 7,
-    paddingBottom: 5,
-    backgroundColor: palette.bg,
-  },
-  bottomNav: {
-    flexDirection: "row",
-    backgroundColor: palette.dark,
-    borderRadius: 24,
-    alignItems: "center",
-    paddingHorizontal: 7,
-    paddingVertical: 6,
-    gap: 1,
-    flexGrow: 1,
-    justifyContent: "space-around",
-  },
-  mobileNavItem: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    borderRadius: 17,
-  },
-  mobileNavActive: { backgroundColor: "#FFFFFF" },
-  mobileNavIcon: { color: "#FFFFFF", fontSize: 19, lineHeight: 22 },
-  mobileNavIconActive: { color: palette.dark },
-  mobileNavText: {
-    color: "#FFFFFF",
-    fontSize: 9,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  mobileNavTextActive: { color: palette.dark },
 });

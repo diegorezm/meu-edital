@@ -18,10 +18,12 @@ import {
   Page,
   palette,
   Section,
+  useLayout,
 } from "@global/components/ui";
 
 export default function Dashboard() {
   const { data } = useStore();
+  const { mobile, wide } = useLayout();
   const exam = data?.exams.find((item) => item.id === data.activeExamId);
   const week = data && exam ? weekSummary(data, exam.id) : null;
   const cycle = data && exam ? cycleState(data, exam.id) : null;
@@ -48,177 +50,10 @@ export default function Dashboard() {
     .filter((item) => item.sessions === 0)
     .slice(0, 2);
 
-  return (
-    <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
-      <View style={s.content}>
-        {exam ? (
-          <>
-            <View style={s.examCard}>
-              <View style={s.examInfo}>
-                <Text style={s.overline}>SEU OBJETIVO</Text>
-                <Text style={s.examName}>{exam.name}</Text>
-                <Text style={s.examRole}>{exam.role}</Text>
-              </View>
-              <View style={s.progressBadge}>
-                <Text style={s.progressValue}>{progress}%</Text>
-                <Text style={s.progressCaption}>do edital</Text>
-              </View>
-            </View>
-
-            <View style={s.focusCard}>
-              <Text style={s.focusOverline}>
-                {next && cycle
-                  ? `PRÓXIMO DO CICLO · ${cycle.position + 1} DE ${cycle.items.length}`
-                  : "PRÓXIMO PASSO"}
-              </Text>
-              <Text style={s.focusTitle}>
-                {next ? subject(next.subjectId) : "Monte seu ciclo"}
-              </Text>
-              <Text style={s.focusMeta}>
-                {next
-                  ? `${suggestion ? `${suggestion.name} · ` : ""}${formatDuration(next.minutes)}`
-                  : "Gere a sequência de estudos pelos pesos das matérias."}
-              </Text>
-              <Button
-                title={next ? "Começar estudo  →" : "Abrir ciclo  →"}
-                onPress={() =>
-                  router.push(
-                    next
-                      ? { pathname: "/estudar", params: { cycleId: next.id } }
-                      : "/ciclo",
-                  )
-                }
-              />
-              {pending.length > 0 && (
-                <View style={s.reviewHint}>
-                  <Text style={s.reviewHintText}>
-                    {pending.length}{" "}
-                    {pending.length === 1
-                      ? "revisão vencida"
-                      : "revisões vencidas"}
-                  </Text>
-                  <InlineLink href="/revisoes" label="Revisar" />
-                </View>
-              )}
-            </View>
-
-            <Section
-              title="Esta semana"
-              aside={`${formatDuration(week?.minutes || 0)} de ${formatDuration(week?.targetMinutes || 0)}`}
-            >
-              <View style={s.track}>
-                <View style={[s.trackFill, { width: `${goal}%` }]} />
-              </View>
-              {week?.subjects.map((item) => (
-                <View key={item.subjectId} style={s.weekRow}>
-                  <Text style={s.weekName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={s.weekMeta}>
-                    {formatDuration(item.minutes)} /{" "}
-                    {formatDuration(item.targetMinutes)}
-                  </Text>
-                </View>
-              ))}
-              <View style={s.sectionFooter}>
-                <InlineLink href="/semana" label="Ver semana" />
-              </View>
-            </Section>
-
-            <Text style={s.detailsTitle}>Quando quiser ver mais</Text>
-            <BottomDrawer
-              title="Desempenho da semana"
-              summary={`${week?.questions || 0} questões · ${week?.cycleBlocks || 0} blocos do ciclo`}
-            >
-              <View style={s.statsRow}>
-                <View style={[s.statTile, s.mint]}>
-                  <Text style={s.statValue}>
-                    {formatDuration(week?.minutes || 0)}
-                  </Text>
-                  <Text style={s.statLabel}>de estudo</Text>
-                </View>
-                <View style={[s.statTile, s.peach]}>
-                  <Text style={s.statValue}>{week?.questions || 0}</Text>
-                  <Text style={s.statLabel}>questões</Text>
-                </View>
-              </View>
-              <Text style={s.supportingText}>
-                {week?.accuracy === null || week?.accuracy === undefined
-                  ? "Registre questões para acompanhar seus acertos."
-                  : `${week.accuracy}% de acertos nas questões registradas.`}
-              </Text>
-              <Text style={s.supportingText}>
-                {cycle?.laps || 0}{" "}
-                {cycle?.laps === 1 ? "volta completa" : "voltas completas"} no
-                ciclo.
-              </Text>
-            </BottomDrawer>
-
-            <BottomDrawer
-              title="Revisões"
-              action={{ label: "Abrir revisões  →", href: "/revisoes" }}
-              summary={
-                pending.length
-                  ? `${pending.length} ${pending.length === 1 ? "pendente" : "pendentes"}`
-                  : "Tudo em dia"
-              }
-            >
-              {pending.length ? (
-                pending.slice(0, 3).map((item) => (
-                  <View key={item.id} style={s.detailRow}>
-                    <Text style={s.detailText}>{topic(item.topicId)}</Text>
-                    <Text style={s.detailMeta}>{item.dueDate}</Text>
-                  </View>
-                ))
-              ) : (
-                <Empty text="Tudo em dia por aqui." />
-              )}
-            </BottomDrawer>
-
-            <BottomDrawer
-              title="Matérias"
-              summary={`${subjects.length} ${subjects.length === 1 ? "matéria" : "matérias"} no edital`}
-            >
-              {subjects.map((item) => {
-                const topics = data!.topics.filter(
-                  (topic) => topic.subjectId === item.id,
-                );
-                const value = topics.length
-                  ? Math.round(
-                      (100 * topics.filter((topic) => topic.studied).length) /
-                        topics.length,
-                    )
-                  : 0;
-                return (
-                  <View key={item.id} style={s.subjectRow}>
-                    <View style={s.progressLine}>
-                      <Text style={s.detailText}>{item.name}</Text>
-                      <Text style={s.detailMeta}>{value}%</Text>
-                    </View>
-                    <View style={s.track}>
-                      <View style={[s.trackFill, { width: `${value}%` }]} />
-                    </View>
-                  </View>
-                );
-              })}
-              {(weak.length > 0 || notStarted.length > 0) && (
-                <View style={s.focusHint}>
-                  <Text style={s.focusHintTitle}>Para focar depois</Text>
-                  {weak.map((item) => (
-                    <Text key={item.topic.id} style={s.supportingText}>
-                      • {item.topic.name} · {item.accuracy}% de acertos
-                    </Text>
-                  ))}
-                  {notStarted.map((item) => (
-                    <Text key={item.topic.id} style={s.supportingText}>
-                      • {item.topic.name} · ainda não estudado
-                    </Text>
-                  ))}
-                </View>
-              )}
-            </BottomDrawer>
-          </>
-        ) : (
+  if (!data || !exam)
+    return (
+      <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
+        <View style={s.content}>
           <Section title="Seu próximo capítulo começa aqui">
             <Empty text="Crie seu primeiro concurso e organize seus estudos com calma." />
             <Button
@@ -226,7 +61,263 @@ export default function Dashboard() {
               onPress={() => router.push("/concursos")}
             />
           </Section>
-        )}
+        </View>
+      </Page>
+    );
+
+  const upcoming = cycle
+    ? Array.from(
+        { length: Math.min(5, Math.max(0, cycle.items.length - 1)) },
+        (_, index) =>
+          cycle.items[(cycle.position + 1 + index) % cycle.items.length],
+      )
+    : [];
+
+  const examCard = (
+    <View style={s.examCard}>
+      <View style={s.examInfo}>
+        <Text style={s.overline}>SEU OBJETIVO</Text>
+        <Text style={s.examName}>{exam.name}</Text>
+        <Text style={s.examRole}>{exam.role}</Text>
+      </View>
+      <View style={s.progressBadge}>
+        <Text style={s.progressValue}>{progress}%</Text>
+        <Text style={s.progressCaption}>do edital</Text>
+      </View>
+    </View>
+  );
+
+  const focusCard = (
+    <View style={[s.focusCard, !mobile && s.focusCardDesktop]}>
+      <Text style={s.focusOverline}>
+        {next && cycle
+          ? `PRÓXIMO DO CICLO · ${cycle.position + 1} DE ${cycle.items.length} · VOLTA ${cycle.laps + 1}`
+          : "PRÓXIMO PASSO"}
+      </Text>
+      <Text style={[s.focusTitle, !mobile && s.focusTitleDesktop]}>
+        {next ? subject(next.subjectId) : "Monte seu ciclo"}
+      </Text>
+      <Text style={s.focusMeta}>
+        {next
+          ? `${suggestion ? `${suggestion.name} · ` : ""}${formatDuration(next.minutes)}`
+          : "Gere a sequência de estudos pelos pesos das matérias."}
+      </Text>
+      <Button
+        title={next ? "Começar estudo  →" : "Abrir ciclo  →"}
+        onPress={() =>
+          router.push(
+            next
+              ? { pathname: "/estudar", params: { cycleId: next.id } }
+              : "/ciclo",
+          )
+        }
+      />
+      {pending.length > 0 && (
+        <View style={s.reviewHint}>
+          <Text style={s.reviewHintText}>
+            {pending.length}{" "}
+            {pending.length === 1 ? "revisão vencida" : "revisões vencidas"}
+          </Text>
+          <InlineLink href="/revisoes" label="Revisar" />
+        </View>
+      )}
+    </View>
+  );
+
+  const weekSection = (
+    <Section
+      title="Esta semana"
+      aside={`${formatDuration(week?.minutes || 0)} de ${formatDuration(week?.targetMinutes || 0)}`}
+    >
+      <View style={s.track}>
+        <View style={[s.trackFill, { width: `${goal}%` }]} />
+      </View>
+      {week?.subjects.map((item) => {
+        const percent = item.targetMinutes
+          ? Math.min(100, (100 * item.minutes) / item.targetMinutes)
+          : 0;
+        return (
+          <View key={item.subjectId} style={s.weekRow}>
+            <View style={s.weekLine}>
+              <Text style={s.weekName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={s.weekMeta}>
+                {formatDuration(item.minutes)} /{" "}
+                {formatDuration(item.targetMinutes)}
+              </Text>
+            </View>
+            {!mobile && (
+              <View style={s.miniTrack}>
+                <View style={[s.trackFill, { width: `${percent}%` }]} />
+              </View>
+            )}
+          </View>
+        );
+      })}
+      <View style={s.sectionFooter}>
+        <InlineLink href="/semana" label="Ver semana" />
+      </View>
+    </Section>
+  );
+
+  const queueSection = upcoming.length > 0 && (
+    <Section
+      title="Depois deste bloco"
+      aside={`${cycle?.items.length} no ciclo`}
+    >
+      {upcoming.map((item, index) => (
+        <View key={`${item.id}-${index}`} style={s.queueRow}>
+          <Text style={s.queueNumber}>
+            {String(
+              ((cycle!.position + 1 + index) % cycle!.items.length) + 1,
+            ).padStart(2, "0")}
+          </Text>
+          <Text style={s.queueName} numberOfLines={1}>
+            {subject(item.subjectId)}
+          </Text>
+          <Text style={s.weekMeta}>{formatDuration(item.minutes)}</Text>
+        </View>
+      ))}
+      <View style={s.sectionFooter}>
+        <InlineLink href="/ciclo" label="Ver ciclo" />
+      </View>
+    </Section>
+  );
+
+  const performance = (
+    <>
+      <View style={s.statsRow}>
+        <View style={[s.statTile, s.mint]}>
+          <Text style={s.statValue}>{formatDuration(week?.minutes || 0)}</Text>
+          <Text style={s.statLabel}>de estudo</Text>
+        </View>
+        <View style={[s.statTile, s.peach]}>
+          <Text style={s.statValue}>{week?.questions || 0}</Text>
+          <Text style={s.statLabel}>questões</Text>
+        </View>
+      </View>
+      <Text style={s.supportingText}>
+        {week?.accuracy === null || week?.accuracy === undefined
+          ? "Registre questões para acompanhar seus acertos."
+          : `${week.accuracy}% de acertos nas questões registradas.`}
+      </Text>
+      <Text style={s.supportingText}>
+        {cycle?.laps || 0}{" "}
+        {cycle?.laps === 1 ? "volta completa" : "voltas completas"} no ciclo.
+      </Text>
+    </>
+  );
+
+  const reviews = pending.length ? (
+    pending.slice(0, mobile ? 3 : 5).map((item) => (
+      <View key={item.id} style={s.detailRow}>
+        <Text style={s.detailText}>{topic(item.topicId)}</Text>
+        <Text style={s.detailMeta}>{item.dueDate}</Text>
+      </View>
+    ))
+  ) : (
+    <Empty text="Tudo em dia por aqui." />
+  );
+
+  const coverage = (
+    <>
+      {subjects.map((item) => {
+        const topics = data.topics.filter(
+          (topic) => topic.subjectId === item.id,
+        );
+        const value = topics.length
+          ? Math.round(
+              (100 * topics.filter((topic) => topic.studied).length) /
+                topics.length,
+            )
+          : 0;
+        return (
+          <View key={item.id} style={s.subjectRow}>
+            <View style={s.progressLine}>
+              <Text style={s.detailText}>{item.name}</Text>
+              <Text style={s.detailMeta}>{value}%</Text>
+            </View>
+            <View style={s.track}>
+              <View style={[s.trackFill, { width: `${value}%` }]} />
+            </View>
+          </View>
+        );
+      })}
+      {(weak.length > 0 || notStarted.length > 0) && (
+        <View style={s.focusHint}>
+          <Text style={s.focusHintTitle}>Para focar depois</Text>
+          {weak.map((item) => (
+            <Text key={item.topic.id} style={s.supportingText}>
+              • {item.topic.name} · {item.accuracy}% de acertos
+            </Text>
+          ))}
+          {notStarted.map((item) => (
+            <Text key={item.topic.id} style={s.supportingText}>
+              • {item.topic.name} · ainda não estudado
+            </Text>
+          ))}
+        </View>
+      )}
+    </>
+  );
+
+  const reviewsAside = pending.length
+    ? `${pending.length} ${pending.length === 1 ? "pendente" : "pendentes"}`
+    : "Tudo em dia";
+
+  if (mobile)
+    return (
+      <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
+        <View style={s.content}>
+          {examCard}
+          {focusCard}
+          {weekSection}
+          <Text style={s.detailsTitle}>Quando quiser ver mais</Text>
+          <BottomDrawer
+            title="Desempenho da semana"
+            summary={`${week?.questions || 0} questões · ${week?.cycleBlocks || 0} blocos do ciclo`}
+          >
+            {performance}
+          </BottomDrawer>
+          <BottomDrawer
+            title="Revisões"
+            action={{ label: "Abrir revisões  →", href: "/revisoes" }}
+            summary={reviewsAside}
+          >
+            {reviews}
+          </BottomDrawer>
+          <BottomDrawer
+            title="Matérias"
+            summary={`${subjects.length} ${subjects.length === 1 ? "matéria" : "matérias"} no edital`}
+          >
+            {coverage}
+          </BottomDrawer>
+        </View>
+      </Page>
+    );
+
+  return (
+    <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
+      <View style={[s.grid, wide && s.gridWide]}>
+        <View style={[s.column, wide && s.mainColumn]}>
+          {focusCard}
+          {weekSection}
+          {queueSection}
+        </View>
+        <View style={[s.column, wide && s.sideColumn]}>
+          {examCard}
+          <Section title="Desempenho da semana">{performance}</Section>
+          <Section title="Revisões" aside={reviewsAside}>
+            {reviews}
+            <View style={s.sectionFooter}>
+              <InlineLink href="/revisoes" label="Abrir revisões" />
+            </View>
+          </Section>
+          <Section title="Cobertura do edital" aside={`${progress}%`}>
+            {coverage}
+          </Section>
+        </View>
       </View>
     </Page>
   );
@@ -234,6 +325,40 @@ export default function Dashboard() {
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 760, alignSelf: "center" },
+  grid: { width: "100%", gap: 18 },
+  gridWide: { flexDirection: "row", alignItems: "flex-start" },
+  column: { gap: 0, minWidth: 0 },
+  mainColumn: { flex: 3 },
+  sideColumn: { flex: 2 },
+  focusCardDesktop: { padding: 28 },
+  focusTitleDesktop: { fontSize: 34, lineHeight: 40 },
+  weekLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  miniTrack: {
+    height: 5,
+    borderRadius: 4,
+    backgroundColor: "#ECEEF0",
+    marginTop: 7,
+    overflow: "hidden",
+  },
+  queueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.line,
+  },
+  queueNumber: {
+    color: palette.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    width: 22,
+  },
+  queueName: { color: palette.text, fontSize: 13, fontWeight: "700", flex: 1 },
   examCard: {
     backgroundColor: "#EBE6FF",
     borderRadius: 22,
@@ -302,9 +427,6 @@ const s = StyleSheet.create({
   },
   reviewHintText: { color: "#495979", fontSize: 12, fontWeight: "700" },
   weekRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
     paddingVertical: 9,
     borderBottomWidth: 1,
     borderBottomColor: palette.line,

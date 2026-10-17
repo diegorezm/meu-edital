@@ -1,7 +1,8 @@
 import { Tabs } from "expo-router";
 import { Text, View } from "react-native";
 import LoginScreen from "@features/auth";
-import { AppShell, palette } from "@global/components/ui";
+import { AppShell } from "@global/components/AppShell";
+import { palette } from "@global/components/ui";
 import { AuthProvider, useAuth } from "@global/store/auth";
 import { StoreProvider } from "@global/store/store";
 

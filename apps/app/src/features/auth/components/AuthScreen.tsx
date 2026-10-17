@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@global/components/Brand";
@@ -12,7 +13,7 @@ const RESEND_SECONDS = 30;
 const copy = {
   signUp: {
     title: "Crie sua conta grátis.",
-    intro: "Só o e-mail. Sem senha: enviamos um código para você entrar.",
+    intro: "Use sua conta Google ou só o e-mail. Sem senha para criar.",
     action: "Criar conta  →",
     trust: "Grátis e sem cartão. Seu ciclo fica pronto em poucos minutos.",
     switchText: "Já tem conta?",
@@ -20,7 +21,7 @@ const copy = {
   },
   signIn: {
     title: "Bom te ver de volta.",
-    intro: "Digite seu e-mail e enviamos um código de acesso.",
+    intro: "Entre com o Google ou receba um código no e-mail.",
     action: "Enviar código  →",
     trust: "Sem senha para lembrar. O código chega em segundos.",
     switchText: "Ainda não tem conta?",
@@ -39,13 +40,13 @@ export function AuthScreen({
   onModeChange: (mode: AuthMode) => void;
   onBack: () => void;
 }) {
-  const { sendCode, verifyCode } = useAuth();
+  const { sendCode, verifyCode, signInWithGoogle, oauthError } = useAuth();
   const { mobile } = useLayout();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(oauthError || "");
   const [notFound, setNotFound] = useState(false);
   const [wait, setWait] = useState(0);
   const text = copy[mode];
@@ -84,6 +85,8 @@ export function AuthScreen({
         throw new Error("Digite o código de números que chegou no e-mail.");
       await verifyCode(email, code);
     });
+  // Na web a página sai para o Google; no celular volta aqui já com a sessão.
+  const google = () => run(signInWithGoogle);
   const switchMode = (next: AuthMode) => {
     setError("");
     setNotFound(false);
@@ -119,6 +122,29 @@ export function AuthScreen({
           </>
         )}
       </Text>
+      {step === "email" && (
+        <>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={google}
+            style={({ pressed }) => [s.google, (pressed || busy) && s.pressed]}
+          >
+            <Image
+              source={require("../../../../assets/images/google-g.svg")}
+              style={s.googleIcon}
+              contentFit="contain"
+              accessibilityIgnoresInvertColors
+            />
+            <Text style={s.googleText}>Continuar com Google</Text>
+          </Pressable>
+          <View style={s.divider}>
+            <View style={s.dividerLine} />
+            <Text style={s.dividerText}>ou com e-mail</Text>
+            <View style={s.dividerLine} />
+          </View>
+        </>
+      )}
       {step === "email" ? (
         <Field
           key="email"
@@ -314,6 +340,28 @@ const s = StyleSheet.create({
     marginBottom: 22,
   },
   strong: { color: palette.text, fontWeight: "700" },
+  google: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    minHeight: 46,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
+  },
+  googleIcon: { width: 18, height: 18 },
+  googleText: { color: palette.text, fontSize: 14, fontWeight: "700" },
+  pressed: { opacity: 0.65 },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginVertical: 18,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: palette.line },
+  dividerText: { color: palette.muted, fontSize: 12 },
   errorBox: { marginBottom: 14, gap: 6 },
   error: { color: palette.danger, fontSize: 13 },
   errorAction: { color: "#6D5BB8", fontSize: 13, fontWeight: "800" },

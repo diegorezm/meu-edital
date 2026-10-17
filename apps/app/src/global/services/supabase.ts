@@ -16,7 +16,10 @@ export const supabase: SupabaseClient | null =
           storage: AsyncStorage,
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: false,
+          // PKCE: o login com Google devolve um código trocado pela sessão.
+          // Na web o próprio cliente lê o código da URL na volta do redirecionamento.
+          flowType: "pkce",
+          detectSessionInUrl: Platform.OS === "web",
         },
       })
     : null;

@@ -287,7 +287,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </View>
         ))}
-        <SyncChip />
+        <SyncChip inSheet />
         <Account />
       </BottomSheet>
     </SafeAreaView>
@@ -354,7 +354,7 @@ function MobileNavItem({ link, active }: { link: NavLink; active: boolean }) {
 }
 
 /** Estado da sincronização; no modo local, avisa que os dados ficam no aparelho. */
-function SyncChip() {
+function SyncChip({ inSheet = false }: { inSheet?: boolean }) {
   const { enabled, session } = useAuth();
   const { sync, syncNow } = useStore();
   const remote = enabled && Boolean(session);
@@ -381,7 +381,7 @@ function SyncChip() {
       accessibilityHint={sync.error || undefined}
       disabled={!remote}
       onPress={syncNow}
-      style={s.syncChip}
+      style={[s.syncChip, inSheet && s.syncChipSheet]}
     >
       <View style={[s.syncDot, s[`sync_${tone}`]]} />
       <Text style={s.syncText} numberOfLines={1}>
@@ -524,7 +524,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    alignSelf: "flex-start",
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 999,
@@ -532,6 +531,7 @@ const s = StyleSheet.create({
     borderColor: palette.line,
     backgroundColor: palette.panel,
   },
+  syncChipSheet: { alignSelf: "flex-start" },
   syncDot: { width: 7, height: 7, borderRadius: 4 },
   sync_ok: { backgroundColor: "#6FAE86" },
   sync_busy: { backgroundColor: "#E2B25B" },

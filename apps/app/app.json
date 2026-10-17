@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "meu-edital",
+    "slug": "meu-edital",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/brand-icon.png",
+    "scheme": "meuedital",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/brand-icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#208AEF",
+        "foregroundImage": "./assets/images/brand-android-foreground.png",
+        "backgroundImage": "./assets/images/brand-android-background.png",
+        "monochromeImage": "./assets/images/brand-android-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.diegorezm.meuedital"
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/brand-favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#208AEF",
+          "image": "./assets/images/brand-splash-icon.png",
+          "imageWidth": 112
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "709a6339-a2b9-4c62-ad84-ab79a327b540"
+      }
+    }
+  }
+}

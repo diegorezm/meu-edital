@@ -1,53 +1,117 @@
 # Meu Edital
 
-O **Meu Edital** é um aplicativo de organização de estudos para concursos públicos. Sua função é transformar o conteúdo de um edital em matérias, assuntos e ações concretas de estudo, respondendo com clareza à pergunta: **“O que preciso estudar agora?”**
+Aplicativo de **estudo cíclico para concursos públicos**, no celular (Android/iOS) e no navegador. Ele transforma o edital em matérias e assuntos, monta um ciclo de estudos pelos pesos de cada matéria e acompanha o que foi estudado na semana.
 
-## Filosofia do produto
+O app responde a duas perguntas:
 
-**A IA externa interpreta e sugere; o aplicativo organiza, registra e acompanha.** Nesta versão, o usuário copia um prompt gerado pelo app, envia o edital ou seus dados de estudo ao ChatGPT, Gemini, Claude, NotebookLM ou outra ferramenta e cola a resposta de volta. O app valida o JSON, mostra uma prévia e só importa após confirmação. Nenhum edital é enviado automaticamente e nenhuma API de IA é integrada. O conteúdo importado é tratado como dado não confiável, nunca como código.
+- **O que eu estudo agora?** → o próximo bloco do ciclo, com um assunto sugerido.
+- **Como foi minha semana?** → tempo estudado contra a meta, por matéria e por dia.
 
-A experiência deve ser simples, rápida e focada em produtividade: próximo estudo em destaque, interface limpa, boa leitura em celular e desktop, tema escuro e pouca animação. Na dúvida, preferimos a solução mais simples que atende bem ao estudante.
+> Agentes de código: este arquivo explica **o que** o app é. Para **como** trabalhar no código, leia [AGENTS.md](AGENTS.md).
 
-## O que o MVP oferece
+## Como o estudo funciona
 
-- Vários concursos, cada um com matérias, assuntos e subassuntos.
-- Dashboard com próximo estudo, progresso, revisões e resumo da semana.
-- Sessões com timer, duração, questões, acertos e observações.
-- Plano semanal, ciclo de estudos e revisões automáticas configuráveis (1, 7 e 30 dias por padrão).
-- Importação de edital e de plano semanal por respostas estruturadas de IA externa.
-- Dados de demonstração do concurso DETRAN-SP no primeiro uso.
+| Conceito | O que é |
+| --- | --- |
+| **Concurso** | O objetivo do estudante: nome, cargo, banca, data da prova e meta de horas por semana. É possível ter vários; um fica ativo. |
+| **Matéria** | Disciplina do edital. Tem um peso: `questões × pontos por questão`, um peso informado ou peso 1. |
+| **Assunto** | Item do conteúdo programático de uma matéria. Pode ter subassuntos. Fica marcado como estudado na primeira sessão. |
+| **Ciclo** | Fila de **blocos** (matéria + minutos). Uma **volta** completa soma a meta semanal. O tempo de cada matéria vem do peso, do aproveitamento nas questões, dos assuntos ainda não estudados e das revisões vencidas. |
+| **Sessão** | Registro de um estudo: matéria, assunto, tipo (Teoria, Questões ou Revisão), minutos, questões e acertos. Uma sessão feita a partir de um bloco avança o ciclo. |
+| **Revisão** | Agendada automaticamente quando um assunto é estudado pela primeira vez (1, 7 e 30 dias por padrão). Uma sessão do tipo Revisão conclui as revisões vencidas daquele assunto. |
+| **Semana** | De segunda a domingo. Compara o estudado com a meta e mostra as matérias que ficaram para trás. |
 
-## Estrutura técnica
+O ciclo **não depende do calendário**: faltou um dia, o estudante continua de onde parou. Não existe plano dia a dia.
 
-Expo SDK 57, React Native, Expo Router e TypeScript. `src/app` contém apenas as rotas e o layout. Cada pasta de `src/features` expõe sua tela em `index.ts` e mantém seus componentes e, conforme necessário, `utils`, `services` e `schemas`. `src/global` reúne componentes, estado, cores e utilidades usados por várias funcionalidades; `src/domain` guarda os modelos e cálculos de estudo compartilhados. Os imports entre essas áreas usam `@features/*`, `@global/*` e `@domain/*` definidos em `tsconfig.json`; imports dentro da própria funcionalidade usam caminhos relativos. A funcionalidade `ia` mantém o fluxo de importação por copiar e colar; a interface `AIProvider` permite acrescentar provedores no futuro. Os dados são salvos localmente com AsyncStorage; não há conta nem sincronização entre dispositivos.
+## Telas
 
-## Executar e verificar
+- **Início:** próximo bloco do ciclo, revisões vencidas e resumo da semana.
+- **Ciclo:** sequência de blocos. Dá para gerar o ciclo pelos pesos, reordenar, ajustar a duração, pular e excluir blocos.
+- **Estudar:** cronômetro (persistente, com notificação no Android) e registro da sessão.
+- **Semana:** meta × estudado, dia a dia, por matéria, matérias atrasadas e lista de sessões. Navega por semanas anteriores.
+- **Revisões:** revisões pendentes e intervalos configuráveis.
+- **Editais:** concursos, matérias, pesos, assuntos e subassuntos.
+- **IA externa:** importar o edital e revisar a semana com qualquer IA.
 
-Requer Node.js 22.13+ e npm.
+## IA externa: a IA sugere, o estudante decide
+
+O app não chama nenhuma API de IA. Ele gera um pedido em texto com:
+
+1. instruções da tarefa;
+2. o contexto de estudo em JSON (`StudyContext`, versionado, com nomes legíveis em vez de ids);
+3. o JSON Schema exato da resposta.
+
+O estudante cola o pedido no ChatGPT, Claude, Gemini, NotebookLM ou outra IA e traz a resposta de volta. O app valida o formato, confere os nomes das matérias e mostra cada alteração como **antes → depois**. Nada é salvo sem confirmação. A resposta é tratada como dado não confiável.
+
+Tarefas disponíveis:
+
+- **Importar edital:** extrai matérias, assuntos, subassuntos e pesos do edital.
+- **Revisar a semana:** gera uma análise, recomendações e propostas de ajuste (peso de matéria, meta semanal, novo ciclo).
+
+O mesmo pacote (`@meu-edital/agent-context`) já gera mensagens + schema para uma futura integração por API ou servidor MCP.
+
+## Dados e conta
+
+- **Com Supabase configurado:** login por código enviado ao e-mail. O banco é a fonte da verdade, com RLS (cada usuário só vê os próprios dados). Cada aparelho guarda uma cópia e uma fila de alterações, então dá para estudar offline. Ao voltar para o app ou para a aba, ele busca o que mudou em outro aparelho.
+- **Sem Supabase (modo local):** sem conta, dados só no aparelho, com um concurso de demonstração (DETRAN-SP).
+
+## Tecnologia e estrutura
+
+Expo SDK 57, React Native, Expo Router, TypeScript, Zod e Supabase, num monorepo com npm workspaces e Turborepo.
+
+```text
+apps/app                 App Expo (Android, iOS e web)
+packages/domain          Modelos e regras de estudo (TypeScript puro)
+packages/agent-context   Contrato de contexto, tarefas e propostas para IA externa
+supabase/migrations      Esquema do banco com RLS
+```
+
+## Executar
+
+Requer Node.js 22.13+ e npm. Rode os comandos na raiz.
 
 ```bash
 npm install
-npx expo start
+npm run web     # app no navegador
+npm run dev     # Metro para o development build no Android/iOS
+npm run check   # lint, typecheck e testes de todo o monorepo
 ```
 
-### Android sem fila do EAS
+Sem configurar nada, o app abre no modo local.
 
-Para criar e instalar o development build diretamente no emulador Android, com o Android SDK configurado no computador:
+### Configurar o Supabase
+
+1. Crie um projeto no [Supabase](https://supabase.com).
+2. Aplique as migrações de `supabase/migrations` (no SQL Editor ou com `npx supabase link` + `npx supabase db push`).
+3. Em **Authentication → Email Templates → Magic Link**, inclua `{{ .Token }}` no e-mail. O login usa esse código.
+4. Copie `apps/app/.env.example` para `apps/app/.env.local` e preencha `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_KEY` (chave publicável, em Project Settings → API).
+
+### Publicar a web (EAS Hosting)
+
+A web é uma SPA publicada no [EAS Hosting](https://docs.expo.dev/eas/hosting/introduction/). O plano gratuito dá um endereço `*.expo.app`.
 
 ```bash
-npm run android:build
+npx eas-cli@latest login    # uma vez
+npm run deploy:web          # exporta e publica em produção
+npm run deploy:web:preview  # publica uma prévia com URL própria
 ```
 
-Depois da primeira instalação, use `npm run android` para abrir o app no emulador. Para um celular físico que já tenha o development build instalado, execute `npm start` e leia o QR code com o celular. Alterações em JavaScript e TypeScript são carregadas pelo Metro sem repetir o build nativo. Execute `npm run android:build` novamente quando mudar dependências nativas ou a configuração nativa do app.
+As variáveis `EXPO_PUBLIC_*` entram no build, então `apps/app/.env.local` precisa existir na máquina que publica. Depois do primeiro deploy, configure o endereço em **Supabase → Authentication → URL Configuration → Site URL**.
+
+### Android
+
+Development build no emulador (com o Android SDK instalado):
 
 ```bash
-npx expo lint
-npx tsc --noEmit
-npm test
+npm run android:build --workspace=@meu-edital/app
 ```
 
-O escopo desta versão não inclui pagamentos, recursos sociais, gamificação complexa, notificações push ou APIs pagas de IA.
+Depois, `npm run android`. Repita o build quando mudar dependências nativas. Builds na nuvem: `npx eas-cli@latest build` dentro de `apps/app`.
+
+## Fora do escopo
+
+Pagamentos, recursos sociais, gamificação complexa, notificações push e APIs pagas de IA.
 
 ## Licença
 
-O código do Meu Edital é distribuído sob a [GNU GPL versão 3](LICENSE) (`GPL-3.0-only`). Quem distribuir uma versão que incorpore ou modifique esse código deve disponibilizar o código-fonte correspondente sob a mesma licença. O aviso de licença dos arquivos provenientes do template da Expo está preservado em [LICENSES/Expo-template-MIT.txt](LICENSES/Expo-template-MIT.txt). As dependências mantêm suas próprias licenças.
+Distribuído sob a [GNU GPL versão 3](LICENSE) (`GPL-3.0-only`). Quem distribuir uma versão que incorpore ou modifique este código deve disponibilizar o código-fonte sob a mesma licença. O aviso dos arquivos vindos do template da Expo está em [LICENSES/Expo-template-MIT.txt](LICENSES/Expo-template-MIT.txt). As dependências mantêm suas próprias licenças.

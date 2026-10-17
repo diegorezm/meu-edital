@@ -92,7 +92,8 @@ Every new table has `user_id uuid default auth.uid()`, RLS enabled, the owner-on
 ## UI conventions
 
 - Build screens with the kit in `global/components/ui.tsx`: `Page`, `Section`, `Button`, `Field`, `BottomSheet`, `BottomDrawer`, `Empty`, `InlineLink`. Colors come from `palette` (`global/constants/colors.ts`).
-- Layout switches at `width < 760` (mobile: top bar + bottom nav; desktop: sidebar). Content columns use a `maxWidth` around 680–760 and `alignSelf: "center"`.
+- Desktop is its own design, not a stretched phone. Use `useLayout()` from `ui.tsx`: `mobile` (< 760 px) and `wide` (>= 1100 px). The shell lives in `global/components/AppShell.tsx`: on mobile, top bar + bottom nav + "Mais" sheet; on desktop, a slim sidebar with every page visible and a top bar with the exam picker and sync status.
+- On desktop, prefer columns and inline panels over the mobile patterns: `BottomSheet` already renders as a centered dialog, and `BottomDrawer` is for mobile only (show the content in a `Section` instead). See `inicio/components/DashboardScreen.tsx` for the mobile list vs desktop grid split.
 - All user-facing text is in Brazilian Portuguese, short and friendly. Follow the language of the file you are in for comments.
 - Keep animation minimal. Format time with `formatDuration` and dates with `formatShortDate`.
 - Platform-specific code uses file suffixes (`.native.tsx`, `.android.ts`) next to a web-safe default file.

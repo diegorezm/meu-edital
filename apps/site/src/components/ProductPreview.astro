@@ -1,0 +1,230 @@
+---
+// Retrato estático do app: mostra o resultado em vez de explicar.
+const cycle = [
+  { name: "Português", color: "var(--lavender)" },
+  { name: "Dir. Adm.", color: "var(--blue)", current: true },
+  { name: "Matemática", color: "var(--peach)" },
+  { name: "Dir. Const.", color: "var(--mint)" },
+  { name: "Português", color: "var(--lavender)" },
+];
+// Minutos por dia numa semana de exemplo (meta de 150 min/dia).
+const week = [150, 120, 165, 90, 140, 0, 0];
+const days = ["S", "T", "Q", "Q", "S", "S", "D"];
+const max = Math.max(...week);
+---
+
+<figure class="preview" aria-label="Exemplo da tela inicial do app">
+  <span class="sample">EXEMPLO</span>
+  <div class="next">
+    <p class="eyebrow">PRÓXIMO BLOCO</p>
+    <p class="subject">Direito Administrativo</p>
+    <p class="meta">60 min · Teoria</p>
+    <div class="topic">
+      <span>Assunto sugerido</span>
+      <strong>Atos administrativos</strong>
+    </div>
+    <div class="play">▷&nbsp; Começar agora</div>
+  </div>
+  <div class="row">
+    <div class="card grow">
+      <p class="card-title">Ciclo</p>
+      <div class="chips">
+        {
+          cycle.map((item) => (
+            <span
+              class:list={["chip", { current: item.current }]}
+              style={`background:${item.color}`}
+            >
+              {item.name}
+            </span>
+          ))
+        }
+      </div>
+    </div>
+    <div class="card reviews">
+      <p class="card-title">Revisões</p>
+      <p class="big">3</p>
+      <p class="small">vencem hoje</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="week-head">
+      <p class="card-title">Semana</p>
+      <p class="small">11h05 de 17h30</p>
+    </div>
+    <div class="bars">
+      {
+        week.map((minutes, index) => (
+          <div class="bar-col">
+            <div class="track">
+              <div class="bar" style={`height:${(minutes / max) * 100}%`} />
+            </div>
+            <span class="day">{days[index]}</span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</figure>
+
+<style>
+  .preview {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+    box-shadow: 0 14px 30px rgba(32, 39, 49, 0.08);
+  }
+  p {
+    margin: 0;
+  }
+  .sample {
+    position: absolute;
+    top: -10px;
+    right: 18px;
+    background: var(--dark);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    padding: 4px 9px;
+    border-radius: 8px;
+  }
+  .next {
+    background: var(--dark);
+    border-radius: 22px;
+    padding: 18px;
+    color: #fff;
+  }
+  .eyebrow {
+    color: var(--lavender);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+  }
+  .subject {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+    margin-top: 8px;
+  }
+  .meta {
+    color: #aeb4bb;
+    font-size: 12px;
+    margin-top: 3px;
+  }
+  .topic {
+    display: grid;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 11px;
+    margin-top: 14px;
+  }
+  .topic span {
+    color: #aeb4bb;
+    font-size: 10px;
+  }
+  .topic strong {
+    font-size: 13px;
+  }
+  .play {
+    background: var(--lavender);
+    color: var(--dark);
+    border-radius: 13px;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    margin-top: 12px;
+  }
+  .row {
+    display: flex;
+    gap: 10px;
+  }
+  .grow {
+    flex: 1;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid #eff0ed;
+    border-radius: 18px;
+    padding: 13px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 9px;
+  }
+  .chip {
+    border-radius: 8px;
+    padding: 4px 7px;
+    color: var(--dark);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .chip.current {
+    outline: 1.5px solid var(--dark);
+  }
+  .reviews {
+    width: 96px;
+  }
+  .big {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-top: 4px;
+  }
+  .small {
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .week-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bars {
+    display: flex;
+    gap: 8px;
+    height: 70px;
+    margin-top: 10px;
+  }
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .track {
+    flex: 1;
+    width: 100%;
+    background: #f1f2ef;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  .bar {
+    width: 100%;
+    background: var(--accent);
+    border-radius: 6px;
+  }
+  .day {
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+</style>

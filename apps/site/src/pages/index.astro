@@ -1,0 +1,502 @@
+---
+import { PUBLIC_APP_URL } from "astro:env/client";
+import Brand from "../components/Brand.astro";
+import ProductPreview from "../components/ProductPreview.astro";
+import { faq, features, pains, steps } from "../content/landing";
+import Base from "../layouts/Base.astro";
+
+// O app abre direto em criar conta ou entrar conforme o parâmetro.
+const app = PUBLIC_APP_URL.replace(/\/$/, "");
+const signUp = `${app}/?conta=criar`;
+const signIn = `${app}/?conta=entrar`;
+const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e navegador"];
+---
+
+<Base
+  title="Meu Edital: ciclo de estudos para concurso"
+  description="Monte um ciclo de estudos pelos pesos do edital, saiba o próximo bloco e acompanhe revisões e a meta da semana. Grátis, no celular e no navegador."
+>
+  <header class="top wrap">
+    <Brand />
+    <nav class="top-actions">
+      <a class="top-link" href={signIn}>Entrar</a>
+      <a class="cta small only-desktop" href={signUp}>Criar conta grátis</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <p class="eyebrow">PARA QUEM ESTUDA PARA CONCURSO</p>
+        <h1>Seu edital tem 12 matérias. Hoje você estuda qual?</h1>
+        <p class="lead">
+          O Meu Edital monta um ciclo de estudos pelos pesos do edital e mostra
+          o próximo bloco. Faltou um dia? Você continua de onde parou.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href={signUp}>Montar meu ciclo grátis&nbsp; →</a>
+          <a class="cta secondary only-desktop" href={signIn}>Já tenho conta</a>
+        </div>
+        <ul class="trust">
+          {trust.map((item) => <li><span>✓</span> {item}</li>)}
+        </ul>
+      </div>
+      <div class="hero-visual">
+        <ProductPreview />
+      </div>
+    </section>
+
+    <section class="block wrap">
+      <h2>Por que o cronograma não aguenta o mês</h2>
+      <div class="grid">
+        {
+          pains.map((item) => (
+            <article class="card">
+              <span class="pain-mark" aria-hidden="true">×</span>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="block wrap">
+      <p class="eyebrow">COMO FUNCIONA</p>
+      <h2>Do edital ao primeiro bloco em 3 passos</h2>
+      <ol class="grid steps">
+        {
+          steps.map((item, index) => (
+            <li class="step">
+              <span class="step-number">{index + 1}</span>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="block wrap">
+      <h2>Você estuda. O app faz as contas.</h2>
+      <div class="grid">
+        {
+          features.map((item) => (
+            <article class="feature" style={`background:var(--${item.tone})`}>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+      <a class="cta inline" href={signUp}>Quero meu ciclo&nbsp; →</a>
+    </section>
+
+    <section class="block wrap faq">
+      <div class="faq-intro">
+        <h2>Perguntas rápidas</h2>
+        <p class="only-desktop">
+          Não achou sua dúvida? Crie a conta e veja por dentro. Leva menos tempo
+          que ler um artigo da lei seca.
+        </p>
+      </div>
+      <div class="faq-list">
+        {
+          faq.map((item, index) => (
+            <details open={index === 0}>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="block wrap">
+      <div class="final">
+        <h2>Seu próximo bloco de estudo está a 3 passos.</h2>
+        <p>Pare de refazer cronograma. Comece a estudar o que pesa.</p>
+        <a class="cta light" href={signUp}>Montar meu ciclo grátis&nbsp; →</a>
+        <p class="final-trust">Grátis · sem senha · sem cartão</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <Brand />
+    <p>Software livre (GPL-3.0). Seus dados são só seus.</p>
+  </footer>
+
+  <div class="sticky only-mobile">
+    <a class="cta full" href={signUp}>Montar meu ciclo grátis&nbsp; →</a>
+  </div>
+</Base>
+
+<style>
+  .wrap {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .top {
+    max-width: 1160px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .top-link {
+    padding: 9px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .top-link:hover {
+    background: #eeefe9;
+  }
+
+  .eyebrow {
+    color: #8573ce;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 36px;
+    line-height: 41px;
+    font-weight: 800;
+    letter-spacing: -1.6px;
+  }
+  h2 {
+    font-size: 26px;
+    line-height: 31px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 22px;
+    max-width: 640px;
+  }
+  h3 {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+  }
+  .lead {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 24px;
+    margin-top: 18px;
+    max-width: 520px;
+  }
+
+  .hero {
+    display: grid;
+    gap: 34px;
+    padding-top: 22px;
+    padding-bottom: 36px;
+  }
+  .cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .trust {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .trust span {
+    color: #4e9a72;
+    font-weight: 900;
+  }
+
+  .cta {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--dark);
+    color: #fff;
+    border: 1px solid var(--dark);
+    border-radius: 16px;
+    padding: 16px 24px;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    transition:
+      transform 0.15s,
+      opacity 0.15s;
+  }
+  .cta:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+  }
+  .cta:focus-visible,
+  .top-link:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .cta.small {
+    padding: 10px 16px;
+    border-radius: 13px;
+    font-size: 13px;
+  }
+  .cta.secondary {
+    background: var(--panel);
+    color: var(--dark);
+    border-color: var(--line);
+  }
+  .cta.light {
+    background: var(--lavender);
+    border-color: var(--lavender);
+    color: var(--dark);
+  }
+  .cta.full {
+    width: 100%;
+  }
+  .cta.inline {
+    margin-top: 24px;
+    width: 100%;
+  }
+
+  .block {
+    padding-top: 34px;
+    padding-bottom: 34px;
+  }
+  .grid {
+    display: grid;
+    gap: 10px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid #eff0ed;
+    border-radius: 22px;
+    padding: 20px;
+  }
+  .card p,
+  .step p,
+  .faq-intro p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 21px;
+    margin-top: 8px;
+  }
+  .pain-mark {
+    display: block;
+    color: var(--danger);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .step {
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 20px;
+  }
+  .step-number {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    background: var(--dark);
+    color: #fff;
+    font-weight: 800;
+    margin-bottom: 14px;
+  }
+  .feature {
+    border-radius: 22px;
+    padding: 22px;
+  }
+  .feature h3 {
+    color: var(--dark);
+    font-size: 19px;
+    line-height: 24px;
+  }
+  .feature p {
+    color: #3a424c;
+    font-size: 14px;
+    line-height: 21px;
+    margin-top: 10px;
+  }
+
+  .faq-list {
+    display: grid;
+    gap: 8px;
+  }
+  details {
+    background: var(--panel);
+    border: 1px solid #eff0ed;
+    border-radius: 16px;
+    padding: 15px 18px;
+  }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::after {
+    content: "+";
+    color: var(--muted);
+    font-size: 20px;
+    line-height: 20px;
+  }
+  details[open] summary::after {
+    content: "−";
+  }
+  details p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 21px;
+    margin-top: 8px;
+  }
+
+  .final {
+    background: var(--dark);
+    border-radius: 30px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .final h2 {
+    color: #fff;
+    margin: 0 auto;
+  }
+  .final p {
+    color: #aeb4bb;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 12px 0 24px;
+  }
+  .final .final-trust {
+    font-size: 12px;
+    margin: 14px 0 0;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    padding-bottom: 96px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 16px 12px;
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+  }
+
+  .only-desktop {
+    display: none;
+  }
+
+  @media (min-width: 760px) {
+    .only-desktop {
+      display: inline-flex;
+    }
+    p.only-desktop {
+      display: block;
+    }
+    .only-mobile {
+      display: none;
+    }
+    .top {
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+    h1 {
+      font-size: 48px;
+      line-height: 54px;
+      letter-spacing: -2.2px;
+    }
+    h2 {
+      font-size: 32px;
+      line-height: 38px;
+      letter-spacing: -1.2px;
+    }
+    .lead {
+      font-size: 18px;
+      line-height: 28px;
+    }
+    .hero {
+      grid-template-columns: 1.1fr 1fr;
+      align-items: center;
+      gap: 48px;
+      padding-top: 54px;
+      padding-bottom: 70px;
+    }
+    .cta-row {
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .cta.inline {
+      width: auto;
+    }
+    .faq {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 48px;
+    }
+    .final {
+      padding: 44px;
+      align-items: center;
+    }
+    .final h2 {
+      font-size: 34px;
+      line-height: 40px;
+    }
+    .footer {
+      padding-bottom: 24px;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    h1 {
+      font-size: 58px;
+      line-height: 64px;
+    }
+  }
+</style>

@@ -1,27 +1,28 @@
 import { useState } from "react";
-import { LandingScreen } from "@features/landing";
-import { useAuth } from "@global/store/auth";
+import { useGlobalSearchParams } from "expo-router";
+import { Platform } from "react-native";
 import { AuthScreen, type AuthMode } from "./AuthScreen";
 
-/** O que a pessoa sem conta vê: a landing e, a partir dela, criar conta ou entrar. */
+const siteUrl = process.env.EXPO_PUBLIC_SITE_URL;
+
+/**
+ * O que a pessoa sem conta vê no app. A divulgação fica no site (`apps/site`),
+ * que linka para cá com `?conta=criar` ou `?conta=entrar`.
+ */
 export default function PublicScreen() {
-  const { oauthError } = useAuth();
-  // Se o Google devolveu erro, volta direto para a tela de entrar com o aviso.
-  const [screen, setScreen] = useState<"landing" | AuthMode>(
-    oauthError ? "signIn" : "landing",
+  const { conta } = useGlobalSearchParams<{ conta?: string }>();
+  const [mode, setMode] = useState<AuthMode>(
+    conta === "criar" ? "signUp" : "signIn",
   );
-  if (screen === "landing")
-    return (
-      <LandingScreen
-        onSignUp={() => setScreen("signUp")}
-        onSignIn={() => setScreen("signIn")}
-      />
-    );
   return (
     <AuthScreen
-      mode={screen}
-      onModeChange={setScreen}
-      onBack={() => setScreen("landing")}
+      mode={mode}
+      onModeChange={setMode}
+      onBack={
+        Platform.OS === "web" && siteUrl
+          ? () => window.location.assign(siteUrl)
+          : undefined
+      }
     />
   );
 }

@@ -38,7 +38,8 @@ export function AuthScreen({
 }: {
   mode: AuthMode;
   onModeChange: (mode: AuthMode) => void;
-  onBack: () => void;
+  /** Volta para o site. Sem ele (celular, ou site não configurado) o link some. */
+  onBack?: () => void;
 }) {
   const { sendCode, verifyCode, signInWithGoogle, oauthError } = useAuth();
   const { mobile } = useLayout();
@@ -95,15 +96,17 @@ export function AuthScreen({
 
   const form = (
     <View style={[s.card, mobile ? s.cardMobile : s.cardDesktop]}>
-      <Pressable
-        accessibilityRole="button"
-        onPress={step === "code" ? () => setStep("email") : onBack}
-        style={s.back}
-      >
-        <Text style={s.backText}>
-          ← {step === "code" ? "Trocar e-mail" : "Voltar"}
-        </Text>
-      </Pressable>
+      {(step === "code" || onBack) && (
+        <Pressable
+          accessibilityRole="button"
+          onPress={step === "code" ? () => setStep("email") : onBack}
+          style={s.back}
+        >
+          <Text style={s.backText}>
+            ← {step === "code" ? "Trocar e-mail" : "Voltar ao site"}
+          </Text>
+        </Pressable>
+      )}
       {mobile && (
         <View style={s.mobileBrand}>
           <Brand large />

@@ -10,8 +10,10 @@
   "scripts": {
     "dev": "turbo run dev --filter=@meu-edital/app",
     "web": "npm run web --workspace=@meu-edital/app",
+    "site": "npm run dev --workspace=@meu-edital/site",
     "android": "npm run android --workspace=@meu-edital/app",
     "build:web": "turbo run build:web",
+    "build:site": "npm run build --workspace=@meu-edital/site",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",

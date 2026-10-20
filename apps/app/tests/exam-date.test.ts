@@ -4,7 +4,7 @@ import {
   displayExamDate,
   formatExamDateInput,
   parseExamDate,
-} from "../src/features/concursos/utils/examDate";
+} from "../src/global/utils/examDate";
 
 test("formata a data exibida e preserva o formato salvo", () => {
   assert.equal(displayExamDate("2028-02-29"), "29/02/2028");

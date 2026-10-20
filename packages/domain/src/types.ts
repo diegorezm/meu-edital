@@ -115,4 +115,9 @@ export const weekStartOf = (date: string) => {
   return addDays(date, -((d.getDay() + 6) % 7));
 };
 export const currentWeekStart = () => weekStartOf(today());
+/** Dias de `from` até `date`. Negativo quando a data já passou. */
+export const daysUntil = (date: string, from = today()) =>
+  Math.round(
+    (fromDateKey(date).getTime() - fromDateKey(from).getTime()) / 86_400_000,
+  );
 export const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];

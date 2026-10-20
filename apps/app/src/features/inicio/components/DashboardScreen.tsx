@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import {
   cycleState,
+  daysUntil,
   dueReviews,
   examProgress,
   suggestNextTopic,
@@ -36,6 +37,7 @@ export default function Dashboard() {
   const topic = (id: string) =>
     data?.topics.find((item) => item.id === id)?.name || "Assunto";
   const progress = exam && data ? examProgress(data, exam.id) : 0;
+  const daysLeft = exam?.examDate ? daysUntil(exam.examDate) : null;
   const goal = week?.targetMinutes
     ? Math.min(100, Math.round((100 * week.minutes) / week.targetMinutes))
     : 0;
@@ -79,6 +81,15 @@ export default function Dashboard() {
         <Text style={s.overline}>SEU OBJETIVO</Text>
         <Text style={s.examName}>{exam.name}</Text>
         <Text style={s.examRole}>{exam.role}</Text>
+        {daysLeft !== null && daysLeft >= 0 && (
+          <Text style={s.examCountdown}>
+            {daysLeft === 0
+              ? "A prova é hoje"
+              : daysLeft === 1
+                ? "Falta 1 dia para a prova"
+                : `Faltam ${daysLeft} dias para a prova`}
+          </Text>
+        )}
       </View>
       <View style={s.progressBadge}>
         <Text style={s.progressValue}>{progress}%</Text>
@@ -383,6 +394,12 @@ const s = StyleSheet.create({
     marginTop: 5,
   },
   examRole: { color: "#655F78", fontSize: 12, marginTop: 3 },
+  examCountdown: {
+    color: palette.dark,
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 8,
+  },
   progressBadge: {
     width: 68,
     height: 68,

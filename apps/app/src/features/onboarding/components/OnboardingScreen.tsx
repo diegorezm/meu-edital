@@ -8,11 +8,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { cycleState, startExam } from "@meu-edital/domain";
+import { cycleState, daysUntil, startExam } from "@meu-edital/domain";
 import { Brand } from "@global/components/Brand";
+import ExamDateField from "@global/components/shared/ExamDateField";
 import { Button, Field, palette, useLayout } from "@global/components/ui";
 import { useAuth } from "@global/store/auth";
 import { useStore } from "@global/store/store";
+import { displayExamDate, parseExamDate } from "@global/utils/examDate";
 import { formatDuration } from "@global/utils/formatDuration";
 import {
   commonSubjects,
@@ -31,13 +33,27 @@ const progress: Record<Step, number> = {
 };
 const tones = [palette.lavender, palette.blue, palette.peach, palette.mint];
 
-export function OnboardingScreen({ onDone }: { onDone: () => void }) {
+/** Texto curto da contagem até a prova, ou nada sem data válida e futura. */
+function countdown(examDate?: string | null) {
+  if (!examDate) return "";
+  const days = daysUntil(examDate);
+  if (days < 0) return "";
+  return days === 0 ? "a prova é hoje" : days === 1 ? "falta 1 dia" : `faltam ${days} dias`;
+}
+
+export function OnboardingScreen({
+  onDone,
+}: {
+  /** Recebe o bloco para abrir no estudo, ou nada para ir ao painel. */
+  onDone: (cycleId?: string) => void;
+}) {
   const { mobile } = useLayout();
   const { enabled, signOut } = useAuth();
   const { data, update, error } = useStore();
   const [step, setStep] = useState<Step>("exam");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
+  const [date, setDate] = useState("");
   const [hours, setHours] = useState(15);
   const [selected, setSelected] = useState<string[]>(["Português"]);
   const [custom, setCustom] = useState<string[]>([]);
@@ -83,6 +99,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       startExam(current, {
         name,
         role,
+        examDate: examDate || undefined,
         hoursPerWeek: hours,
         subjects: [
           ...commonSubjects.filter((item) => selected.includes(item.name)),
@@ -94,6 +111,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
     setStep("ready");
   };
 
+  // "" sem data, null com data incompleta ou inválida.
+  const examDate = parseExamDate(date);
   const examName = name.trim() || "Seu concurso";
   const perDay = formatDuration((hours * 60) / 7);
 
@@ -102,6 +121,10 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
     const cycle = data && examId ? cycleState(data, examId) : null;
     const subjectName = (id: string) =>
       data?.subjects.find((item) => item.id === id)?.name || "";
+    const readyCountdown = countdown(
+      data?.exams.find((item) => item.id === examId)?.examDate,
+    );
+    const first = cycle?.next;
     const examSubjects =
       data?.subjects.filter((item) => item.examId === examId) || [];
     const toneOf = (subjectId: string) =>
@@ -128,6 +151,12 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
               {cycle?.items.length || 0} blocos somam{" "}
               {formatDuration(cycle?.lapMinutes || 0)}. Uma volta é a sua
               semana. Faltou um dia? Continue do bloco onde parou.
+              {readyCountdown ? (
+                <Text style={s.strong}>
+                  {" "}
+                  Até a prova, {readyCountdown}.
+                </Text>
+              ) : null}
             </Text>
             <View style={s.blocks}>
               {cycle?.items.slice(0, 8).map((item, index) => (
@@ -157,10 +186,23 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
               )}
             </View>
             <Button
-              title="Ver meu primeiro bloco  →"
-              onPress={onDone}
+              title={
+                first
+                  ? `Começar ${subjectName(first.subjectId)} agora  →`
+                  : "Ir para o painel  →"
+              }
+              onPress={() => onDone(first?.id)}
               full={mobile}
             />
+            {first ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => onDone()}
+                style={s.later}
+              >
+                <Text style={s.laterText}>Prefiro ver o painel primeiro</Text>
+              </Pressable>
+            ) : null}
             <Text style={s.hint}>
               Os pesos, assuntos e a ordem dos blocos ficam em Editais e Ciclo.
             </Text>
@@ -172,7 +214,9 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
   const canNext =
     step === "exam"
-      ? Boolean(name.trim())
+      ? Boolean(name.trim()) &&
+        examDate !== null &&
+        !(examDate && daysUntil(examDate) < 0)
       : step === "hours"
         ? hours > 0
         : subjectNames.length > 0;
@@ -221,6 +265,18 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
             placeholder="Ex.: Técnico do Seguro Social"
             onSubmitEditing={next}
           />
+          <ExamDateField value={date} onChange={setDate} />
+          {examDate === null && date.length === 10 ? (
+            <Text style={s.error}>Confira a data: use DD/MM/AAAA.</Text>
+          ) : examDate && daysUntil(examDate) < 0 ? (
+            <Text style={s.error}>Essa data já passou.</Text>
+          ) : (
+            <Text style={s.dateHint}>
+              {examDate
+                ? `Até a prova, ${countdown(examDate)}.`
+                : "Sem edital ainda? Deixe em branco."}
+            </Text>
+          )}
         </>
       )}
 
@@ -361,6 +417,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
             <Summary
               exam={examName}
               role={role.trim()}
+              date={examDate ? displayExamDate(examDate) : ""}
+              left={countdown(examDate)}
               hours={hours}
               perDay={perDay}
               subjects={step === "subjects" ? subjectNames : []}
@@ -377,6 +435,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 function Summary({
   exam,
   role,
+  date,
+  left,
   hours,
   perDay,
   subjects,
@@ -384,6 +444,8 @@ function Summary({
 }: {
   exam: string;
   role: string;
+  date: string;
+  left: string;
   hours: number;
   perDay: string;
   subjects: string[];
@@ -394,6 +456,15 @@ function Summary({
       <Text style={s.summaryEyebrow}>SEU CICLO</Text>
       <Text style={s.summaryTitle}>{exam}</Text>
       {role ? <Text style={s.summaryRole}>{role}</Text> : null}
+      {date ? (
+        <View style={s.summaryRow}>
+          <Text style={s.summaryLabel}>Prova</Text>
+          <Text style={s.summaryValue}>
+            {date}
+            {left ? ` · ${left}` : ""}
+          </Text>
+        </View>
+      ) : null}
       <View style={s.summaryRow}>
         <Text style={s.summaryLabel}>Meta</Text>
         <Text style={[s.summaryValue, step === "exam" && s.summaryPending]}>
@@ -571,6 +642,9 @@ const s = StyleSheet.create({
     fontSize: 14,
   },
   hint: { color: palette.muted, fontSize: 12, lineHeight: 18, marginTop: 16 },
+  dateHint: { color: palette.muted, fontSize: 12, marginTop: -6 },
+  later: { alignSelf: "flex-start", paddingVertical: 12 },
+  laterText: { color: palette.muted, fontSize: 13, fontWeight: "700" },
   error: { color: palette.danger, fontSize: 13, marginTop: 14 },
   nav: {
     flexDirection: "row",

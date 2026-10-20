@@ -66,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         /signups? not allowed|not found/i.test(error.message)
       )
         throw new AccountNotFoundError();
+      if (/signups? not allowed/i.test(error.message))
+        throw new Error("Os cadastros estão fechados por enquanto.");
       throw new Error(error.message);
     },
     async verifyCode(email, code) {

@@ -11,6 +11,8 @@ export type StarterSubject = {
 export type StartExamInput = {
   name: string;
   role?: string;
+  /** Data da prova em AAAA-MM-DD, quando já é conhecida. */
+  examDate?: string;
   hoursPerWeek: number;
   subjects: StarterSubject[];
 };
@@ -51,6 +53,7 @@ export function startExam(data: AppData, input: StartExamInput): AppData {
         id: examId,
         name: input.name.trim(),
         role: input.role?.trim() || "",
+        ...(input.examDate ? { examDate: input.examDate } : {}),
         hoursPerWeek: input.hoursPerWeek,
         createdAt: today(),
         cyclePosition: 0,

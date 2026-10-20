@@ -31,8 +31,8 @@ import {
   uid,
 } from "@meu-edital/domain";
 import { normalizeText } from "@global/utils/normalizeText";
-import ExamDateField from "./ExamDateField";
-import { displayExamDate, parseExamDate } from "../utils/examDate";
+import ExamDateField from "@global/components/shared/ExamDateField";
+import { displayExamDate, parseExamDate } from "@global/utils/examDate";
 
 type CatalogView = "list" | "subject" | "topic" | "subjectForm" | "topicForm";
 const colors = ["#DAEACD", "#DAE3F7", "#F8DDD0", "#E9DDF2", "#D7E9EA"];

@@ -1,5 +1,5 @@
 import { Field } from "@global/components/ui";
-import { formatExamDateInput } from "../utils/examDate";
+import { formatExamDateInput } from "@global/utils/examDate";
 
 type Props = { value: string; onChange: (value: string) => void };
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { palette } from "@global/components/ui";
-import { parseExamDate } from "../utils/examDate";
+import { parseExamDate } from "@global/utils/examDate";
 
 type Props = { value: string; onChange: (value: string) => void };
 

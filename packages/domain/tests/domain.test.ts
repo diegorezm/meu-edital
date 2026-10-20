@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   addDays,
+  daysUntil,
   emptyData,
   GENERAL_TOPIC,
   startExam,
@@ -289,4 +290,23 @@ test("startExam cria concurso ativo com assuntos e ciclo do tamanho da meta", ()
   assert.ok(items.length > 0);
   assert.equal(lapMinutes, 600);
   assert.ok(suggestNextTopic(data, next!.subjectId));
+  assert.equal(exam.examDate, undefined);
+});
+
+test("startExam guarda a data da prova quando informada", () => {
+  const data = startExam(emptyData(), {
+    name: "INSS",
+    examDate: "2027-03-14",
+    hoursPerWeek: 10,
+    subjects: [{ name: "Português" }],
+  });
+  assert.equal(data.exams[0].examDate, "2027-03-14");
+});
+
+test("daysUntil conta dias de calendário, inclusive na virada do horário de verão", () => {
+  assert.equal(daysUntil("2026-10-20", "2026-10-20"), 0);
+  assert.equal(daysUntil("2026-10-21", "2026-10-20"), 1);
+  assert.equal(daysUntil("2027-01-01", "2026-12-31"), 1);
+  assert.equal(daysUntil("2026-11-10", "2026-10-20"), 21);
+  assert.equal(daysUntil("2026-10-19", "2026-10-20"), -1);
 });

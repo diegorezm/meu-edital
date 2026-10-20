@@ -30,21 +30,18 @@ export const steps = [
 
 export const features = [
   {
-    tone: "lavender",
     title: "Ciclo pelos pesos do edital",
     text: "Cada matéria ganha tempo pelo peso, pelos acertos e pelo que falta estudar. Uma volta do ciclo é a sua meta da semana. Faltou um dia? Continue de onde parou.",
   },
   {
-    tone: "mint",
     title: "Revisões no dia certo",
     text: "Estudou um assunto pela primeira vez, o app agenda as revisões de 1, 7 e 30 dias. Você abre e vê o que venceu.",
   },
   {
-    tone: "peach",
     title: "Semana sem achismo",
     text: "Meta × estudado, dia a dia e por matéria. Fica claro o que ficou para trás antes que vire problema.",
   },
-] as const;
+];
 
 export const faq = [
   {

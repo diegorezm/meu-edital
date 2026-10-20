@@ -1,5 +1,6 @@
 ---
 import { PUBLIC_APP_URL } from "astro:env/client";
+import { subjectTones } from "@meu-edital/brand";
 import Brand from "../components/Brand.astro";
 import ProductPreview from "../components/ProductPreview.astro";
 import { faq, features, pains, steps } from "../content/landing";
@@ -28,7 +29,7 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     <section class="hero wrap">
       <div class="hero-copy">
         <p class="eyebrow">PARA QUEM ESTUDA PARA CONCURSO</p>
-        <h1>Seu edital tem 12 matérias. Hoje você estuda qual?</h1>
+        <h1>Seu edital tem 12 matérias. Hoje você estuda <mark>qual?</mark></h1>
         <p class="lead">
           O Meu Edital monta um ciclo de estudos pelos pesos do edital e mostra
           o próximo bloco. Faltou um dia? Você continua de onde parou.
@@ -68,7 +69,9 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
         {
           steps.map((item, index) => (
             <li class="step">
-              <span class="step-number">{index + 1}</span>
+              <span class="step-number" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
               <h3>{item.title}</h3>
               <p>{item.text}</p>
             </li>
@@ -81,8 +84,11 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
       <h2>Você estuda. O app faz as contas.</h2>
       <div class="grid">
         {
-          features.map((item) => (
-            <article class="feature" style={`background:var(--${item.tone})`}>
+          features.map((item, index) => (
+            <article
+              class="feature"
+              style={`--tone:${subjectTones[index % subjectTones.length]}`}
+            >
               <h3>{item.title}</h3>
               <p>{item.text}</p>
             </article>
@@ -114,8 +120,9 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
 
     <section class="block wrap">
       <div class="final">
+        <p class="hand">pare de refazer cronograma.</p>
         <h2>Seu próximo bloco de estudo está a 3 passos.</h2>
-        <p>Pare de refazer cronograma. Comece a estudar o que pesa.</p>
+        <p>Comece a estudar o que pesa no edital.</p>
         <a class="cta light" href={signUp}>Montar meu ciclo grátis&nbsp; →</a>
         <p class="final-trust">Grátis · sem senha · sem cartão</p>
       </div>
@@ -146,6 +153,7 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     justify-content: space-between;
     padding-top: 12px;
     padding-bottom: 12px;
+    border-bottom: 1px solid var(--ink);
   }
   .top-actions {
     display: flex;
@@ -154,118 +162,107 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
   }
   .top-link {
     padding: 9px 12px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
     text-decoration: none;
   }
   .top-link:hover {
-    background: #eeefe9;
+    background: var(--field);
   }
 
   .eyebrow {
-    color: #8573ce;
+    color: var(--muted);
     font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
   }
   h1 {
-    font-size: 36px;
-    line-height: 41px;
-    font-weight: 800;
-    letter-spacing: -1.6px;
+    font-size: 38px;
+    line-height: 1.1;
   }
   h2 {
-    font-size: 26px;
-    line-height: 31px;
-    font-weight: 800;
-    letter-spacing: -1px;
+    font-size: 28px;
+    line-height: 1.15;
     margin-bottom: 22px;
     max-width: 640px;
   }
   h3 {
-    font-size: 17px;
-    line-height: 22px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
+    font-size: 19px;
+    line-height: 1.25;
   }
   .lead {
-    color: var(--muted);
-    font-size: 16px;
-    line-height: 24px;
+    color: var(--inkSoft);
+    font-size: 15px;
+    line-height: 1.65;
     margin-top: 18px;
     max-width: 520px;
   }
 
   .hero {
     display: grid;
-    gap: 34px;
-    padding-top: 22px;
-    padding-bottom: 36px;
+    gap: 40px;
+    padding-top: 30px;
+    padding-bottom: 40px;
   }
   .cta-row {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 22px;
+    margin-top: 24px;
   }
   .trust {
     list-style: none;
     padding: 0;
-    margin: 16px 0 0;
+    margin: 18px 0 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 14px;
+    gap: 6px 16px;
     color: var(--muted);
     font-size: 12px;
-    font-weight: 600;
   }
   .trust span {
-    color: #4e9a72;
-    font-weight: 900;
+    color: var(--ink);
   }
 
   .cta {
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    background: var(--dark);
-    color: #fff;
-    border: 1px solid var(--dark);
-    border-radius: 16px;
-    padding: 16px 24px;
-    font-size: 15px;
-    font-weight: 800;
+    background: var(--ink);
+    color: var(--bg);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    padding: 15px 22px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
     text-decoration: none;
-    transition:
-      transform 0.15s,
-      opacity 0.15s;
+    transition: opacity 0.15s;
   }
   .cta:hover {
-    transform: translateY(-1px);
-    opacity: 0.92;
+    opacity: 0.88;
   }
   .cta:focus-visible,
   .top-link:focus-visible,
   summary:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
   }
   .cta.small {
-    padding: 10px 16px;
-    border-radius: 13px;
-    font-size: 13px;
+    padding: 9px 14px;
+    font-size: 11px;
   }
   .cta.secondary {
-    background: var(--panel);
-    color: var(--dark);
-    border-color: var(--line);
+    background: transparent;
+    color: var(--ink);
   }
   .cta.light {
-    background: var(--lavender);
-    border-color: var(--lavender);
-    color: var(--dark);
+    background: var(--bg);
+    border-color: var(--bg);
+    color: var(--ink);
   }
   .cta.full {
     width: 100%;
@@ -276,32 +273,37 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
   }
 
   .block {
-    padding-top: 34px;
-    padding-bottom: 34px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    border-top: 1px dashed var(--rule);
   }
   .grid {
     display: grid;
-    gap: 10px;
+    gap: 12px;
   }
-  .card {
+  .card,
+  .step,
+  .feature {
     background: var(--panel);
-    border: 1px solid #eff0ed;
-    border-radius: 22px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
     padding: 20px;
   }
   .card p,
   .step p,
+  .feature p,
   .faq-intro p {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 21px;
-    margin-top: 8px;
+    color: var(--inkSoft);
+    font-size: 13px;
+    line-height: 1.65;
+    margin-top: 10px;
   }
   .pain-mark {
     display: block;
     color: var(--danger);
-    font-size: 22px;
-    font-weight: 800;
+    font-family: "Caveat", cursive;
+    font-size: 34px;
+    line-height: 1;
     margin-bottom: 6px;
   }
   .steps {
@@ -309,36 +311,23 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     padding: 0;
     margin: 0;
   }
-  .step {
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 20px;
-  }
   .step-number {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
-    background: var(--dark);
-    color: #fff;
-    font-weight: 800;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 500;
     margin-bottom: 14px;
   }
   .feature {
-    border-radius: 22px;
-    padding: 22px;
+    border-left: 6px solid var(--tone);
   }
   .feature h3 {
-    color: var(--dark);
-    font-size: 19px;
-    line-height: 24px;
-  }
-  .feature p {
-    color: #3a424c;
-    font-size: 14px;
-    line-height: 21px;
-    margin-top: 10px;
+    font-size: 21px;
   }
 
   .faq-list {
@@ -347,8 +336,8 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
   }
   details {
     background: var(--panel);
-    border: 1px solid #eff0ed;
-    border-radius: 16px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
     padding: 15px 18px;
   }
   summary {
@@ -357,8 +346,9 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
   }
   summary::-webkit-details-marker {
     display: none;
@@ -366,41 +356,52 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
   summary::after {
     content: "+";
     color: var(--muted);
-    font-size: 20px;
-    line-height: 20px;
+    font-size: 18px;
+    line-height: 18px;
   }
   details[open] summary::after {
     content: "−";
   }
   details p {
-    color: var(--muted);
+    font-family: "Courier Prime", monospace;
+    color: var(--inkSoft);
     font-size: 14px;
-    line-height: 21px;
-    margin-top: 8px;
+    line-height: 1.55;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
   }
 
   .final {
-    background: var(--dark);
-    border-radius: 30px;
-    padding: 26px;
+    background: var(--ink);
+    border-radius: 4px;
+    padding: 28px 22px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     text-align: center;
   }
+  .final .hand {
+    font-family: "Caveat", cursive;
+    color: var(--highlight);
+    font-size: 24px;
+    margin: 0 0 6px;
+  }
   .final h2 {
-    color: #fff;
+    color: var(--bg);
     margin: 0 auto;
   }
   .final p {
-    color: #aeb4bb;
-    font-size: 16px;
-    line-height: 24px;
+    color: #c9c3b4;
+    font-size: 14px;
+    line-height: 1.6;
     margin: 12px 0 24px;
   }
   .final .final-trust {
-    font-size: 12px;
-    margin: 14px 0 0;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin: 16px 0 0;
   }
 
   .footer {
@@ -409,8 +410,9 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding-top: 24px;
+    padding-top: 22px;
     padding-bottom: 96px;
+    border-top: 1px solid var(--ink);
     color: var(--muted);
     font-size: 12px;
   }
@@ -421,7 +423,7 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
     bottom: 0;
     padding: 10px 16px 12px;
     background: var(--bg);
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--ink);
   }
 
   .only-desktop {
@@ -443,34 +445,29 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
       padding-bottom: 16px;
     }
     h1 {
-      font-size: 48px;
-      line-height: 54px;
-      letter-spacing: -2.2px;
+      font-size: 52px;
     }
     h2 {
-      font-size: 32px;
-      line-height: 38px;
-      letter-spacing: -1.2px;
+      font-size: 36px;
     }
     .lead {
-      font-size: 18px;
-      line-height: 28px;
+      font-size: 16px;
     }
     .hero {
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: 1.05fr 1fr;
       align-items: center;
-      gap: 48px;
-      padding-top: 54px;
-      padding-bottom: 70px;
+      gap: 56px;
+      padding-top: 60px;
+      padding-bottom: 72px;
     }
     .cta-row {
       flex-direction: row;
       flex-wrap: wrap;
-      margin-top: 28px;
+      margin-top: 30px;
     }
     .grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 16px;
     }
     .cta.inline {
       width: auto;
@@ -481,12 +478,11 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
       gap: 48px;
     }
     .final {
-      padding: 44px;
+      padding: 48px;
       align-items: center;
     }
     .final h2 {
-      font-size: 34px;
-      line-height: 40px;
+      font-size: 38px;
     }
     .footer {
       padding-bottom: 24px;
@@ -495,8 +491,7 @@ const trust = ["Grátis, sem cartão", "Entra com Google ou código", "Celular e
 
   @media (min-width: 1100px) {
     h1 {
-      font-size: 58px;
-      line-height: 64px;
+      font-size: 62px;
     }
   }
 </style>

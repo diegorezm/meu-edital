@@ -1,65 +1,102 @@
 ---
-// Retrato estático do app: mostra o resultado em vez de explicar.
-const cycle = [
-  { name: "Português", color: "var(--lavender)" },
-  { name: "Dir. Adm.", color: "var(--blue)", current: true },
-  { name: "Matemática", color: "var(--peach)" },
-  { name: "Dir. Const.", color: "var(--mint)" },
-  { name: "Português", color: "var(--lavender)" },
+// Retrato estático da tela Início do app: mostra o resultado em vez de explicar.
+const total = 16;
+const position = 3;
+const week = [
+  { name: "Português", done: 70 },
+  { name: "Dir. Administrativo", done: 45 },
+  { name: "Dir. Constitucional", done: 30 },
 ];
-// Minutos por dia numa semana de exemplo (meta de 150 min/dia).
-const week = [150, 120, 165, 90, 140, 0, 0];
-const days = ["S", "T", "Q", "Q", "S", "S", "D"];
-const max = Math.max(...week);
+const log = [
+  {
+    date: "19 out",
+    subject: "Dir. Constitucional",
+    meta: "Teoria · 12/15",
+    minutes: "1h10",
+    tone: "#8E9CC9",
+    note: "Errei as de remédios constitucionais. Revisar HC e MS.",
+  },
+  {
+    date: "17 out",
+    subject: "Português",
+    meta: "Crase",
+    minutes: "30min",
+    tone: "#9DBFA6",
+    stamp: "Revisada",
+  },
+];
 ---
 
 <figure class="preview" aria-label="Exemplo da tela inicial do app">
-  <span class="sample">EXEMPLO</span>
+  <span class="sample">Exemplo</span>
+  <p class="label">INSS · Técnico do Seguro Social</p>
+  <p class="countdown">Faltam <mark>145 dias</mark> para a prova.</p>
+
   <div class="next">
-    <p class="eyebrow">PRÓXIMO BLOCO</p>
-    <p class="subject">Direito Administrativo</p>
-    <p class="meta">60 min · Teoria</p>
-    <div class="topic">
-      <span>Assunto sugerido</span>
-      <strong>Atos administrativos</strong>
-    </div>
-    <div class="play">▷&nbsp; Começar agora</div>
+    <p class="label light">Bloco 04 de {total} · volta 1</p>
+    <p class="subject">Dir. Administrativo</p>
+    <p class="topic">Atos administrativos · 1h</p>
+    <span class="play">Começar estudo &nbsp;→</span>
   </div>
-  <div class="row">
-    <div class="card grow">
-      <p class="card-title">Ciclo</p>
-      <div class="chips">
-        {
-          cycle.map((item) => (
-            <span
-              class:list={["chip", { current: item.current }]}
-              style={`background:${item.color}`}
-            >
-              {item.name}
-            </span>
-          ))
-        }
-      </div>
-    </div>
-    <div class="card reviews">
-      <p class="card-title">Revisões</p>
-      <p class="big">3</p>
-      <p class="small">vencem hoje</p>
-    </div>
-  </div>
+
   <div class="card">
-    <div class="week-head">
-      <p class="card-title">Semana</p>
-      <p class="small">11h05 de 17h30</p>
+    <div class="card-head">
+      <p class="card-title">Cartão-resposta do ciclo</p>
+      <p class="label">{position} de {total}</p>
     </div>
-    <div class="bars">
+    <div class="bubbles">
       {
-        week.map((minutes, index) => (
-          <div class="bar-col">
-            <div class="track">
-              <div class="bar" style={`height:${(minutes / max) * 100}%`} />
+        Array.from({ length: total }, (_, index) => (
+          <span
+            class:list={[
+              "bubble",
+              { done: index < position, current: index === position },
+            ]}
+          >
+            {index < position ? "✓" : index + 1}
+          </span>
+        ))
+      }
+    </div>
+    <p class="hand">faltou um dia? segue daqui.</p>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="card-head">
+        <p class="card-title">Esta semana</p>
+        <p class="label">4h / 15h</p>
+      </div>
+      {
+        week.map((item) => (
+          <div class="week">
+            <span>{item.name}</span>
+            <span class="track">
+              <span style={`width:${item.done}%`} />
+            </span>
+          </div>
+        ))
+      }
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <p class="card-title">Outubro</p>
+        <p class="label">9 · 6h12</p>
+      </div>
+      {
+        log.map((item) => (
+          <div class="log">
+            <span class="bar" style={`background:${item.tone}`} />
+            <div>
+              <p class="log-title">
+                {item.date} · {item.subject}
+              </p>
+              <p class="label">
+                {item.meta} · {item.minutes}
+              </p>
+              {item.note && <p class="note">{item.note}</p>}
+              {item.stamp && <span class="stamp">{item.stamp}</span>}
             </div>
-            <span class="day">{days[index]}</span>
           </div>
         ))
       }
@@ -72,159 +109,185 @@ const max = Math.max(...week);
     position: relative;
     margin: 0 auto;
     width: 100%;
-    max-width: 440px;
+    max-width: 460px;
     background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 28px;
-    padding: 14px;
+    border: 1px solid var(--ink);
+    border-radius: 10px;
+    padding: 18px;
     display: grid;
-    gap: 10px;
-    box-shadow: 0 14px 30px rgba(32, 39, 49, 0.08);
+    gap: 12px;
   }
   p {
     margin: 0;
   }
   .sample {
     position: absolute;
-    top: -10px;
+    top: -11px;
     right: 18px;
-    background: var(--dark);
-    color: #fff;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.2px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
     padding: 4px 9px;
-    border-radius: 8px;
+    border-radius: 3px;
+  }
+  .label {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+  }
+  .label.light {
+    color: #c9c3b4;
+  }
+  .countdown {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-top: -6px;
   }
   .next {
-    background: var(--dark);
-    border-radius: 22px;
-    padding: 18px;
-    color: #fff;
-  }
-  .eyebrow {
-    color: var(--lavender);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.4px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 4px;
+    padding: 16px;
   }
   .subject {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.7px;
-    margin-top: 8px;
-  }
-  .meta {
-    color: #aeb4bb;
-    font-size: 12px;
-    margin-top: 3px;
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 600;
+    font-size: 23px;
+    margin-top: 6px;
   }
   .topic {
-    display: grid;
-    gap: 2px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 11px;
-    margin-top: 14px;
-  }
-  .topic span {
-    color: #aeb4bb;
-    font-size: 10px;
-  }
-  .topic strong {
+    font-family: "Courier Prime", monospace;
+    color: #dcd6c8;
     font-size: 13px;
+    margin-top: 2px;
   }
   .play {
-    background: var(--lavender);
-    color: var(--dark);
-    border-radius: 13px;
-    padding: 10px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 800;
+    display: inline-block;
     margin-top: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 7px 11px;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
   }
   .row {
-    display: flex;
-    gap: 10px;
-  }
-  .grow {
-    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
   .card {
     background: var(--panel);
-    border: 1px solid #eff0ed;
-    border-radius: 18px;
-    padding: 13px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    padding: 12px;
+    min-width: 0;
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed var(--rule);
   }
   .card-title {
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    color: var(--ink);
   }
-  .chips {
+  .bubbles {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-top: 9px;
   }
-  .chip {
-    border-radius: 8px;
-    padding: 4px 7px;
-    color: var(--dark);
-    font-size: 10px;
-    font-weight: 700;
-  }
-  .chip.current {
-    outline: 1.5px solid var(--dark);
-  }
-  .reviews {
-    width: 96px;
-  }
-  .big {
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-top: 4px;
-  }
-  .small {
+  .bubble {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--ink);
+    display: grid;
+    place-items: center;
+    font-size: 8px;
     color: var(--muted);
-    font-size: 10px;
   }
-  .week-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .bubble.done {
+    background: var(--ink);
+    color: var(--bg);
   }
-  .bars {
-    display: flex;
-    gap: 8px;
-    height: 70px;
-    margin-top: 10px;
+  .bubble.current {
+    border-width: 2px;
+    color: var(--ink);
+    font-weight: 500;
   }
-  .bar-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .hand {
+    font-family: "Caveat", cursive;
+    color: var(--danger);
+    font-size: 18px;
+    margin-top: 6px;
+  }
+  .week {
+    display: grid;
     gap: 4px;
+    font-size: 10px;
+    margin-top: 6px;
   }
   .track {
-    flex: 1;
-    width: 100%;
-    background: #f1f2ef;
-    border-radius: 6px;
+    height: 6px;
+    border: 1px solid var(--ink);
+    background: var(--field);
+    display: block;
+  }
+  .track span {
+    display: block;
+    height: 100%;
+    background: var(--ink);
+  }
+  .log {
     display: flex;
-    align-items: flex-end;
-    overflow: hidden;
+    gap: 8px;
+    margin-top: 8px;
   }
   .bar {
-    width: 100%;
-    background: var(--accent);
-    border-radius: 6px;
+    width: 3px;
+    flex: none;
   }
-  .day {
-    color: var(--muted);
-    font-size: 9px;
-    font-weight: 700;
+  .log-title {
+    font-size: 10px;
+    color: var(--ink);
+  }
+  .note {
+    font-family: "Courier Prime", monospace;
+    color: var(--inkSoft);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 3px;
+  }
+  .stamp {
+    display: inline-block;
+    margin-top: 5px;
+    border: 1.5px solid var(--danger);
+    color: var(--danger);
+    border-radius: 2px;
+    padding: 1px 5px;
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    transform: rotate(-7deg);
+  }
+  @media (max-width: 420px) {
+    .row {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

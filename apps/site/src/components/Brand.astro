@@ -1,10 +1,30 @@
 ---
-type Props = { inverted?: boolean };
-const { inverted = false } = Astro.props;
+import { mark } from "@meu-edital/brand";
+
+type Props = { large?: boolean };
+const { large = false } = Astro.props;
+const { frame } = mark;
+const size = large ? 38 : 32;
 ---
 
 <a href="/" class="brand" aria-label="Meu Edital, página inicial">
-  <span class:list={["mark", { inverted }]}>m.</span>
+  <svg width={size} height={size} viewBox={mark.viewBox} aria-hidden="true">
+    <rect width="120" height="120" rx="27" fill="var(--bg)"></rect>
+    <rect
+      x={frame.x}
+      y={frame.y}
+      width={frame.size}
+      height={frame.size}
+      rx={frame.radius}
+      fill="none"
+      stroke="var(--ink)"
+      stroke-width={frame.stroke}></rect>
+    <path d={mark.highlight} fill="var(--highlight)"></path>
+    <path d={mark.letter.d} transform={mark.letter.transform} fill="var(--ink)"
+    ></path>
+    <circle cx={mark.dot.cx} cy={mark.dot.cy} r={mark.dot.r} fill="var(--danger)"
+    ></circle>
+  </svg>
   <span class="logo">meu edital<span class="dot">.</span></span>
 </a>
 
@@ -15,29 +35,13 @@ const { inverted = false } = Astro.props;
     gap: 9px;
     text-decoration: none;
   }
-  .mark {
-    width: 36px;
-    height: 36px;
-    border-radius: 13px;
-    background: var(--lavender);
-    color: var(--dark);
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: -1.5px;
-  }
-  .mark.inverted {
-    background: var(--dark);
-    color: var(--lavender);
-  }
   .logo {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.9px;
-    color: var(--text);
+    font-family: "Newsreader", Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
   }
   .dot {
-    color: #8b75db;
+    color: var(--danger);
   }
 </style>

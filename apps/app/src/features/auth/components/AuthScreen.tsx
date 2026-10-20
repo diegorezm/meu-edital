@@ -240,7 +240,7 @@ export function AuthScreen({
     <SafeAreaView style={[s.root, s.rootDesktop]}>
       <View style={s.split}>
         <View style={s.aside}>
-          <Brand large inverted />
+          <Brand large />
           <View>
             <Text style={s.asideTitle}>
               {mode === "signUp"

@@ -50,3 +50,4 @@ export function cssVariables(colors: Record<string, string> = palette) {
     .map(([name, value]) => `--${name}: ${value};`)
     .join(" ");
 }
+export * from "./mark";

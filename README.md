@@ -108,11 +108,12 @@ As variáveis `EXPO_PUBLIC_*` entram no build, então `apps/app/.env.local` prec
 
 ### Publicar o site
 
-O site (`apps/site`) é HTML e CSS estáticos, sem JavaScript. Funciona em qualquer hospedagem estática, como Cloudflare Pages ou Netlify (ambos têm plano gratuito).
+O site (`apps/site`) é HTML e CSS estáticos, sem JavaScript, publicado no GitHub Pages em **https://diegorezm.github.io/meu-edital/**.
 
-- Comando de build: `npm run build:site` (na raiz)
-- Pasta publicada: `apps/site/dist`
-- Variável: `PUBLIC_APP_URL` com o endereço do app. Os botões "Criar conta" e "Entrar" levam para `PUBLIC_APP_URL/?conta=criar` e `?conta=entrar`.
+- O workflow `.github/workflows/site.yml` publica sozinho a cada push na `main` que mude `apps/site`, `packages/brand` ou o `package-lock.json`. Para publicar na mão: **Actions → Site → Run workflow**.
+- O site fica no subcaminho `/meu-edital` (`base` em `apps/site/astro.config.mjs`). Links internos usam `import.meta.env.BASE_URL`, nunca `/`.
+- Os botões "Criar conta" e "Entrar" levam para `PUBLIC_APP_URL/?conta=criar` e `?conta=entrar`. No workflow, `PUBLIC_APP_URL` vem da variável `APP_URL` do repositório (Settings → Secrets and variables → Actions → Variables) ou, sem ela, de `https://meu-edital.expo.app`.
+- Para publicar em outro lugar: `npm run build:site` na raiz e a pasta `apps/site/dist`.
 
 Para rodar localmente com outro endereço, copie `apps/site/.env.example` para `apps/site/.env`.
 

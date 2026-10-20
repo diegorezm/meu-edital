@@ -5,9 +5,11 @@ type Props = { large?: boolean };
 const { large = false } = Astro.props;
 const { frame } = mark;
 const size = large ? 38 : 32;
+// O site fica num subcaminho do GitHub Pages; "/" levaria para fora dele.
+const home = import.meta.env.BASE_URL;
 ---
 
-<a href="/" class="brand" aria-label="Meu Edital, página inicial">
+<a href={home} class="brand" aria-label="Meu Edital, página inicial">
   <svg width={size} height={size} viewBox={mark.viewBox} aria-hidden="true">
     <rect width="120" height="120" rx="27" fill="var(--bg)"></rect>
     <rect

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@global/components/Text";
 import { palette } from "@global/components/ui";
 import { parseExamDate } from "@global/utils/examDate";
 
@@ -80,10 +81,10 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 48,
-    backgroundColor: "#F7F7F2",
+    backgroundColor: "#FBF9F4",
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 16,
+    borderRadius: 6,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
   placeholder: { color: palette.muted, fontSize: 15 },
   icon: { color: palette.muted, fontSize: 20 },
   done: { alignSelf: "flex-end", padding: 10 },
-  doneText: { color: "#6D5BB8", fontSize: 13, fontWeight: "700" },
+  doneText: { color: "#22304A", fontSize: 13, fontWeight: "700" },
   clear: { alignSelf: "flex-start", paddingVertical: 8 },
   clearText: { color: palette.muted, fontSize: 12 },
 });

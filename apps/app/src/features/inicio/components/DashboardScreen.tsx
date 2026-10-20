@@ -1,32 +1,48 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   cycleState,
   daysUntil,
   dueReviews,
   examProgress,
+  monthSummary,
   suggestNextTopic,
   topicPerformance,
   weekSummary,
 } from "@meu-edital/domain";
-import { useStore } from "@global/store/store";
-import { formatDuration } from "@global/utils/formatDuration";
+import { Text } from "@global/components/Text";
 import {
-  Button,
+  AnswerSheet,
   BottomDrawer,
+  Button,
   Empty,
+  HandNote,
+  Highlight,
   InlineLink,
+  Label,
   Page,
   palette,
+  Rule,
   Section,
+  Stamp,
   useLayout,
 } from "@global/components/ui";
+import { fonts } from "@global/constants/fonts";
+import { useStore } from "@global/store/store";
+import { displayExamDate } from "@global/utils/examDate";
+import {
+  formatDuration,
+  formatMonth,
+  formatShortDate,
+} from "@global/utils/formatDuration";
+import { subjectTone } from "@global/utils/subjectTone";
 
 export default function Dashboard() {
   const { data } = useStore();
   const { mobile, wide } = useLayout();
   const exam = data?.exams.find((item) => item.id === data.activeExamId);
   const week = data && exam ? weekSummary(data, exam.id) : null;
+  const month = data && exam ? monthSummary(data, exam.id) : null;
   const cycle = data && exam ? cycleState(data, exam.id) : null;
   const next = cycle?.next;
   const suggestion =
@@ -38,9 +54,6 @@ export default function Dashboard() {
     data?.topics.find((item) => item.id === id)?.name || "Assunto";
   const progress = exam && data ? examProgress(data, exam.id) : 0;
   const daysLeft = exam?.examDate ? daysUntil(exam.examDate) : null;
-  const goal = week?.targetMinutes
-    ? Math.min(100, Math.round((100 * week.minutes) / week.targetMinutes))
-    : 0;
   const subjects =
     data?.subjects.filter((item) => item.examId === exam?.id) || [];
   const topicStats = data && exam ? topicPerformance(data, exam.id) : [];
@@ -54,7 +67,7 @@ export default function Dashboard() {
 
   if (!data || !exam)
     return (
-      <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
+      <Page eyebrow="Início" title="Um passo de cada vez.">
         <View style={s.content}>
           <Section title="Seu próximo capítulo começa aqui">
             <Empty text="Crie seu primeiro concurso e organize seus estudos com calma." />
@@ -67,6 +80,32 @@ export default function Dashboard() {
       </Page>
     );
 
+  const title =
+    daysLeft !== null && daysLeft > 0 ? (
+      <>
+        {daysLeft === 1 ? "Falta " : "Faltam "}
+        <Highlight>
+          {daysLeft} {daysLeft === 1 ? "dia" : "dias"}
+        </Highlight>{" "}
+        para a prova.
+      </>
+    ) : daysLeft === 0 ? (
+      <>
+        A prova é <Highlight>hoje</Highlight>. Boa prova!
+      </>
+    ) : (
+      "Um passo de cada vez."
+    );
+  const eyebrow = [exam.name, exam.role].filter(Boolean).join(" · ");
+  const facts = [
+    exam.examDate && daysLeft !== null && daysLeft >= 0
+      ? `Prova ${displayExamDate(exam.examDate)}`
+      : null,
+    `${progress}% do edital`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const upcoming = cycle
     ? Array.from(
         { length: Math.min(5, Math.max(0, cycle.items.length - 1)) },
@@ -75,35 +114,12 @@ export default function Dashboard() {
       )
     : [];
 
-  const examCard = (
-    <View style={s.examCard}>
-      <View style={s.examInfo}>
-        <Text style={s.overline}>SEU OBJETIVO</Text>
-        <Text style={s.examName}>{exam.name}</Text>
-        <Text style={s.examRole}>{exam.role}</Text>
-        {daysLeft !== null && daysLeft >= 0 && (
-          <Text style={s.examCountdown}>
-            {daysLeft === 0
-              ? "A prova é hoje"
-              : daysLeft === 1
-                ? "Falta 1 dia para a prova"
-                : `Faltam ${daysLeft} dias para a prova`}
-          </Text>
-        )}
-      </View>
-      <View style={s.progressBadge}>
-        <Text style={s.progressValue}>{progress}%</Text>
-        <Text style={s.progressCaption}>do edital</Text>
-      </View>
-    </View>
-  );
-
   const focusCard = (
     <View style={[s.focusCard, !mobile && s.focusCardDesktop]}>
       <Text style={s.focusOverline}>
         {next && cycle
-          ? `PRÓXIMO DO CICLO · ${cycle.position + 1} DE ${cycle.items.length} · VOLTA ${cycle.laps + 1}`
-          : "PRÓXIMO PASSO"}
+          ? `Bloco ${String(cycle.position + 1).padStart(2, "0")} de ${cycle.items.length} · volta ${cycle.laps + 1}`
+          : "Próximo passo"}
       </Text>
       <Text style={[s.focusTitle, !mobile && s.focusTitleDesktop]}>
         {next ? subject(next.subjectId) : "Monte seu ciclo"}
@@ -114,6 +130,7 @@ export default function Dashboard() {
           : "Gere a sequência de estudos pelos pesos das matérias."}
       </Text>
       <Button
+        inverted
         title={next ? "Começar estudo  →" : "Abrir ciclo  →"}
         onPress={() =>
           router.push(
@@ -129,20 +146,39 @@ export default function Dashboard() {
             {pending.length}{" "}
             {pending.length === 1 ? "revisão vencida" : "revisões vencidas"}
           </Text>
-          <InlineLink href="/revisoes" label="Revisar" />
+          <Text
+            accessibilityRole="link"
+            onPress={() => router.push("/revisoes")}
+            style={s.reviewHintLink}
+          >
+            Revisar →
+          </Text>
         </View>
       )}
     </View>
   );
 
+  const answerSection = cycle && cycle.items.length > 0 && (
+    <Section
+      title="Cartão-resposta do ciclo"
+      aside={`${cycle.position} de ${cycle.items.length}`}
+    >
+      <AnswerSheet
+        total={cycle.items.length}
+        position={cycle.position}
+        size={mobile ? 20 : 18}
+      />
+      <View style={s.handNote}>
+        <HandNote>faltou um dia? segue daqui.</HandNote>
+      </View>
+    </Section>
+  );
+
   const weekSection = (
     <Section
       title="Esta semana"
-      aside={`${formatDuration(week?.minutes || 0)} de ${formatDuration(week?.targetMinutes || 0)}`}
+      aside={`${formatDuration(week?.minutes || 0)} / ${formatDuration(week?.targetMinutes || 0)}`}
     >
-      <View style={s.track}>
-        <View style={[s.trackFill, { width: `${goal}%` }]} />
-      </View>
       {week?.subjects.map((item) => {
         const percent = item.targetMinutes
           ? Math.min(100, (100 * item.minutes) / item.targetMinutes)
@@ -158,25 +194,71 @@ export default function Dashboard() {
                 {formatDuration(item.targetMinutes)}
               </Text>
             </View>
-            {!mobile && (
-              <View style={s.miniTrack}>
-                <View style={[s.trackFill, { width: `${percent}%` }]} />
-              </View>
-            )}
+            <View style={s.track}>
+              <View style={[s.trackFill, { width: `${percent}%` }]} />
+            </View>
           </View>
         );
       })}
+      <Rule style={s.innerRule} />
+      <Text style={s.supportingText}>
+        {week?.questions || 0} questões
+        {week?.accuracy === null || week?.accuracy === undefined
+          ? ""
+          : ` · ${week.accuracy}% de acertos`}
+        {" · "}
+        {cycle?.laps || 0} {cycle?.laps === 1 ? "volta" : "voltas"} no ciclo
+      </Text>
       <View style={s.sectionFooter}>
         <InlineLink href="/semana" label="Ver semana" />
       </View>
     </Section>
   );
 
-  const queueSection = upcoming.length > 0 && (
+  const monthSection = month && (
     <Section
-      title="Depois deste bloco"
-      aside={`${cycle?.items.length} no ciclo`}
+      title={formatMonth(month.monthStart)}
+      aside={`${month.sessions.length} ${month.sessions.length === 1 ? "sessão" : "sessões"} · ${formatDuration(month.minutes)}`}
     >
+      {month.sessions.length ? (
+        month.sessions.slice(0, mobile ? 4 : 6).map((item) => (
+          <View key={item.id} style={s.logRow}>
+            <View
+              style={[
+                s.logBar,
+                { backgroundColor: subjectTone(data, item.subjectId) },
+              ]}
+            />
+            <View style={s.logBody}>
+              <View style={s.logLine}>
+                <Text style={s.logTitle} numberOfLines={1}>
+                  {formatShortDate(item.date)} · {subject(item.subjectId)}
+                </Text>
+                <Text style={s.logMinutes}>{formatDuration(item.minutes)}</Text>
+              </View>
+              <View style={s.logLine}>
+                <Label style={s.logMeta}>
+                  {item.type === "Revisão"
+                    ? topic(item.topicId)
+                    : `${item.type} · ${topic(item.topicId)}`}
+                  {item.questions
+                    ? ` · ${item.correct || 0}/${item.questions}`
+                    : ""}
+                </Label>
+                {item.type === "Revisão" && <Stamp label="Revisada" />}
+              </View>
+              {item.note ? <Text style={s.logNote}>{item.note}</Text> : null}
+            </View>
+          </View>
+        ))
+      ) : (
+        <Empty text="Nenhuma sessão neste mês ainda. O primeiro bloco já está te esperando." />
+      )}
+    </Section>
+  );
+
+  const queueSection = upcoming.length > 0 && (
+    <Section title="Depois deste bloco" aside={`${cycle?.items.length} no ciclo`}>
       {upcoming.map((item, index) => (
         <View key={`${item.id}-${index}`} style={s.queueRow}>
           <Text style={s.queueNumber}>
@@ -196,35 +278,11 @@ export default function Dashboard() {
     </Section>
   );
 
-  const performance = (
-    <>
-      <View style={s.statsRow}>
-        <View style={[s.statTile, s.mint]}>
-          <Text style={s.statValue}>{formatDuration(week?.minutes || 0)}</Text>
-          <Text style={s.statLabel}>de estudo</Text>
-        </View>
-        <View style={[s.statTile, s.peach]}>
-          <Text style={s.statValue}>{week?.questions || 0}</Text>
-          <Text style={s.statLabel}>questões</Text>
-        </View>
-      </View>
-      <Text style={s.supportingText}>
-        {week?.accuracy === null || week?.accuracy === undefined
-          ? "Registre questões para acompanhar seus acertos."
-          : `${week.accuracy}% de acertos nas questões registradas.`}
-      </Text>
-      <Text style={s.supportingText}>
-        {cycle?.laps || 0}{" "}
-        {cycle?.laps === 1 ? "volta completa" : "voltas completas"} no ciclo.
-      </Text>
-    </>
-  );
-
   const reviews = pending.length ? (
     pending.slice(0, mobile ? 3 : 5).map((item) => (
       <View key={item.id} style={s.detailRow}>
         <Text style={s.detailText}>{topic(item.topicId)}</Text>
-        <Text style={s.detailMeta}>{item.dueDate}</Text>
+        <Text style={s.detailMeta}>{formatShortDate(item.dueDate)}</Text>
       </View>
     ))
   ) : (
@@ -244,10 +302,10 @@ export default function Dashboard() {
             )
           : 0;
         return (
-          <View key={item.id} style={s.subjectRow}>
-            <View style={s.progressLine}>
-              <Text style={s.detailText}>{item.name}</Text>
-              <Text style={s.detailMeta}>{value}%</Text>
+          <View key={item.id} style={s.weekRow}>
+            <View style={s.weekLine}>
+              <Text style={s.weekName}>{item.name}</Text>
+              <Text style={s.weekMeta}>{value}%</Text>
             </View>
             <View style={s.track}>
               <View style={[s.trackFill, { width: `${value}%` }]} />
@@ -257,7 +315,7 @@ export default function Dashboard() {
       })}
       {(weak.length > 0 || notStarted.length > 0) && (
         <View style={s.focusHint}>
-          <Text style={s.focusHintTitle}>Para focar depois</Text>
+          <Label>Para focar depois</Label>
           {weak.map((item) => (
             <Text key={item.topic.id} style={s.supportingText}>
               • {item.topic.name} · {item.accuracy}% de acertos
@@ -277,20 +335,18 @@ export default function Dashboard() {
     ? `${pending.length} ${pending.length === 1 ? "pendente" : "pendentes"}`
     : "Tudo em dia";
 
+  const factsLine = <Label style={s.facts}>{facts}</Label>;
+
   if (mobile)
     return (
-      <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
+      <Page eyebrow={eyebrow} title={title}>
         <View style={s.content}>
-          {examCard}
+          {factsLine}
           {focusCard}
+          {answerSection}
           {weekSection}
-          <Text style={s.detailsTitle}>Quando quiser ver mais</Text>
-          <BottomDrawer
-            title="Desempenho da semana"
-            summary={`${week?.questions || 0} questões · ${week?.cycleBlocks || 0} blocos do ciclo`}
-          >
-            {performance}
-          </BottomDrawer>
+          {monthSection}
+          <Label style={s.detailsTitle}>Quando quiser ver mais</Label>
           <BottomDrawer
             title="Revisões"
             action={{ label: "Abrir revisões  →", href: "/revisoes" }}
@@ -300,7 +356,7 @@ export default function Dashboard() {
           </BottomDrawer>
           <BottomDrawer
             title="Matérias"
-            summary={`${subjects.length} ${subjects.length === 1 ? "matéria" : "matérias"} no edital`}
+            summary={`${subjects.length} ${subjects.length === 1 ? "matéria" : "matérias"} · ${progress}% do edital`}
           >
             {coverage}
           </BottomDrawer>
@@ -308,181 +364,164 @@ export default function Dashboard() {
       </Page>
     );
 
-  return (
-    <Page eyebrow="INÍCIO" title="Um passo de cada vez.">
-      <View style={[s.grid, wide && s.gridWide]}>
-        <View style={[s.column, wide && s.mainColumn]}>
-          {focusCard}
-          {weekSection}
-          {queueSection}
-        </View>
-        <View style={[s.column, wide && s.sideColumn]}>
-          {examCard}
-          <Section title="Desempenho da semana">{performance}</Section>
-          <Section title="Revisões" aside={reviewsAside}>
-            {reviews}
-            <View style={s.sectionFooter}>
-              <InlineLink href="/revisoes" label="Abrir revisões" />
-            </View>
-          </Section>
-          <Section title="Cobertura do edital" aside={`${progress}%`}>
-            {coverage}
-          </Section>
-        </View>
+  const reviewsSection = (
+    <Section title="Revisões" aside={reviewsAside}>
+      {reviews}
+      <View style={s.sectionFooter}>
+        <InlineLink href="/revisoes" label="Abrir revisões" />
       </View>
+    </Section>
+  );
+  const coverageSection = (
+    <Section title="Cobertura do edital" aside={`${progress}%`}>
+      {coverage}
+    </Section>
+  );
+
+  return (
+    <Page eyebrow={eyebrow} title={title} action={factsLine}>
+      {wide ? (
+        <View style={s.grid}>
+          <View style={[s.column, s.columnMain]}>
+            {focusCard}
+            {answerSection}
+            {queueSection}
+          </View>
+          <View style={s.column}>
+            {weekSection}
+            {reviewsSection}
+          </View>
+          <View style={s.column}>
+            {monthSection}
+            {coverageSection}
+          </View>
+        </View>
+      ) : (
+        <View style={s.grid}>
+          <View style={s.column}>
+            {focusCard}
+            {answerSection}
+            {weekSection}
+          </View>
+          <View style={s.column}>
+            {monthSection}
+            {reviewsSection}
+            {coverageSection}
+          </View>
+        </View>
+      )}
     </Page>
   );
 }
 
 const s = StyleSheet.create({
   content: { width: "100%", maxWidth: 760, alignSelf: "center" },
-  grid: { width: "100%", gap: 18 },
-  gridWide: { flexDirection: "row", alignItems: "flex-start" },
-  column: { gap: 0, minWidth: 0 },
-  mainColumn: { flex: 3 },
-  sideColumn: { flex: 2 },
-  focusCardDesktop: { padding: 28 },
-  focusTitleDesktop: { fontSize: 34, lineHeight: 40 },
-  weekLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  miniTrack: {
-    height: 5,
-    borderRadius: 4,
-    backgroundColor: "#ECEEF0",
-    marginTop: 7,
-    overflow: "hidden",
-  },
-  queueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.line,
-  },
-  queueNumber: {
-    color: palette.muted,
-    fontSize: 12,
-    fontWeight: "800",
-    width: 22,
-  },
-  queueName: { color: palette.text, fontSize: 13, fontWeight: "700", flex: 1 },
-  examCard: {
-    backgroundColor: "#EBE6FF",
-    borderRadius: 22,
-    padding: 20,
-    marginBottom: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
-  },
-  examInfo: { flex: 1, minWidth: 0 },
-  overline: {
-    color: "#7767B3",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.1,
-  },
-  examName: {
-    color: palette.text,
-    fontSize: 20,
-    fontWeight: "800",
-    marginTop: 5,
-  },
-  examRole: { color: "#655F78", fontSize: 12, marginTop: 3 },
-  examCountdown: {
-    color: palette.dark,
-    fontSize: 12,
-    fontWeight: "800",
-    marginTop: 8,
-  },
-  progressBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  progressValue: { color: "#6C58B2", fontSize: 17, fontWeight: "900" },
-  progressCaption: { color: palette.muted, fontSize: 9 },
+  grid: { flexDirection: "row", alignItems: "flex-start", gap: 16 },
+  column: { flex: 1, minWidth: 0 },
+  columnMain: { flex: 1.2 },
+  facts: { marginBottom: 16 },
   focusCard: {
-    backgroundColor: "#BDD1FC",
-    borderRadius: 24,
-    padding: 23,
-    marginBottom: 18,
+    backgroundColor: palette.ink,
+    borderRadius: 4,
+    padding: 20,
+    marginBottom: 16,
   },
+  focusCardDesktop: { padding: 24 },
   focusOverline: {
-    color: "#4D6295",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.1,
+    color: "#C9C3B4",
+    fontSize: 11,
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
   },
   focusTitle: {
-    color: palette.text,
-    fontSize: 25,
-    lineHeight: 30,
-    fontWeight: "800",
-    letterSpacing: -0.6,
-    marginTop: 11,
+    color: palette.bg,
+    fontSize: 27,
+    lineHeight: 32,
+    fontWeight: "700",
+    marginTop: 8,
   },
-  focusMeta: { color: "#495979", fontSize: 12, marginTop: 6, marginBottom: 19 },
-  sectionFooter: { marginTop: 14 },
+  focusTitleDesktop: { fontSize: 32, lineHeight: 38 },
+  focusMeta: {
+    color: "#DCD6C8",
+    fontFamily: fonts.typewriter,
+    fontSize: 14,
+    marginTop: 4,
+    marginBottom: 18,
+  },
   reviewHint: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 10,
     marginTop: 18,
-    paddingTop: 14,
+    paddingTop: 13,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.55)",
+    borderStyle: "dashed",
+    borderTopColor: "#6A7488",
   },
-  reviewHintText: { color: "#495979", fontSize: 12, fontWeight: "700" },
-  weekRow: {
+  reviewHintText: { color: "#DCD6C8", fontSize: 12 },
+  reviewHintLink: {
+    color: palette.bg,
+    fontSize: 12,
+    fontWeight: "700",
+    textDecorationLine: "underline",
+  },
+  handNote: { marginTop: 8 },
+  weekRow: { paddingVertical: 7 },
+  weekLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  weekName: { color: palette.ink, fontSize: 13, flex: 1 },
+  weekMeta: { color: palette.muted, fontSize: 12 },
+  track: {
+    height: 7,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    backgroundColor: palette.field,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  trackFill: { height: "100%", backgroundColor: palette.ink },
+  innerRule: { marginTop: 12, marginBottom: 4 },
+  sectionFooter: { marginTop: 14 },
+  supportingText: {
+    color: palette.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  logRow: { flexDirection: "row", gap: 11, paddingVertical: 9 },
+  logBar: { width: 4, alignSelf: "stretch", minHeight: 34 },
+  logBody: { flex: 1, minWidth: 0, gap: 3 },
+  logLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  logTitle: { color: palette.ink, fontSize: 13, flex: 1 },
+  logMinutes: { color: palette.ink, fontSize: 13 },
+  logMeta: { fontSize: 11, flex: 1 },
+  logNote: {
+    color: palette.inkSoft,
+    fontFamily: fonts.typewriter,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  queueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     paddingVertical: 9,
     borderBottomWidth: 1,
     borderBottomColor: palette.line,
   },
-  weekName: { color: palette.text, fontSize: 13, fontWeight: "700", flex: 1 },
-  weekMeta: { color: palette.muted, fontSize: 12 },
-  detailsTitle: {
-    color: palette.muted,
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 7,
-    marginBottom: 11,
-  },
-  statsRow: { flexDirection: "row", gap: 9, marginTop: 16 },
-  statTile: { flex: 1, borderRadius: 16, padding: 15 },
-  mint: { backgroundColor: palette.mint },
-  peach: { backgroundColor: palette.peach },
-  statValue: { color: palette.text, fontSize: 19, fontWeight: "800" },
-  statLabel: { color: "#576161", fontSize: 11, marginTop: 3 },
-  progressLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-  },
-  track: {
-    height: 6,
-    borderRadius: 6,
-    backgroundColor: "#ECEEF0",
-    marginTop: 8,
-    overflow: "hidden",
-  },
-  trackFill: { height: "100%", borderRadius: 6, backgroundColor: "#937ED8" },
-  supportingText: {
-    color: palette.muted,
-    fontSize: 11,
-    lineHeight: 17,
-    marginTop: 8,
-  },
+  queueNumber: { color: palette.muted, fontSize: 12, width: 22 },
+  queueName: { color: palette.ink, fontSize: 13, flex: 1 },
+  detailsTitle: { marginTop: 6, marginBottom: 10 },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -491,14 +530,13 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: palette.line,
   },
-  detailText: { color: palette.text, fontSize: 12, fontWeight: "700", flex: 1 },
+  detailText: { color: palette.ink, fontSize: 13, flex: 1 },
   detailMeta: { color: palette.muted, fontSize: 11 },
-  subjectRow: { marginTop: 15 },
   focusHint: {
-    marginTop: 18,
+    marginTop: 16,
     borderTopWidth: 1,
-    borderTopColor: palette.line,
+    borderStyle: "dashed",
+    borderTopColor: palette.rule,
     paddingTop: 14,
   },
-  focusHintTitle: { color: palette.text, fontSize: 12, fontWeight: "800" },
 });

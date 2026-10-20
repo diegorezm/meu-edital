@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@global/components/Text";
 import {
   BottomSheet,
   BottomSheetHandle,
@@ -241,7 +242,7 @@ function StudySession({
     <Page eyebrow="SEU MOMENTO" title="Hora de focar.">
       <View style={[s.content, !mobile && s.contentDesktop]}>
         <View style={!mobile && s.focusColumn}>
-          <Text style={s.intro}>Respire fundo e siga no seu ritmo. ☁</Text>
+          <Text style={s.intro}>Respire fundo e siga no seu ritmo.</Text>
 
           <Pressable
             accessibilityRole="button"
@@ -253,7 +254,7 @@ function StudySession({
               <Text style={s.cardEyebrow}>
                 {cycleItem ? "DO SEU CICLO" : "ESTUDO LIVRE"}
               </Text>
-              <Text style={s.editPill}>Editar ↗</Text>
+              <Text style={s.editPill}>Editar</Text>
             </View>
             <Text style={s.topicTitle} numberOfLines={2}>
               {topicName}
@@ -285,7 +286,7 @@ function StudySession({
                 <Text style={s.timerTime}>{formatTime(seconds)}</Text>
                 <Text style={s.timerStatus}>
                   {running
-                    ? "Você está no seu momento ✦"
+                    ? "Você está no seu momento."
                     : seconds
                       ? "Pausado. Volte quando quiser."
                       : "Pronto quando você estiver"}
@@ -312,8 +313,8 @@ function StudySession({
                 {running
                   ? "Ⅱ  Pausar"
                   : seconds
-                    ? "▶  Continuar"
-                    : "▶  Começar estudo"}
+                    ? "Continuar"
+                    : "Começar estudo"}
               </Text>
             </Pressable>
             {notificationUnavailable && (
@@ -533,7 +534,7 @@ function StudySession({
         />
         {error ? <Text style={s.error}>{error}</Text> : null}
         <View style={s.registerAction}>
-          <Button title="Salvar sessão  ✓" onPress={save} />
+          <Button title="Salvar sessão" onPress={save} />
         </View>
       </BottomSheet>
     </Page>
@@ -552,8 +553,10 @@ const s = StyleSheet.create({
   timerColumn: { width: 400, flexShrink: 0 },
   intro: { color: palette.muted, fontSize: 13, marginBottom: 21 },
   subjectCard: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 24,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 22,
     marginBottom: 16,
   },
@@ -564,7 +567,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
   },
   cardEyebrow: {
-    color: "#53647A",
+    color: "#4A5468",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -574,7 +577,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     backgroundColor: "rgba(255,255,255,0.62)",
-    borderRadius: 16,
+    borderRadius: 6,
     paddingHorizontal: 11,
     paddingVertical: 7,
   },
@@ -586,11 +589,11 @@ const s = StyleSheet.create({
     letterSpacing: -0.6,
     marginBottom: 5,
   },
-  subjectName: { color: "#53647A", fontSize: 13, fontWeight: "600" },
+  subjectName: { color: "#4A5468", fontSize: 13, fontWeight: "600" },
   cardTags: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 21 },
   cardTag: {
     backgroundColor: "rgba(255,255,255,0.58)",
-    borderRadius: 12,
+    borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
@@ -599,7 +602,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 25,
+    borderRadius: 6,
     padding: 23,
     alignItems: "center",
   },
@@ -614,19 +617,20 @@ const s = StyleSheet.create({
     width: 222,
     height: 222,
     borderRadius: 111,
-    borderWidth: 12,
-    borderColor: "#E9DFF7",
-    padding: 7,
+    borderWidth: 2,
+    borderColor: palette.ink,
+    padding: 9,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8F4FC",
+    backgroundColor: palette.panel,
   },
   timerCircleInner: {
     width: "100%",
     height: "100%",
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: "#EFE7F8",
+    borderStyle: "dashed",
+    borderColor: palette.rule,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 9,
@@ -639,7 +643,7 @@ const s = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   timerStatus: {
-    color: "#747284",
+    color: "#4A5468",
     fontSize: 10,
     textAlign: "center",
     marginTop: 9,
@@ -647,23 +651,24 @@ const s = StyleSheet.create({
   progressWrap: { width: "100%", marginTop: 23, alignItems: "center" },
   progressTrack: {
     width: "100%",
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#F0ECF4",
+    height: 8,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    backgroundColor: palette.field,
     overflow: "hidden",
   },
-  progressFill: { height: "100%", backgroundColor: "#B8A5E6", borderRadius: 4 },
+  progressFill: { height: "100%", backgroundColor: palette.ink },
   progressText: { color: palette.muted, fontSize: 11, marginTop: 9 },
   timerButton: {
     backgroundColor: palette.dark,
-    borderRadius: 17,
+    borderRadius: 6,
     minHeight: 52,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 23,
   },
-  timerButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  timerButtonText: { color: "#F8F5EE", fontSize: 14, fontWeight: "800" },
   resetButton: { paddingHorizontal: 15, paddingVertical: 11, marginTop: 4 },
   resetText: { color: palette.muted, fontSize: 11, fontWeight: "700" },
   notificationHint: {
@@ -694,10 +699,10 @@ const s = StyleSheet.create({
     marginBottom: 10,
   },
   selectionCard: {
-    backgroundColor: "#F7F7F2",
+    backgroundColor: "#FBF9F4",
     borderColor: palette.line,
     borderWidth: 1,
-    borderRadius: 17,
+    borderRadius: 6,
     minHeight: 72,
     paddingHorizontal: 13,
     flexDirection: "row",
@@ -708,13 +713,13 @@ const s = StyleSheet.create({
   selectionIcon: {
     width: 43,
     height: 43,
-    borderRadius: 14,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
-  subjectIcon: { backgroundColor: "#DFD6FA" },
-  topicIcon: { backgroundColor: "#DCECCF" },
+  subjectIcon: { backgroundColor: "#E2DCEC" },
+  topicIcon: { backgroundColor: "#D6E2D0" },
   selectionIconText: { color: palette.dark, fontSize: 13, fontWeight: "800" },
   selectionContent: { flex: 1, minWidth: 0 },
   selectionLabel: { color: palette.muted, fontSize: 11, marginBottom: 3 },
@@ -724,7 +729,7 @@ const s = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 20,
   },
-  selectionPlaceholder: { color: "#6B7479", fontWeight: "500" },
+  selectionPlaceholder: { color: "#4A5468", fontWeight: "500" },
   selectionArrow: {
     color: palette.text,
     fontSize: 28,
@@ -736,21 +741,23 @@ const s = StyleSheet.create({
   typeChip: {
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 20,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 6,
+    backgroundColor: "#FBF9F4",
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   typeChipActive: { backgroundColor: palette.dark, borderColor: palette.dark },
   typeChipText: { color: palette.text, fontSize: 12, fontWeight: "700" },
-  typeChipTextActive: { color: "#FFFFFF" },
+  typeChipTextActive: { color: "#F8F5EE" },
   settingsAction: { marginTop: 26 },
   backButton: { alignSelf: "flex-start", paddingVertical: 7, marginBottom: 12 },
-  backText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  backText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   pickerContext: { color: palette.muted, fontSize: 12, marginBottom: 12 },
   finishSummary: {
-    backgroundColor: "#F2EDF8",
-    borderRadius: 17,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 16,
     marginBottom: 23,
   },
@@ -764,7 +771,7 @@ const s = StyleSheet.create({
   questionsRow: { flexDirection: "row", gap: 12 },
   questionField: { flex: 1, minWidth: 0 },
   performance: {
-    color: "#6D5BB8",
+    color: "#22304A",
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 15,

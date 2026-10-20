@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Icon } from "@global/components/Icon";
+import { Text, TextInput } from "@global/components/Text";
 import {
   BottomSheet,
   BottomSheetHandle,
@@ -35,7 +30,7 @@ import ExamDateField from "@global/components/shared/ExamDateField";
 import { displayExamDate, parseExamDate } from "@global/utils/examDate";
 
 type CatalogView = "list" | "subject" | "topic" | "subjectForm" | "topicForm";
-const colors = ["#DAEACD", "#DAE3F7", "#F8DDD0", "#E9DDF2", "#D7E9EA"];
+const colors = ["#D6E2D0", "#D5DCEB", "#EFD9C6", "#E2DCEC", "#D6E2D0"];
 
 export default function ExamsScreen() {
   const { data, update } = useStore();
@@ -399,7 +394,11 @@ export default function ExamsScreen() {
       style={[s.topicRow, { marginLeft: topicDepth(item) * 14 }]}
     >
       <View style={[s.topicMark, item.studied && s.topicMarkDone]}>
-        <Text style={s.topicMarkText}>{item.studied ? "✓" : "○"}</Text>
+        <Icon
+                    name={item.studied ? "check" : "circle"}
+                    size={15}
+                    color={item.studied ? "#4E7A5A" : palette.muted}
+                  />
       </View>
       <Text style={s.topicRowTitle} numberOfLines={2}>
         {item.name}
@@ -572,7 +571,7 @@ export default function ExamsScreen() {
                   }}
                   style={s.moreButton}
                 >
-                  <Text style={s.moreText}>⋯</Text>
+                  <Icon name="more" size={22} />
                 </Pressable>
               </View>
             ))}
@@ -675,7 +674,7 @@ export default function ExamsScreen() {
                     }}
                     style={s.moreButton}
                   >
-                    <Text style={s.moreText}>⋯</Text>
+                    <Icon name="more" size={22} />
                   </Pressable>
                 </View>
               ))}
@@ -1117,7 +1116,7 @@ export default function ExamsScreen() {
                   title={
                     selectedTopic.studied
                       ? "Marcar como não estudado"
-                      : "Marcar como estudado  ✓"
+                      : "Marcar como estudado"
                   }
                   onPress={() => toggleStudied(selectedTopic.id)}
                 />
@@ -1275,7 +1274,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 20,
+    borderRadius: 6,
     padding: 16,
   },
   topicsPanel: { flex: 1.4 },
@@ -1294,9 +1293,9 @@ const s = StyleSheet.create({
     gap: 10,
     height: 40,
     paddingHorizontal: 10,
-    borderRadius: 10,
+    borderRadius: 6,
   },
-  deskRowActive: { backgroundColor: "#EDE9FF" },
+  deskRowActive: { backgroundColor: "#E2DCEC" },
   deskRowTitle: {
     color: palette.text,
     fontSize: 13,
@@ -1320,8 +1319,10 @@ const s = StyleSheet.create({
   },
   deskTopicName: { flex: 1, minWidth: 0, paddingVertical: 4 },
   hero: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 25,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 23,
     marginBottom: 28,
   },
@@ -1331,7 +1332,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   heroEyebrow: {
-    color: "#53647A",
+    color: "#4A5468",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -1341,7 +1342,7 @@ const s = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     backgroundColor: "rgba(255,255,255,0.58)",
-    borderRadius: 15,
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
@@ -1353,27 +1354,29 @@ const s = StyleSheet.create({
     lineHeight: 31,
     marginTop: 18,
   },
-  heroRole: { color: "#53647A", fontSize: 13, marginTop: 4 },
+  heroRole: { color: "#4A5468", fontSize: 13, marginTop: 4 },
   heroMeta: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 19 },
   heroTag: {
     color: palette.text,
     fontSize: 11,
     fontWeight: "700",
     backgroundColor: "rgba(255,255,255,0.58)",
-    borderRadius: 12,
+    borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
   heroAction: { alignSelf: "flex-start", paddingVertical: 11, marginTop: 13 },
   heroActionText: { color: palette.text, fontSize: 12, fontWeight: "800" },
   emptyHero: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 24,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 23,
     marginBottom: 28,
   },
   emptyTitle: { color: palette.text, fontSize: 20, fontWeight: "800" },
-  emptyHint: { color: "#53647A", fontSize: 12, marginTop: 7, marginBottom: 19 },
+  emptyHint: { color: "#4A5468", fontSize: 12, marginTop: 7, marginBottom: 19 },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1388,13 +1391,13 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderColor: palette.line,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 6,
     paddingHorizontal: 13,
     paddingVertical: 9,
   },
   addText: { color: palette.text, fontSize: 11, fontWeight: "800" },
   subjectCard: {
-    borderRadius: 18,
+    borderRadius: 6,
     minHeight: 80,
     flexDirection: "row",
     alignItems: "center",
@@ -1404,7 +1407,7 @@ const s = StyleSheet.create({
   subjectBadge: {
     width: 43,
     height: 43,
-    borderRadius: 13,
+    borderRadius: 6,
     backgroundColor: "rgba(255,255,255,0.62)",
     alignItems: "center",
     justifyContent: "center",
@@ -1418,16 +1421,16 @@ const s = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 19,
   },
-  subjectMeta: { color: "#59636A", fontSize: 10, marginTop: 5 },
+  subjectMeta: { color: "#4A5468", fontSize: 10, marginTop: 5 },
   rowArrow: { color: palette.text, fontSize: 25, marginLeft: 10 },
   emptyList: { color: palette.muted, fontSize: 12, paddingVertical: 19 },
   allButton: { alignItems: "center", paddingVertical: 13, marginBottom: 15 },
-  allText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  allText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   otherCard: {
     backgroundColor: palette.panel,
     borderColor: palette.line,
     borderWidth: 1,
-    borderRadius: 17,
+    borderRadius: 6,
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 9,
@@ -1441,7 +1444,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  moreText: { color: palette.text, fontSize: 21 },
   sheetIntro: {
     color: palette.muted,
     fontSize: 13,
@@ -1454,10 +1456,10 @@ const s = StyleSheet.create({
   detailActions: { gap: 12, marginTop: 25 },
   confirmText: { color: palette.danger, fontSize: 12, lineHeight: 18 },
   searchInput: {
-    backgroundColor: "#F7F7F2",
+    backgroundColor: "#FBF9F4",
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 16,
+    borderRadius: 6,
     paddingHorizontal: 16,
     paddingVertical: 13,
     color: palette.text,
@@ -1471,8 +1473,8 @@ const s = StyleSheet.create({
   },
   listRow: {
     minHeight: 54,
-    borderRadius: 14,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 6,
+    backgroundColor: "#FBF9F4",
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: "row",
@@ -1488,15 +1490,17 @@ const s = StyleSheet.create({
   },
   sheetAction: { marginTop: 17 },
   backButton: { alignSelf: "flex-start", paddingVertical: 7, marginBottom: 12 },
-  backText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  backText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   subjectSummary: {
-    backgroundColor: "#E7E1F8",
-    borderRadius: 18,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 17,
     marginBottom: 16,
   },
   summaryName: { color: palette.text, fontSize: 17, fontWeight: "800" },
-  summaryMeta: { color: "#695F84", fontSize: 11, marginTop: 5 },
+  summaryMeta: { color: "#4A5468", fontSize: 11, marginTop: 5 },
   inlineActions: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1505,8 +1509,8 @@ const s = StyleSheet.create({
   },
   topicRow: {
     minHeight: 51,
-    borderRadius: 13,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 6,
+    backgroundColor: "#FBF9F4",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
@@ -1515,15 +1519,15 @@ const s = StyleSheet.create({
   topicMark: {
     width: 29,
     height: 29,
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#BBC2BD",
+    borderColor: "#9C9686",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
   },
-  topicMarkDone: { backgroundColor: "#D6EACF", borderColor: "#D6EACF" },
-  topicMarkText: { color: "#54765A", fontSize: 16 },
+  topicMarkDone: { backgroundColor: "#D6E2D0", borderColor: "#D6E2D0" },
+  topicMarkText: { color: "#4E7A5A", fontSize: 16 },
   topicRowTitle: {
     flex: 1,
     color: palette.text,

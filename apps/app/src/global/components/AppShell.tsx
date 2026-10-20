@@ -1,51 +1,45 @@
 import React, { useRef, useState } from "react";
 import { Link, router, usePathname } from "expo-router";
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  ViewStyle,
-} from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { palette } from "@global/constants/colors";
 import { useAuth } from "@global/store/auth";
 import { useStore } from "@global/store/store";
 import { normalizeText } from "@global/utils/normalizeText";
 import { Brand } from "./Brand";
+import { Icon, type IconName } from "./Icon";
+import { Text, TextInput } from "./Text";
 import { BottomSheet, BottomSheetHandle, Button, useLayout } from "./ui";
 
-type NavLink = { href: "/" | `/${string}`; label: string; icon: string };
+type NavLink = { href: "/" | `/${string}`; label: string; icon: IconName };
 
 /** Navegação do desktop: todas as páginas à vista, agrupadas. */
 const desktopGroups: { title: string; links: NavLink[] }[] = [
   {
     title: "Estudo",
     links: [
-      { href: "/", label: "Início", icon: "⌂" },
-      { href: "/ciclo", label: "Ciclo", icon: "◌" },
-      { href: "/estudar", label: "Estudar", icon: "▷" },
-      { href: "/semana", label: "Semana", icon: "▦" },
-      { href: "/revisoes", label: "Revisões", icon: "↻" },
+      { href: "/", label: "Início", icon: "home" },
+      { href: "/ciclo", label: "Ciclo", icon: "cycle" },
+      { href: "/estudar", label: "Estudar", icon: "timer" },
+      { href: "/semana", label: "Semana", icon: "calendar" },
+      { href: "/revisoes", label: "Revisões", icon: "reviews" },
     ],
   },
   {
     title: "Organizar",
     links: [
-      { href: "/concursos", label: "Editais", icon: "▤" },
-      { href: "/ia", label: "IA externa", icon: "✦" },
+      { href: "/concursos", label: "Editais", icon: "books" },
+      { href: "/ia", label: "IA externa", icon: "sparkle" },
     ],
   },
 ];
 
 /** Navegação do celular: quatro atalhos na barra e o resto em "Mais". */
 const mobileLinks: NavLink[] = [
-  { href: "/", label: "Início", icon: "⌂" },
-  { href: "/ciclo", label: "Ciclo", icon: "◌" },
-  { href: "/estudar", label: "Estudar", icon: "▷" },
-  { href: "/semana", label: "Semana", icon: "▦" },
+  { href: "/", label: "Início", icon: "home" },
+  { href: "/ciclo", label: "Ciclo", icon: "cycle" },
+  { href: "/estudar", label: "Estudar", icon: "timer" },
+  { href: "/semana", label: "Semana", icon: "calendar" },
 ];
 const mobileMore = [
   { title: "Acompanhar", links: [desktopGroups[0].links[4]] },
@@ -107,7 +101,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Text style={s.mobileExamName} numberOfLines={1}>
                 {exam?.name || "Concurso"}
               </Text>
-              <Chevron color={palette.text} style={s.mobileExamArrow} />
+              <View style={s.mobileExamArrow}>
+                <Icon name="caretDown" size={14} />
+              </View>
             </Pressable>
           </View>
           <View style={s.contentArea}>{children}</View>
@@ -127,11 +123,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onPress={() => moreSheet.current?.open()}
                 style={[s.mobileNavItem, moreActive && s.mobileNavActive]}
               >
-                <Text
-                  style={[s.mobileNavIcon, moreActive && s.mobileNavIconActive]}
-                >
-                  ⋯
-                </Text>
+                <Icon
+                  name="more"
+                  size={22}
+                  color={moreActive ? palette.bg : palette.ink}
+                />
                 <Text
                   style={[s.mobileNavText, moreActive && s.mobileNavTextActive]}
                 >
@@ -191,7 +187,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </Text>
                   ) : null}
                 </View>
-                <Chevron color={palette.muted} style={s.examPickerArrow} />
+                <View style={s.examPickerArrow}>
+                  <Icon name="caretDown" size={14} color={palette.muted} />
+                </View>
               </Pressable>
               <SyncChip />
             </View>
@@ -242,7 +240,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {item.role}
                 </Text>
               </View>
-              <Text style={s.examOptionCheck}>{active ? "✓" : "›"}</Text>
+              <Icon
+                name={active ? "check" : "caretRight"}
+                size={18}
+                color={active ? palette.ink : palette.muted}
+              />
             </Pressable>
           );
         })}
@@ -289,9 +291,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 }
                 style={[s.moreOption, path === link.href && s.moreOptionActive]}
               >
-                <Text style={s.moreOptionIcon}>{link.icon}</Text>
+                <View style={s.moreOptionIcon}>
+                  <Icon name={link.icon} size={20} />
+                </View>
                 <Text style={s.moreOptionLabel}>{link.label}</Text>
-                <Text style={s.moreOptionArrow}>›</Text>
+                <Icon name="caretRight" size={18} color={palette.muted} />
               </Pressable>
             ))}
           </View>
@@ -300,24 +304,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Account />
       </BottomSheet>
     </SafeAreaView>
-  );
-}
-
-/**
- * Seta para baixo desenhada com bordas: o caractere "⌄" fica abaixo do centro
- * em várias fontes e desalinha do texto ao lado.
- */
-function Chevron({
-  color,
-  style,
-}: {
-  color: string;
-  style?: StyleProp<ViewStyle>;
-}) {
-  return (
-    <View style={[s.chevronBox, style]}>
-      <View style={[s.chevron, { borderColor: color }]} />
-    </View>
   );
 }
 
@@ -337,7 +323,11 @@ function DesktopNavItem({ link, active }: { link: NavLink; active: boolean }) {
           active && s.navActive,
         ])}
       >
-        <Text style={[s.navIcon, active && s.navTextActive]}>{link.icon}</Text>
+        <Icon
+          name={link.icon}
+          size={18}
+          color={active ? palette.bg : palette.ink}
+        />
         <Text style={[s.navText, active && s.navTextActive]}>{link.label}</Text>
       </Pressable>
     </Link>
@@ -356,9 +346,11 @@ function MobileNavItem({ link, active }: { link: NavLink; active: boolean }) {
           active && s.mobileNavActive,
         ])}
       >
-        <Text style={[s.mobileNavIcon, active && s.mobileNavIconActive]}>
-          {link.icon}
-        </Text>
+        <Icon
+          name={link.icon}
+          size={22}
+          color={active ? palette.bg : palette.ink}
+        />
         <Text style={[s.mobileNavText, active && s.mobileNavTextActive]}>
           {link.label}
         </Text>
@@ -420,10 +412,11 @@ function Account() {
       </Text>
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel="Sair da conta"
         onPress={signOut}
         style={s.accountSignOut}
       >
-        <Text style={s.accountSignOutText}>Sair</Text>
+        <Icon name="signOut" size={18} color={palette.muted} />
       </Pressable>
     </View>
   );
@@ -433,26 +426,24 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: palette.bg },
   contentArea: { flex: 1, minHeight: 0 },
 
-
   desktopFrame: { flex: 1, flexDirection: "row" },
   sidebar: {
-    width: 224,
+    width: 208,
     paddingHorizontal: 14,
     paddingTop: 20,
     paddingBottom: 14,
-    backgroundColor: palette.panel,
+    backgroundColor: palette.bg,
     borderRightWidth: 1,
-    borderRightColor: palette.line,
+    borderRightColor: palette.ink,
   },
-  nav: { marginTop: 26, gap: 18 },
-  navGroup: { gap: 2 },
+  nav: { marginTop: 28, gap: 20 },
+  navGroup: { gap: 3 },
   navGroupTitle: {
     color: palette.muted,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
+    fontSize: 11,
+    letterSpacing: 1.6,
     paddingHorizontal: 10,
-    marginBottom: 4,
+    marginBottom: 5,
   },
   navItem: {
     flexDirection: "row",
@@ -460,18 +451,12 @@ const s = StyleSheet.create({
     gap: 10,
     height: 36,
     paddingHorizontal: 10,
-    borderRadius: 10,
+    borderRadius: 4,
   },
-  navHover: { backgroundColor: "#F4F4F0" },
-  navActive: { backgroundColor: "#EDE9FF" },
-  navIcon: {
-    color: palette.muted,
-    fontSize: 15,
-    width: 18,
-    textAlign: "center",
-  },
-  navText: { color: "#4E575D", fontSize: 13, fontWeight: "600" },
-  navTextActive: { color: palette.dark, fontWeight: "800" },
+  navHover: { backgroundColor: palette.field },
+  navActive: { backgroundColor: palette.ink },
+  navText: { color: palette.ink, fontSize: 13 },
+  navTextActive: { color: palette.bg, fontWeight: "700" },
   sidebarFooter: { marginTop: "auto" },
 
   main: { flex: 1, minWidth: 0 },
@@ -483,7 +468,7 @@ const s = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: palette.line,
+    borderBottomColor: palette.ink,
     backgroundColor: palette.bg,
   },
   examPicker: {
@@ -492,59 +477,51 @@ const s = StyleSheet.create({
     gap: 10,
     maxWidth: 380,
     flexShrink: 1,
-    paddingVertical: 6,
-    paddingLeft: 6,
+    paddingVertical: 5,
+    paddingLeft: 5,
     paddingRight: 12,
-    borderRadius: 12,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
-  examPickerHover: { backgroundColor: "#EEEEE8" },
+  examPickerHover: { borderColor: palette.ink, backgroundColor: palette.field },
   examInitial: {
     width: 30,
     height: 30,
-    borderRadius: 9,
-    backgroundColor: "#DDE7FB",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: palette.ink,
     alignItems: "center",
     justifyContent: "center",
   },
-  examInitialText: { color: palette.text, fontSize: 13, fontWeight: "800" },
+  examInitialText: { color: palette.ink, fontSize: 15, fontWeight: "700" },
   examPickerText: { flexShrink: 1, minWidth: 0 },
-  examPickerName: { color: palette.text, fontSize: 14, fontWeight: "800" },
+  examPickerName: { color: palette.ink, fontSize: 13, fontWeight: "700" },
   examPickerRole: { color: palette.muted, fontSize: 11, marginTop: 1 },
   examPickerArrow: { marginLeft: 4 },
-  chevronBox: {
-    width: 10,
-    height: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // Girado, o quadrado pesa para baixo; subir um pouco centraliza a seta.
-  chevron: {
-    width: 7,
-    height: 7,
-    borderRightWidth: 1.8,
-    borderBottomWidth: 1.8,
-    marginTop: -3,
-    transform: [{ rotate: "45deg" }],
-  },
 
   syncChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: palette.line,
-    backgroundColor: palette.panel,
   },
   syncChipSheet: { alignSelf: "flex-start" },
   syncDot: { width: 7, height: 7, borderRadius: 4 },
-  sync_ok: { backgroundColor: "#6FAE86" },
-  sync_busy: { backgroundColor: "#E2B25B" },
+  sync_ok: { backgroundColor: "#4E7A5A" },
+  sync_busy: { backgroundColor: "#C9973E" },
   sync_error: { backgroundColor: palette.danger },
   sync_local: { backgroundColor: palette.muted },
-  syncText: { color: palette.text, fontSize: 11, fontWeight: "700" },
+  syncText: {
+    color: palette.ink,
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
 
   account: {
     flexDirection: "row",
@@ -559,19 +536,14 @@ const s = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: palette.lavender,
+    borderWidth: 1,
+    borderColor: palette.ink,
     alignItems: "center",
     justifyContent: "center",
   },
-  accountAvatarText: { color: palette.dark, fontSize: 12, fontWeight: "800" },
-  accountEmail: {
-    color: palette.text,
-    fontSize: 12,
-    fontWeight: "600",
-    flex: 1,
-  },
-  accountSignOut: { paddingVertical: 6, paddingHorizontal: 4 },
-  accountSignOutText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  accountAvatarText: { color: palette.ink, fontSize: 12, fontWeight: "700" },
+  accountEmail: { color: palette.ink, fontSize: 11, flex: 1 },
+  accountSignOut: { padding: 6 },
 
   mobileFrame: { flex: 1 },
   mobileTop: {
@@ -579,46 +551,44 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 17,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 12,
   },
   mobileExamSelector: {
     flexDirection: "row",
     alignItems: "center",
     flexShrink: 1,
     minWidth: 75,
-    maxWidth: 155,
-    minHeight: 37,
-    borderRadius: 19,
-    backgroundColor: palette.panel,
+    maxWidth: 160,
+    minHeight: 34,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: palette.line,
-    paddingLeft: 12,
-    paddingRight: 9,
+    borderColor: palette.ink,
+    paddingLeft: 10,
+    paddingRight: 8,
   },
   mobileExamName: {
-    color: palette.text,
+    color: palette.ink,
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
     flexShrink: 1,
   },
-  mobileExamArrow: { marginLeft: 8 },
+  mobileExamArrow: { marginLeft: 6 },
   bottomNavWrap: {
-    paddingHorizontal: 10,
-    paddingTop: 7,
-    paddingBottom: 5,
+    borderTopWidth: 1,
+    borderTopColor: palette.ink,
     backgroundColor: palette.bg,
+    paddingHorizontal: 8,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   bottomNav: {
     flexDirection: "row",
-    backgroundColor: palette.dark,
-    borderRadius: 24,
     alignItems: "center",
-    paddingHorizontal: 7,
-    paddingVertical: 6,
-    gap: 1,
-    flexGrow: 1,
+    gap: 4,
     justifyContent: "space-around",
   },
   mobileNavItem: {
@@ -626,60 +596,58 @@ const s = StyleSheet.create({
     minWidth: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    borderRadius: 17,
+    paddingVertical: 5,
+    borderRadius: 4,
   },
-  mobileNavActive: { backgroundColor: "#FFFFFF" },
-  mobileNavIcon: { color: "#FFFFFF", fontSize: 19, lineHeight: 22 },
-  mobileNavIconActive: { color: palette.dark },
+  mobileNavActive: { backgroundColor: palette.ink },
   mobileNavText: {
-    color: "#FFFFFF",
+    color: palette.ink,
     fontSize: 9,
-    fontWeight: "700",
-    marginTop: 2,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginTop: 3,
   },
-  mobileNavTextActive: { color: palette.dark },
+  mobileNavTextActive: { color: palette.bg },
 
-  examSheetIntro: { color: palette.muted, fontSize: 13, marginBottom: 18 },
+  examSheetIntro: { color: palette.muted, fontSize: 13, marginBottom: 16 },
   examSearch: {
-    backgroundColor: "#F7F7F2",
-    borderColor: palette.line,
+    backgroundColor: palette.field,
+    borderColor: palette.ink,
     borderWidth: 1,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 11,
+    borderRadius: 4,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
     fontSize: 14,
-    color: palette.text,
+    color: palette.ink,
     marginBottom: 14,
   },
   examOption: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F7F7F2",
+    gap: 11,
+    backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 17,
-    minHeight: 67,
+    borderRadius: 4,
+    minHeight: 62,
     paddingHorizontal: 12,
     marginBottom: 8,
   },
-  examOptionActive: { backgroundColor: "#EDE9FF", borderColor: "#CBBDF5" },
+  examOptionActive: { borderColor: palette.ink, borderWidth: 2 },
   examOptionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    backgroundColor: "#DDE7FB",
+    width: 36,
+    height: 36,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: palette.ink,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 11,
   },
-  examOptionIconActive: { backgroundColor: "#D6CAFC" },
-  examOptionInitial: { color: palette.text, fontSize: 14, fontWeight: "800" },
+  examOptionIconActive: { backgroundColor: palette.ink },
+  examOptionInitial: { color: palette.ink, fontSize: 16, fontWeight: "700" },
   examOptionText: { flex: 1, minWidth: 0 },
-  examOptionName: { color: palette.text, fontSize: 13, fontWeight: "800" },
+  examOptionName: { color: palette.ink, fontSize: 13, fontWeight: "700" },
   examOptionRole: { color: palette.muted, fontSize: 11, marginTop: 3 },
-  examOptionCheck: { color: palette.text, fontSize: 21, marginLeft: 9 },
   examEmpty: {
     color: palette.muted,
     fontSize: 13,
@@ -687,32 +655,31 @@ const s = StyleSheet.create({
     padding: 22,
   },
   examMore: { alignItems: "center", padding: 12 },
-  examMoreText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  examMoreText: {
+    color: palette.ink,
+    fontSize: 12,
+    textDecorationLine: "underline",
+  },
   examManage: { marginTop: 14, marginBottom: 4 },
   moreGroup: { marginBottom: 16 },
   moreGroupTitle: {
     color: palette.muted,
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
+    letterSpacing: 1.6,
     marginBottom: 9,
   },
   moreOption: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 56,
-    paddingHorizontal: 14,
+    minHeight: 54,
+    paddingHorizontal: 13,
     marginBottom: 7,
-    borderRadius: 15,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
   },
-  moreOptionActive: { backgroundColor: "#EDE9FF" },
-  moreOptionIcon: { color: palette.text, fontSize: 21, width: 33 },
-  moreOptionLabel: {
-    color: palette.text,
-    fontSize: 14,
-    fontWeight: "700",
-    flex: 1,
-  },
-  moreOptionArrow: { color: palette.muted, fontSize: 23 },
+  moreOptionActive: { borderColor: palette.ink },
+  moreOptionIcon: { width: 32 },
+  moreOptionLabel: { color: palette.ink, fontSize: 14, flex: 1 },
 });

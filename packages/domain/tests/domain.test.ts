@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   addDays,
   daysUntil,
+  monthSummary,
   emptyData,
   GENERAL_TOPIC,
   startExam,
@@ -309,4 +310,35 @@ test("daysUntil conta dias de calendário, inclusive na virada do horário de ve
   assert.equal(daysUntil("2027-01-01", "2026-12-31"), 1);
   assert.equal(daysUntil("2026-11-10", "2026-10-20"), 21);
   assert.equal(daysUntil("2026-10-19", "2026-10-20"), -1);
+});
+
+test("monthSummary junta as sessões do mês, das mais recentes para as mais antigas", () => {
+  const data = createSeed();
+  const examId = data.activeExamId!;
+  const subject = data.subjects.find((item) => item.examId === examId)!;
+  const topic = data.topics.find((item) => item.subjectId === subject.id)!;
+  const base = {
+    examId,
+    subjectId: subject.id,
+    topicId: topic.id,
+    type: "Teoria" as const,
+  };
+  const withMonth: AppData = {
+    ...data,
+    sessions: [
+      { ...base, id: "a", date: "2026-10-02", minutes: 30 },
+      { ...base, id: "b", date: "2026-10-31", minutes: 45 },
+      { ...base, id: "c", date: "2026-11-01", minutes: 60 },
+      { ...base, id: "d", date: "2026-09-30", minutes: 20 },
+      { ...base, id: "e", date: "2026-10-31", minutes: 15 },
+      { ...base, id: "f", examId: "outro", date: "2026-10-10", minutes: 90 },
+    ],
+  };
+  const month = monthSummary(withMonth, examId, "2026-10-20");
+  assert.equal(month.monthStart, "2026-10-01");
+  assert.deepEqual(
+    month.sessions.map((item) => item.id),
+    ["e", "b", "a"],
+  );
+  assert.equal(month.minutes, 90);
 });

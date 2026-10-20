@@ -14,3 +14,11 @@ export function formatShortDate(date: string): string {
   const [, month, day] = date.split("-").map(Number);
   return `${day} ${months[month - 1]}`;
 }
+
+const monthNames = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+/** "2026-10-01" → "outubro 2026". */
+export function formatMonth(date: string): string {
+  const [year, month] = date.split("-").map(Number);
+  return `${monthNames[month - 1]} ${year}`;
+}

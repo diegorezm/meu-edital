@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Icon } from "@global/components/Icon";
+import { Text } from "@global/components/Text";
 import {
   BottomSheet,
   BottomSheetHandle,
@@ -69,7 +71,7 @@ export default function ReviewsScreen() {
         onPress={() => complete(item.id)}
         style={s.completeButton}
       >
-        <Text style={s.completeText}>✓</Text>
+        <Icon name="check" size={18} color="#4E7A5A" weight="bold" />
       </Pressable>
     </View>
   );
@@ -88,7 +90,7 @@ export default function ReviewsScreen() {
                     : "revisões esperam por você"}
                 </Text>
                 <Text style={s.heroHint}>
-                  Um pouco hoje ajuda a lembrar amanhã. ✦
+                  Um pouco hoje ajuda a lembrar amanhã.
                 </Text>
               </View>
               <Text style={s.heroNumber}>{due.length}</Text>
@@ -101,7 +103,9 @@ export default function ReviewsScreen() {
               due.map((item) => reviewCard(item))
             ) : (
               <View style={s.emptyCard}>
-                <Text style={s.emptyIcon}>☁</Text>
+                <View style={s.emptyIcon}>
+            <Icon name="checkCircle" size={30} color={palette.muted} />
+          </View>
                 <Text style={s.emptyTitle}>Tudo em dia por aqui</Text>
                 <Text style={s.emptyHint}>
                   Aproveite esse respiro ou siga o seu ciclo.
@@ -168,7 +172,7 @@ export default function ReviewsScreen() {
               : "revisões esperam por você"}
           </Text>
           <Text style={s.heroHint}>
-            Um pouco hoje ajuda a lembrar amanhã. ✦
+            Um pouco hoje ajuda a lembrar amanhã.
           </Text>
         </View>
 
@@ -180,7 +184,9 @@ export default function ReviewsScreen() {
           due.map((item) => reviewCard(item))
         ) : (
           <View style={s.emptyCard}>
-            <Text style={s.emptyIcon}>☁</Text>
+            <View style={s.emptyIcon}>
+            <Icon name="checkCircle" size={30} color={palette.muted} />
+          </View>
             <Text style={s.emptyTitle}>Tudo em dia por aqui</Text>
             <Text style={s.emptyHint}>
               Aproveite esse respiro ou continue seu plano.
@@ -259,15 +265,17 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 22,
   },
-  saved: { color: "#508363", fontSize: 12, marginBottom: 12 },
+  saved: { color: "#4E7A5A", fontSize: 12, marginBottom: 12 },
   hero: {
-    backgroundColor: "#DDEBD5",
-    borderRadius: 25,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 23,
     marginBottom: 28,
   },
   heroEyebrow: {
-    color: "#526958",
+    color: "#4E7A5A",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.2,
@@ -285,7 +293,7 @@ const s = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.4,
   },
-  heroHint: { color: "#526958", fontSize: 12, marginTop: 12 },
+  heroHint: { color: "#4E7A5A", fontSize: 12, marginTop: 12 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -298,7 +306,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 18,
+    borderRadius: 6,
     minHeight: 78,
     padding: 13,
     flexDirection: "row",
@@ -306,10 +314,10 @@ const s = StyleSheet.create({
     gap: 12,
     marginBottom: 9,
   },
-  futureCard: { backgroundColor: "#F7F7F2" },
+  futureCard: { backgroundColor: "#FBF9F4" },
   dateBadge: {
-    backgroundColor: "#F5E8DB",
-    borderRadius: 12,
+    backgroundColor: "#EFD9C6",
+    borderRadius: 6,
     minWidth: 55,
     paddingHorizontal: 7,
     paddingVertical: 10,
@@ -327,22 +335,21 @@ const s = StyleSheet.create({
   completeButton: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#A3BBA8",
+    borderColor: "#9C9686",
     alignItems: "center",
     justifyContent: "center",
   },
-  completeText: { color: "#5A866A", fontSize: 19, fontWeight: "700" },
   emptyCard: {
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 19,
+    borderRadius: 6,
     padding: 25,
     alignItems: "center",
   },
-  emptyIcon: { color: "#8DA4BB", fontSize: 28, marginBottom: 9 },
+  emptyIcon: { marginBottom: 9 },
   emptyTitle: { color: palette.text, fontSize: 15, fontWeight: "800" },
   emptyHint: {
     color: palette.muted,
@@ -361,7 +368,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 17,
+    borderRadius: 6,
     paddingHorizontal: 17,
     paddingVertical: 15,
     flexDirection: "row",

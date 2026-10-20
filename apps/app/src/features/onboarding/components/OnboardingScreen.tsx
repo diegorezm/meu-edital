@@ -1,12 +1,7 @@
 import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Icon } from "@global/components/Icon";
+import { Text, TextInput } from "@global/components/Text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { cycleState, daysUntil, startExam } from "@meu-edital/domain";
 import { Brand } from "@global/components/Brand";
@@ -141,7 +136,7 @@ export function OnboardingScreen({
         >
           <View style={[s.readyCard, mobile && s.readyCardMobile]}>
             <View style={s.badge}>
-              <Text style={s.badgeText}>✓</Text>
+              <Icon name="check" size={26} weight="bold" />
             </View>
             <Text style={s.eyebrow}>PRONTO</Text>
             <Text style={[s.title, mobile && s.titleMobile]}>
@@ -553,17 +548,17 @@ const s = StyleSheet.create({
   },
   formCard: {
     backgroundColor: palette.panel,
-    borderRadius: 28,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     padding: 32,
   },
   formCardDesktop: { flex: 1.3 },
-  formCardMobile: { width: "100%", padding: 20, borderRadius: 24 },
+  formCardMobile: { width: "100%", padding: 20, borderRadius: 6 },
   track: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#EFF0ED",
+    backgroundColor: "#FBF9F4",
     overflow: "hidden",
   },
   bar: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
@@ -574,7 +569,7 @@ const s = StyleSheet.create({
     marginTop: 10,
   },
   eyebrow: {
-    color: "#8573CE",
+    color: "#7D786B",
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.5,
@@ -602,10 +597,10 @@ const s = StyleSheet.create({
   chip: {
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 12,
+    borderRadius: 6,
     paddingVertical: 9,
     paddingHorizontal: 13,
-    backgroundColor: "#F9FAF8",
+    backgroundColor: "#FBF9F4",
   },
   chipActive: {
     backgroundColor: palette.lavender,
@@ -619,14 +614,14 @@ const s = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 14,
+    borderRadius: 6,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    backgroundColor: "#F9FAF8",
+    backgroundColor: "#FBF9F4",
   },
   hourActive: { backgroundColor: palette.dark, borderColor: palette.dark },
   hourValue: { color: palette.text, fontSize: 16, fontWeight: "800" },
-  hourValueActive: { color: "#FFFFFF" },
+  hourValueActive: { color: "#F8F5EE" },
   perDay: { color: palette.muted, fontSize: 14, marginTop: 18 },
   addRow: { flexDirection: "row", gap: 8, marginTop: 16, alignItems: "center" },
   addInput: {
@@ -634,9 +629,9 @@ const s = StyleSheet.create({
     minWidth: 0,
     borderWidth: 1,
     borderColor: palette.line,
-    backgroundColor: "#F9FAF8",
+    backgroundColor: "#FBF9F4",
     color: palette.text,
-    borderRadius: 14,
+    borderRadius: 6,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontSize: 14,
@@ -658,7 +653,7 @@ const s = StyleSheet.create({
   summary: {
     flex: 1,
     backgroundColor: palette.dark,
-    borderRadius: 28,
+    borderRadius: 6,
     padding: 28,
   },
   summaryEyebrow: {
@@ -668,13 +663,13 @@ const s = StyleSheet.create({
     letterSpacing: 1.4,
   },
   summaryTitle: {
-    color: "#FFFFFF",
+    color: "#F8F5EE",
     fontSize: 24,
     fontWeight: "800",
     letterSpacing: -0.8,
     marginTop: 10,
   },
-  summaryRole: { color: "#AEB4BB", fontSize: 13, marginTop: 3 },
+  summaryRole: { color: "#9C9686", fontSize: 13, marginTop: 3 },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -683,19 +678,19 @@ const s = StyleSheet.create({
     paddingTop: 12,
     marginTop: 16,
   },
-  summaryLabel: { color: "#AEB4BB", fontSize: 13 },
-  summaryValue: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
-  summaryPending: { color: "#6B727A" },
+  summaryLabel: { color: "#9C9686", fontSize: 13 },
+  summaryValue: { color: "#F8F5EE", fontSize: 13, fontWeight: "700" },
+  summaryPending: { color: "#4A5468" },
   summaryChips: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
     marginTop: 14,
   },
-  summaryChip: { borderRadius: 9, paddingHorizontal: 9, paddingVertical: 5 },
+  summaryChip: { borderRadius: 6, paddingHorizontal: 9, paddingVertical: 5 },
   summaryChipText: { color: palette.dark, fontSize: 11, fontWeight: "700" },
   summaryFoot: {
-    color: "#8C939B",
+    color: "#9C9686",
     fontSize: 12,
     lineHeight: 18,
     marginTop: "auto",
@@ -706,38 +701,37 @@ const s = StyleSheet.create({
     width: "100%",
     maxWidth: 620,
     backgroundColor: palette.panel,
-    borderRadius: 30,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     padding: 36,
   },
-  readyCardMobile: { padding: 22, borderRadius: 24 },
+  readyCardMobile: { padding: 22, borderRadius: 6 },
   badge: {
     width: 52,
     height: 52,
-    borderRadius: 18,
+    borderRadius: 6,
     backgroundColor: palette.mint,
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeText: { color: palette.dark, fontSize: 24, fontWeight: "900" },
   blocks: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 26 },
   block: {
-    borderRadius: 14,
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minWidth: 120,
     maxWidth: 180,
   },
   blockFirst: { borderWidth: 2, borderColor: palette.dark },
-  blockIndex: { color: "#4B5360", fontSize: 10, fontWeight: "800" },
+  blockIndex: { color: "#4A5468", fontSize: 10, fontWeight: "800" },
   blockName: {
     color: palette.dark,
     fontSize: 13,
     fontWeight: "800",
     marginTop: 2,
   },
-  blockMinutes: { color: "#4B5360", fontSize: 11, marginTop: 1 },
+  blockMinutes: { color: "#4A5468", fontSize: 11, marginTop: 1 },
   more: {
     color: palette.muted,
     fontSize: 12,

@@ -33,7 +33,8 @@
           "image": "./assets/images/brand-splash-icon.png",
           "imageWidth": 112
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@global/components/Text";
 import {
   addDays,
   currentWeekStart,
@@ -196,7 +197,7 @@ export default function WeekScreen() {
           onPress={() => router.push("/ciclo")}
         />
         <Button
-          title="Analisar com IA  ✦"
+          title="Analisar com IA  →"
           secondary
           onPress={() =>
             router.push({ pathname: "/ia", params: { task: "revisar-semana" } })
@@ -296,7 +297,7 @@ const s = StyleSheet.create({
   weekArrow: {
     width: 42,
     height: 42,
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     backgroundColor: palette.panel,
@@ -309,13 +310,15 @@ const s = StyleSheet.create({
   weekTitle: { color: palette.text, fontSize: 16, fontWeight: "800" },
   weekCaption: { color: palette.muted, fontSize: 11, marginTop: 2 },
   summaryCard: {
-    backgroundColor: "#BDD1FC",
-    borderRadius: 24,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 22,
     marginBottom: 18,
   },
   overline: {
-    color: "#4D6295",
+    color: "#4A5468",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.1,
@@ -327,18 +330,18 @@ const s = StyleSheet.create({
     letterSpacing: -1,
     marginTop: 8,
   },
-  summaryTarget: { color: "#495979", fontSize: 15, fontWeight: "600" },
+  summaryTarget: { color: "#4A5468", fontSize: 15, fontWeight: "600" },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 18 },
   tileDesktop: { flexBasis: "40%" },
   tile: {
     flexGrow: 1,
     flexBasis: 120,
     backgroundColor: "rgba(255,255,255,0.6)",
-    borderRadius: 15,
+    borderRadius: 6,
     padding: 12,
   },
   tileValue: { color: palette.text, fontSize: 18, fontWeight: "800" },
-  tileLabel: { color: "#495979", fontSize: 11, marginTop: 2 },
+  tileLabel: { color: "#4A5468", fontSize: 11, marginTop: 2 },
   track: {
     height: 7,
     borderRadius: 6,
@@ -346,8 +349,8 @@ const s = StyleSheet.create({
     marginTop: 10,
     overflow: "hidden",
   },
-  trackFill: { height: "100%", borderRadius: 6, backgroundColor: "#937ED8" },
-  trackDone: { backgroundColor: "#6FAE86" },
+  trackFill: { height: "100%", borderRadius: 6, backgroundColor: "#22304A" },
+  trackDone: { backgroundColor: "#4E7A5A" },
   days: { flexDirection: "row", gap: 6, height: 150 },
   daysDesktop: { height: 196 },
   tilesDesktop: { flexWrap: "wrap" },
@@ -363,8 +366,7 @@ const s = StyleSheet.create({
   dayBar: {
     width: "70%",
     maxWidth: 34,
-    borderRadius: 8,
-    backgroundColor: "#A9C3FC",
+    backgroundColor: palette.ink,
   },
   dayBarEmpty: { backgroundColor: palette.line },
   dayLabel: { color: palette.text, fontSize: 11, fontWeight: "700" },

@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Icon } from "@global/components/Icon";
+import { Text } from "@global/components/Text";
 import {
   applyChanges,
   buildStudyContext,
@@ -40,13 +42,13 @@ type Preview =
 const taskCards = [
   {
     id: "importar-edital",
-    icon: "▤",
+    icon: "fileText" as const,
     title: "Importar edital",
     hint: "Matérias, assuntos e pesos",
   },
   {
     id: "revisar-semana",
-    icon: "▦",
+    icon: "chartBar" as const,
     title: "Revisar a semana",
     hint: "Análise e ajustes do ciclo",
   },
@@ -196,7 +198,7 @@ export default function AIScreen() {
                     !accepted[index] && s.changeOff,
                   ]}
                 >
-                  <Text style={s.check}>{accepted[index] ? "☑" : "☐"}</Text>
+                  <Icon name={accepted[index] ? "checkSquare" : "square"} size={20} />
                   <View style={s.changeText}>
                     <Text style={s.previewRowTitle}>{change.title}</Text>
                     <Text style={s.previewRowMeta}>
@@ -260,7 +262,7 @@ export default function AIScreen() {
           <View style={s.hero}>
             <Text style={s.heroEyebrow}>A IA SUGERE, VOCÊ DECIDE</Text>
             <Text style={s.heroTitle}>
-              Leve seu contexto para qualquer IA. ✦
+              Leve seu contexto para qualquer IA.
             </Text>
             <Text style={s.heroText}>
               O app prepara um pedido com seus dados de estudo e o formato exato
@@ -278,7 +280,9 @@ export default function AIScreen() {
                 onPress={() => changeTask(card.id)}
                 style={[s.modeCard, task === card.id && s.modeActive]}
               >
-                <Text style={s.modeIcon}>{card.icon}</Text>
+                <View style={s.modeIcon}>
+                  <Icon name={card.icon} size={24} />
+                </View>
                 <Text style={s.modeTitle}>{card.title}</Text>
                 <Text style={s.modeHint}>{card.hint}</Text>
               </Pressable>
@@ -306,7 +310,7 @@ export default function AIScreen() {
 
           <View style={s.actions}>
             <Button
-              title="Copiar pedido  ↗"
+              title="Copiar pedido"
               onPress={() =>
                 copy(
                   prompt,
@@ -395,7 +399,7 @@ export default function AIScreen() {
           <View style={s.hero}>
             <Text style={s.heroEyebrow}>A IA SUGERE, VOCÊ DECIDE</Text>
             <Text style={s.heroTitle}>
-              Leve seu contexto para qualquer IA. ✦
+              Leve seu contexto para qualquer IA.
             </Text>
             <Text style={s.heroText}>
               O app prepara um pedido com seus dados de estudo e o formato exato
@@ -413,7 +417,9 @@ export default function AIScreen() {
                 onPress={() => changeTask(card.id)}
                 style={[s.modeCard, task === card.id && s.modeActive]}
               >
-                <Text style={s.modeIcon}>{card.icon}</Text>
+                <View style={s.modeIcon}>
+                  <Icon name={card.icon} size={24} />
+                </View>
                 <Text style={s.modeTitle}>{card.title}</Text>
                 <Text style={s.modeHint}>{card.hint}</Text>
               </Pressable>
@@ -441,7 +447,7 @@ export default function AIScreen() {
 
           <View style={s.actions}>
             <Button
-              title="Copiar pedido  ↗"
+              title="Copiar pedido"
               onPress={() =>
                 copy(
                   prompt,
@@ -529,13 +535,15 @@ const s = StyleSheet.create({
   desktopSide: { width: 400, flexShrink: 0 },
   desktopMain: { flex: 1, minWidth: 0 },
   hero: {
-    backgroundColor: "#DFD6FA",
-    borderRadius: 25,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 23,
     marginBottom: 27,
   },
   heroEyebrow: {
-    color: "#675895",
+    color: "#22304A",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.1,
@@ -550,7 +558,7 @@ const s = StyleSheet.create({
     maxWidth: 380,
   },
   heroText: {
-    color: "#675895",
+    color: "#22304A",
     fontSize: 12,
     lineHeight: 19,
     marginTop: 9,
@@ -569,23 +577,23 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderColor: palette.line,
     borderWidth: 1,
-    borderRadius: 19,
+    borderRadius: 6,
     padding: 16,
     minHeight: 116,
   },
   modeActive: {
-    borderColor: "#8F7AC5",
+    borderColor: "#22304A",
     borderWidth: 2,
-    backgroundColor: "#F9F6FF",
+    backgroundColor: "#E2DCEC",
   },
-  modeIcon: { color: "#675895", fontSize: 22, marginBottom: 11 },
+  modeIcon: { marginBottom: 11 },
   modeTitle: { color: palette.text, fontSize: 13, fontWeight: "800" },
   modeHint: { color: palette.muted, fontSize: 10, marginTop: 4 },
   stepsCard: {
     backgroundColor: palette.panel,
     borderColor: palette.line,
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 6,
     padding: 18,
   },
   stepRow: {
@@ -594,15 +602,17 @@ const s = StyleSheet.create({
     gap: 13,
     paddingVertical: 9,
   },
-  stepNumber: { color: "#8D78B9", fontSize: 12, fontWeight: "800", width: 22 },
+  stepNumber: { color: "#22304A", fontSize: 12, fontWeight: "800", width: 22 },
   stepText: { color: palette.text, fontSize: 12, lineHeight: 18, flex: 1 },
   actions: { gap: 10, marginTop: 20 },
   secondaryAction: { alignItems: "center", paddingVertical: 7 },
-  secondaryActionText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  secondaryActionText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   message: {
-    color: "#508363",
-    backgroundColor: "#E4F2E5",
-    borderRadius: 12,
+    color: "#4E7A5A",
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 12,
     fontSize: 12,
     marginTop: 16,
@@ -623,10 +633,10 @@ const s = StyleSheet.create({
   },
   promptText: {
     color: palette.text,
-    backgroundColor: "#F7F7F2",
+    backgroundColor: "#FBF9F4",
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 15,
+    borderRadius: 6,
     padding: 16,
     fontSize: 12,
     lineHeight: 19,
@@ -634,15 +644,17 @@ const s = StyleSheet.create({
   sheetAction: { marginTop: 18 },
   error: { color: palette.danger, fontSize: 12, marginBottom: 10 },
   backButton: { alignSelf: "flex-start", paddingVertical: 7, marginBottom: 12 },
-  backText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  backText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   previewCard: {
-    backgroundColor: "#DFD6FA",
-    borderRadius: 18,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 17,
     marginBottom: 15,
   },
   previewCount: { color: palette.text, fontSize: 33, fontWeight: "800" },
-  previewLabel: { color: "#675895", fontSize: 12, fontWeight: "700" },
+  previewLabel: { color: "#22304A", fontSize: 12, fontWeight: "700" },
   previewSummary: { color: palette.text, fontSize: 13, lineHeight: 20 },
   recommendation: {
     color: palette.text,
@@ -652,14 +664,13 @@ const s = StyleSheet.create({
   },
   changesTitle: { marginTop: 16 },
   previewRow: {
-    backgroundColor: "#F7F7F2",
-    borderRadius: 14,
+    backgroundColor: "#FBF9F4",
+    borderRadius: 6,
     padding: 13,
     marginBottom: 7,
   },
   changeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   changeOff: { opacity: 0.5 },
-  check: { color: palette.text, fontSize: 18, lineHeight: 20 },
   changeText: { flex: 1, minWidth: 0 },
   previewRowTitle: { color: palette.text, fontSize: 13, fontWeight: "800" },
   previewRowMeta: { color: palette.muted, fontSize: 11, marginTop: 4 },

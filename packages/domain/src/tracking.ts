@@ -67,6 +67,31 @@ export function sessionsBetween(
   );
 }
 
+export type MonthSummary = {
+  /** Primeiro dia do mês, AAAA-MM-01. */
+  monthStart: string;
+  /** Sessões do mês, das mais recentes para as mais antigas. */
+  sessions: StudySession[];
+  minutes: number;
+};
+
+/** Diário do mês: as sessões do concurso no mês de `date`, com o total de tempo. */
+export function monthSummary(
+  data: AppData,
+  examId: string,
+  date = today(),
+): MonthSummary {
+  const monthStart = `${date.slice(0, 7)}-01`;
+  const sessions = sessionsBetween(data, examId, monthStart, `${date.slice(0, 7)}-31`)
+    .slice()
+    .sort((a, b) => (a.date === b.date ? (a.id < b.id ? 1 : -1) : a.date < b.date ? 1 : -1));
+  return {
+    monthStart,
+    sessions,
+    minutes: sessions.reduce((sum, s) => sum + s.minutes, 0),
+  };
+}
+
 /** Resumo do que foi estudado na semana, comparado com a meta de cada matéria. */
 export function weekSummary(
   data: AppData,

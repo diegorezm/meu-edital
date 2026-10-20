@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text } from "@global/components/Text";
 import { palette } from "@global/constants/colors";
 
 /**
  * Marca do app. `large` é usada nas telas públicas (landing, login);
- * `inverted` deixa o símbolo escuro, para fundos lavanda.
+ * `inverted` preenche o símbolo com a tinta.
  */
 export function Brand({
   large = false,
@@ -35,29 +36,20 @@ export function Brand({
 const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 9 },
   mark: {
-    width: 32,
-    height: 32,
-    borderRadius: 11,
-    backgroundColor: palette.lavender,
+    width: 30,
+    height: 30,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: palette.ink,
     alignItems: "center",
     justifyContent: "center",
   },
-  markLarge: { width: 36, height: 36, borderRadius: 13 },
-  markInverted: { backgroundColor: palette.dark },
-  markText: {
-    color: palette.dark,
-    fontSize: 16,
-    fontWeight: "900",
-    letterSpacing: -1.5,
-  },
-  markTextLarge: { fontSize: 18 },
-  markTextInverted: { color: palette.lavender },
-  logo: {
-    color: palette.text,
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: -0.8,
-  },
-  logoLarge: { fontSize: 20, letterSpacing: -0.9 },
-  dot: { color: "#8B75DB" },
+  markLarge: { width: 36, height: 36 },
+  markInverted: { backgroundColor: palette.ink },
+  markText: { color: palette.ink, fontSize: 20, fontWeight: "700" },
+  markTextLarge: { fontSize: 23 },
+  markTextInverted: { color: palette.bg },
+  logo: { color: palette.ink, fontSize: 20, fontWeight: "700" },
+  logoLarge: { fontSize: 23 },
+  dot: { color: palette.danger },
 });

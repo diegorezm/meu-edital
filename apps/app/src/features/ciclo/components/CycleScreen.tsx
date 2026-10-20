@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Icon } from "@global/components/Icon";
+import { Text } from "@global/components/Text";
 import {
   addCycleItem,
   advanceCycle,
@@ -27,7 +29,7 @@ import { studyDurations } from "@global/constants/studyOptions";
 import { useStore } from "@global/store/store";
 import { formatDuration } from "@global/utils/formatDuration";
 
-const colors = ["#DAEACD", "#F8DDD0", "#DAE3F7", "#E9DDF2", "#D7E9EA"];
+const colors = ["#D6E2D0", "#EFD9C6", "#D5DCEB", "#E2DCEC", "#D6E2D0"];
 const blockSizes = [30, 45, 60, 90];
 
 export default function CycleScreen() {
@@ -199,7 +201,7 @@ export default function CycleScreen() {
             </View>
           ) : (
             <View style={s.emptyCard}>
-              <Text style={s.emptyIcon}>◌</Text>
+              <Icon name="cycle" size={30} color={palette.inkSoft} />
               <Text style={s.emptyTitle}>Seu ciclo começa aqui</Text>
               <Text style={s.emptyHint}>
                 {subjects.length
@@ -208,7 +210,7 @@ export default function CycleScreen() {
               </Text>
               <Button
                 title={
-                  subjects.length ? "Gerar pelos pesos  ✦" : "Abrir editais  →"
+                  subjects.length ? "Gerar pelos pesos  →" : "Abrir editais  →"
                 }
                 onPress={() =>
                   subjects.length
@@ -397,7 +399,7 @@ export default function CycleScreen() {
           <View style={s.headerActions}>
             <Button
               title={
-                items.length ? "Regerar pelos pesos" : "Gerar pelos pesos  ✦"
+                items.length ? "Regerar pelos pesos" : "Gerar pelos pesos  →"
               }
               secondary={items.length > 0}
               onPress={() => buildSheet.current?.open()}
@@ -476,7 +478,7 @@ export default function CycleScreen() {
                       <Text style={s.tileNumber}>
                         {String(index + 1).padStart(2, "0")}
                       </Text>
-                      {done ? <Text style={s.tileCheck}>✓</Text> : null}
+                      {done ? <Icon name="check" size={13} weight="bold" /> : null}
                     </View>
                     <Text style={s.tileName} numberOfLines={2}>
                       {subjectName(item.subjectId)}
@@ -562,7 +564,7 @@ export default function CycleScreen() {
                 </View>
                 <View style={s.panelFooter}>
                   <Button
-                    title="↑ Subir"
+                    title="Subir"
                     secondary
                     disabled={detailIndex <= 0}
                     onPress={() =>
@@ -572,7 +574,7 @@ export default function CycleScreen() {
                     }
                   />
                   <Button
-                    title="↓ Descer"
+                    title="Descer"
                     secondary
                     disabled={detailIndex >= items.length - 1}
                     onPress={() =>
@@ -599,7 +601,7 @@ export default function CycleScreen() {
         </View>
       ) : (
         <View style={[s.emptyCard, s.emptyDesktop]}>
-          <Text style={s.emptyIcon}>◌</Text>
+          <Icon name="cycle" size={30} color={palette.inkSoft} />
           <Text style={s.emptyTitle}>Seu ciclo começa aqui</Text>
           <Text style={s.emptyHint}>
             {subjects.length
@@ -608,7 +610,7 @@ export default function CycleScreen() {
           </Text>
           <Button
             title={
-              subjects.length ? "Gerar pelos pesos  ✦" : "Abrir editais  →"
+              subjects.length ? "Gerar pelos pesos  →" : "Abrir editais  →"
             }
             onPress={() =>
               subjects.length
@@ -664,13 +666,15 @@ const s = StyleSheet.create({
     marginBottom: 21,
   },
   nextCard: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 25,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 23,
     marginBottom: 27,
   },
   nextEyebrow: {
-    color: "#53647A",
+    color: "#4A5468",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1.1,
@@ -683,34 +687,35 @@ const s = StyleSheet.create({
     letterSpacing: -0.5,
     marginTop: 20,
   },
-  nextSubject: { color: "#53647A", fontSize: 13, marginTop: 6 },
+  nextSubject: { color: "#4A5468", fontSize: 13, marginTop: 6 },
   nextTags: { flexDirection: "row", gap: 7, marginTop: 18, marginBottom: 22 },
   nextTag: {
     color: palette.text,
     fontSize: 11,
     fontWeight: "700",
     backgroundColor: "rgba(255,255,255,0.6)",
-    borderRadius: 12,
+    borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
   nextActions: { flexDirection: "row", alignItems: "center", gap: 14 },
   skip: { paddingVertical: 10, paddingHorizontal: 4 },
-  skipText: { color: "#53647A", fontSize: 12, fontWeight: "800" },
+  skipText: { color: "#4A5468", fontSize: 12, fontWeight: "800" },
   emptyCard: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 24,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 24,
     marginBottom: 27,
   },
-  emptyIcon: { color: "#6A79A1", fontSize: 30 },
   emptyTitle: {
     color: palette.text,
     fontSize: 21,
     fontWeight: "800",
     marginTop: 8,
   },
-  emptyHint: { color: "#53647A", fontSize: 12, marginTop: 6, marginBottom: 20 },
+  emptyHint: { color: "#4A5468", fontSize: 12, marginTop: 6, marginBottom: 20 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -723,7 +728,7 @@ const s = StyleSheet.create({
   sectionSubtitle: { color: palette.muted, fontSize: 11, marginTop: 3 },
   headerActions: { flexDirection: "row", gap: 7 },
   addButton: {
-    borderRadius: 17,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     backgroundColor: palette.panel,
@@ -734,7 +739,7 @@ const s = StyleSheet.create({
   itemCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 19,
+    borderRadius: 6,
     minHeight: 76,
     padding: 14,
     marginBottom: 10,
@@ -745,7 +750,7 @@ const s = StyleSheet.create({
   itemNumber: {
     width: 44,
     height: 44,
-    borderRadius: 14,
+    borderRadius: 6,
     backgroundColor: "rgba(255,255,255,0.6)",
     alignItems: "center",
     justifyContent: "center",
@@ -759,7 +764,7 @@ const s = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 19,
   },
-  itemMeta: { color: "#59636A", fontSize: 11, marginTop: 5 },
+  itemMeta: { color: "#4A5468", fontSize: 11, marginTop: 5 },
   itemArrow: { color: palette.text, fontSize: 26, marginLeft: 8 },
   sheetIntro: {
     color: palette.muted,
@@ -779,17 +784,17 @@ const s = StyleSheet.create({
   choice: {
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 20,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 6,
+    backgroundColor: "#FBF9F4",
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   choiceActive: { backgroundColor: palette.dark, borderColor: palette.dark },
   choiceText: { color: palette.text, fontSize: 12, fontWeight: "700" },
-  choiceTextActive: { color: "#FFFFFF" },
+  choiceTextActive: { color: "#F8F5EE" },
   formAction: { marginTop: 25 },
   backButton: { alignSelf: "flex-start", paddingVertical: 7, marginBottom: 12 },
-  backText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  backText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   selectedTitle: {
     color: palette.text,
     fontSize: 19,
@@ -808,7 +813,7 @@ const s = StyleSheet.create({
     backgroundColor: palette.panel,
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 16,
+    borderRadius: 6,
     padding: 14,
   },
   statLabel: { color: palette.muted, fontSize: 11, fontWeight: "700" },
@@ -849,28 +854,29 @@ const s = StyleSheet.create({
     flexBasis: 110,
     maxWidth: 160,
     height: 82,
-    borderRadius: 14,
+    borderRadius: 4,
     padding: 10,
     justifyContent: "space-between",
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
+    borderColor: palette.rule,
   },
   tileDone: { opacity: 0.45 },
-  tileCurrent: { borderColor: palette.dark },
-  tileActive: { borderColor: "#7A64D0" },
+  tileCurrent: { borderColor: palette.ink, borderWidth: 2 },
+  tileActive: { borderColor: "#22304A" },
   tileTop: { flexDirection: "row", justifyContent: "space-between" },
-  tileNumber: { color: "#59636A", fontSize: 10, fontWeight: "800" },
-  tileCheck: { color: palette.text, fontSize: 11, fontWeight: "800" },
+  tileNumber: { color: "#4A5468", fontSize: 10, fontWeight: "800" },
   tileName: {
     color: palette.text,
     fontSize: 12,
     lineHeight: 15,
     fontWeight: "800",
   },
-  tileMinutes: { color: "#59636A", fontSize: 11 },
+  tileMinutes: { color: "#4A5468", fontSize: 11 },
   panel: {
-    backgroundColor: "#DDE7FB",
-    borderRadius: 22,
+    backgroundColor: palette.panel,
+    borderWidth: 1,
+    borderColor: palette.ink,
+    borderRadius: 4,
     padding: 22,
   },
   panelTitle: {
@@ -880,16 +886,16 @@ const s = StyleSheet.create({
     letterSpacing: -0.5,
     marginTop: 14,
   },
-  panelHint: { color: "#53647A", fontSize: 13, marginTop: 6 },
+  panelHint: { color: "#4A5468", fontSize: 13, marginTop: 6 },
   panelStats: { flexDirection: "row", gap: 8, marginTop: 18 },
   panelStat: {
     flex: 1,
     backgroundColor: "rgba(255,255,255,0.6)",
-    borderRadius: 14,
+    borderRadius: 6,
     padding: 12,
   },
   panelStatValue: { color: palette.text, fontSize: 17, fontWeight: "800" },
-  panelStatLabel: { color: "#53647A", fontSize: 11, marginTop: 2 },
+  panelStatLabel: { color: "#4A5468", fontSize: 11, marginTop: 2 },
   panelActions: {
     flexDirection: "row",
     flexWrap: "wrap",

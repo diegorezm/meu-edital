@@ -1,9 +1,12 @@
+import { useFonts } from "expo-font";
 import { Tabs } from "expo-router";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "@global/components/Text";
 import PublicScreen from "@features/auth";
 import { OnboardingGate } from "@features/onboarding";
 import { AppShell } from "@global/components/AppShell";
 import { palette } from "@global/components/ui";
+import { fontFiles } from "@global/constants/fonts";
 import { AuthProvider, useAuth } from "@global/store/auth";
 import { StoreProvider } from "@global/store/store";
 
@@ -28,6 +31,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(fontFiles);
+  // Sem as fontes o texto pularia de família ao carregar; o papel vazio dura pouco.
+  if (!fontsLoaded && !fontError)
+    return <View style={{ flex: 1, backgroundColor: palette.bg }} />;
   return (
     <AuthProvider>
       <AuthGate>

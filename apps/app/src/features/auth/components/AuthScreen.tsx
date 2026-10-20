@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Image } from "expo-image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@global/components/Text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@global/components/Brand";
 import { Button, Field, palette, useLayout } from "@global/components/ui";
@@ -282,7 +283,7 @@ const s = StyleSheet.create({
     maxWidth: 940,
     minHeight: 540,
     backgroundColor: palette.panel,
-    borderRadius: 30,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     overflow: "hidden",
@@ -303,13 +304,13 @@ const s = StyleSheet.create({
     marginBottom: 22,
   },
   asideItem: {
-    color: "#3A424C",
+    color: "#4A5468",
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 10,
   },
   asideCheck: { color: palette.dark, fontWeight: "900" },
-  asideFoot: { color: "#4B5360", fontSize: 12 },
+  asideFoot: { color: "#4A5468", fontSize: 12 },
   card: {
     padding: 36,
     justifyContent: "center",
@@ -319,7 +320,7 @@ const s = StyleSheet.create({
   cardMobile: {
     width: "100%",
     maxWidth: 440,
-    borderRadius: 26,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     padding: 24,
@@ -349,7 +350,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     minHeight: 46,
-    borderRadius: 15,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: palette.line,
     backgroundColor: palette.panel,
@@ -367,10 +368,10 @@ const s = StyleSheet.create({
   dividerText: { color: palette.muted, fontSize: 12 },
   errorBox: { marginBottom: 14, gap: 6 },
   error: { color: palette.danger, fontSize: 13 },
-  errorAction: { color: "#6D5BB8", fontSize: 13, fontWeight: "800" },
+  errorAction: { color: "#22304A", fontSize: 13, fontWeight: "800" },
   actions: { gap: 10 },
   resend: { alignSelf: "center", paddingVertical: 8 },
-  resendText: { color: "#6D5BB8", fontSize: 13, fontWeight: "700" },
+  resendText: { color: "#22304A", fontSize: 13, fontWeight: "700" },
   resendWait: { color: palette.muted },
   trust: {
     color: palette.muted,
@@ -388,5 +389,5 @@ const s = StyleSheet.create({
     borderTopColor: palette.line,
   },
   switchText: { color: palette.muted, fontSize: 13 },
-  switchAction: { color: "#6D5BB8", fontSize: 13, fontWeight: "800" },
+  switchAction: { color: "#22304A", fontSize: 13, fontWeight: "800" },
 });

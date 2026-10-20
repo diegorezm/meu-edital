@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Text, TextInput } from "@global/components/Text";
 import { palette } from "@global/constants/colors";
 import { normalizeText } from "@global/utils/normalizeText";
 import type { Subject, Topic } from "@meu-edital/domain";
@@ -81,10 +82,10 @@ export function SearchablePicker({
 
 const s = StyleSheet.create({
   search: {
-    backgroundColor: "#F7F7F2",
+    backgroundColor: "#FBF9F4",
     borderWidth: 1,
     borderColor: palette.line,
-    borderRadius: 16,
+    borderRadius: 6,
     paddingHorizontal: 16,
     paddingVertical: 13,
     color: palette.text,
@@ -94,8 +95,8 @@ const s = StyleSheet.create({
   results: { gap: 7 },
   row: {
     minHeight: 54,
-    borderRadius: 14,
-    backgroundColor: "#F7F7F2",
+    borderRadius: 6,
+    backgroundColor: "#FBF9F4",
     paddingHorizontal: 16,
     paddingVertical: 10,
     flexDirection: "row",
@@ -110,7 +111,7 @@ const s = StyleSheet.create({
   },
   arrow: { color: palette.muted, fontSize: 23, marginLeft: 12 },
   more: { alignItems: "center", padding: 13 },
-  moreText: { color: "#6D5BB8", fontSize: 12, fontWeight: "800" },
+  moreText: { color: "#22304A", fontSize: 12, fontWeight: "800" },
   empty: {
     color: palette.muted,
     fontSize: 13,

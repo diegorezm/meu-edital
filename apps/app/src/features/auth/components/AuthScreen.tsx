@@ -1,30 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@global/components/Text";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Brand } from "@global/components/Brand";
 import { Button, Field, palette, useLayout } from "@global/components/ui";
-import { AccountNotFoundError, useAuth } from "@global/store/auth";
+import { useAuth } from "@global/store/auth";
 
 export type AuthMode = "signIn" | "signUp";
 
-const RESEND_SECONDS = 30;
+const MIN_PASSWORD = 6;
 
 const copy = {
   signUp: {
     title: "Crie sua conta grátis.",
-    intro: "Use sua conta Google ou só o e-mail. Sem senha para criar.",
+    intro: "Use sua conta Google ou crie com e-mail e senha.",
     action: "Criar conta  →",
+    busy: "Criando...",
+    passwordHint: "Pelo menos 6 caracteres",
     trust: "Grátis e sem cartão. Seu ciclo fica pronto em poucos minutos.",
     switchText: "Já tem conta?",
     switchAction: "Entrar",
   },
   signIn: {
     title: "Bom te ver de volta.",
-    intro: "Entre com o Google ou receba um código no e-mail.",
-    action: "Enviar código  →",
-    trust: "Sem senha para lembrar. O código chega em segundos.",
+    intro: "Entre com o Google ou com seu e-mail e senha.",
+    action: "Entrar  →",
+    busy: "Entrando...",
+    passwordHint: "Sua senha",
+    trust: "A mesma conta funciona no celular e no navegador.",
     switchText: "Ainda não tem conta?",
     switchAction: "Criar conta grátis",
   },
@@ -42,70 +46,45 @@ export function AuthScreen({
   /** Volta para o site. Sem ele (celular, ou site não configurado) o link some. */
   onBack?: () => void;
 }) {
-  const { sendCode, verifyCode, signInWithGoogle, oauthError } = useAuth();
+  const { signIn, signUp, signInWithGoogle, oauthError } = useAuth();
   const { mobile } = useLayout();
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(oauthError || "");
-  const [notFound, setNotFound] = useState(false);
-  const [wait, setWait] = useState(0);
   const text = copy[mode];
-
-  useEffect(() => {
-    if (wait <= 0) return;
-    const timer = setTimeout(() => setWait(wait - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [wait]);
 
   const run = async (action: () => Promise<void>) => {
     setBusy(true);
     setError("");
-    setNotFound(false);
     try {
       await action();
     } catch (cause) {
-      if (cause instanceof AccountNotFoundError) setNotFound(true);
       setError(cause instanceof Error ? cause.message : "Algo deu errado.");
     } finally {
       setBusy(false);
     }
   };
-  const request = (as: AuthMode) =>
+  const submit = () =>
     run(async () => {
       if (!isEmail(email)) throw new Error("Digite um e-mail válido.");
-      await sendCode(email, as);
-      if (as !== mode) onModeChange(as);
-      setStep("code");
-      setCode("");
-      setWait(RESEND_SECONDS);
-    });
-  const confirm = () =>
-    run(async () => {
-      if (!/^\d{6,10}$/.test(code.trim()))
-        throw new Error("Digite o código de números que chegou no e-mail.");
-      await verifyCode(email, code);
+      if (mode === "signUp" && password.length < MIN_PASSWORD)
+        throw new Error("A senha precisa ter pelo menos 6 caracteres.");
+      if (!password) throw new Error("Digite sua senha.");
+      await (mode === "signUp" ? signUp : signIn)(email, password);
     });
   // Na web a página sai para o Google; no celular volta aqui já com a sessão.
   const google = () => run(signInWithGoogle);
   const switchMode = (next: AuthMode) => {
     setError("");
-    setNotFound(false);
     onModeChange(next);
   };
 
   const form = (
     <View style={[s.card, mobile ? s.cardMobile : s.cardDesktop]}>
-      {(step === "code" || onBack) && (
-        <Pressable
-          accessibilityRole="button"
-          onPress={step === "code" ? () => setStep("email") : onBack}
-          style={s.back}
-        >
-          <Text style={s.backText}>
-            ← {step === "code" ? "Trocar e-mail" : "Voltar ao site"}
-          </Text>
+      {onBack && (
+        <Pressable accessibilityRole="button" onPress={onBack} style={s.back}>
+          <Text style={s.backText}>← Voltar ao site</Text>
         </Pressable>
       )}
       {mobile && (
@@ -113,125 +92,68 @@ export function AuthScreen({
           <Brand large />
         </View>
       )}
-      <Text style={s.title}>
-        {step === "email" ? text.title : "Confira seu e-mail."}
-      </Text>
-      <Text style={s.intro}>
-        {step === "email" ? (
-          text.intro
-        ) : (
-          <>
-            Enviamos um código para <Text style={s.strong}>{email.trim()}</Text>
-            . Olhe também a caixa de spam.
-          </>
-        )}
-      </Text>
-      {step === "email" && (
-        <>
-          <Pressable
-            accessibilityRole="button"
-            disabled={busy}
-            onPress={google}
-            style={({ pressed }) => [s.google, (pressed || busy) && s.pressed]}
-          >
-            <Image
-              source={require("../../../../assets/images/google-g.svg")}
-              style={s.googleIcon}
-              contentFit="contain"
-              accessibilityIgnoresInvertColors
-            />
-            <Text style={s.googleText}>Continuar com Google</Text>
-          </Pressable>
-          <View style={s.divider}>
-            <View style={s.dividerLine} />
-            <Text style={s.dividerText}>ou com e-mail</Text>
-            <View style={s.dividerLine} />
-          </View>
-        </>
-      )}
-      {step === "email" ? (
-        <Field
-          key="email"
-          label="E-mail"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="voce@exemplo.com"
-          keyboardType="email-address"
-          autoComplete="email"
-          autoFocus={!mobile}
-          onSubmitEditing={() => request(mode)}
+      <Text style={s.title}>{text.title}</Text>
+      <Text style={s.intro}>{text.intro}</Text>
+      <Pressable
+        accessibilityRole="button"
+        disabled={busy}
+        onPress={google}
+        style={({ pressed }) => [s.google, (pressed || busy) && s.pressed]}
+      >
+        <Image
+          source={require("../../../../assets/images/google-g.svg")}
+          style={s.googleIcon}
+          contentFit="contain"
+          accessibilityIgnoresInvertColors
         />
-      ) : (
-        <Field
-          key="code"
-          label="Código"
-          value={code}
-          onChangeText={(value) => setCode(value.replace(/\D/g, ""))}
-          keyboardType="numeric"
-          autoComplete="one-time-code"
-          placeholder="123456"
-          autoFocus
-          onSubmitEditing={confirm}
-        />
-      )}
+        <Text style={s.googleText}>Continuar com Google</Text>
+      </Pressable>
+      <View style={s.divider}>
+        <View style={s.dividerLine} />
+        <Text style={s.dividerText}>ou com e-mail</Text>
+        <View style={s.dividerLine} />
+      </View>
+      <Field
+        label="E-mail"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="voce@exemplo.com"
+        keyboardType="email-address"
+        autoComplete="email"
+        autoFocus={!mobile}
+      />
+      <Field
+        label="Senha"
+        value={password}
+        onChangeText={setPassword}
+        placeholder={text.passwordHint}
+        autoComplete={mode === "signUp" ? "new-password" : "current-password"}
+        secure
+        onSubmitEditing={submit}
+      />
       {error ? (
         <View style={s.errorBox}>
           <Text style={s.error}>{error}</Text>
-          {notFound && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => request("signUp")}
-            >
-              <Text style={s.errorAction}>Criar conta com esse e-mail →</Text>
-            </Pressable>
-          )}
         </View>
       ) : null}
       <View style={s.actions}>
-        {step === "email" ? (
-          <Button
-            title={busy ? "Enviando..." : text.action}
-            onPress={() => request(mode)}
-            disabled={busy || !email.trim()}
-            full
-          />
-        ) : (
-          <>
-            <Button
-              title={busy ? "Entrando..." : "Entrar  →"}
-              onPress={confirm}
-              disabled={busy || code.trim().length < 6}
-              full
-            />
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy || wait > 0}
-              onPress={() => request(mode)}
-              style={s.resend}
-            >
-              <Text style={[s.resendText, wait > 0 && s.resendWait]}>
-                {wait > 0 ? `Reenviar código em ${wait}s` : "Reenviar código"}
-              </Text>
-            </Pressable>
-          </>
-        )}
+        <Button
+          title={busy ? text.busy : text.action}
+          onPress={submit}
+          disabled={busy || !email.trim() || !password}
+          full
+        />
       </View>
-      {step === "email" && (
-        <>
-          <Text style={s.trust}>{text.trust}</Text>
-          <View style={s.switchRow}>
-            <Text style={s.switchText}>{text.switchText} </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() =>
-                switchMode(mode === "signIn" ? "signUp" : "signIn")
-              }
-            >
-              <Text style={s.switchAction}>{text.switchAction}</Text>
-            </Pressable>
-          </View>
-        </>
-      )}
+      <Text style={s.trust}>{text.trust}</Text>
+      <View style={s.switchRow}>
+        <Text style={s.switchText}>{text.switchText} </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => switchMode(mode === "signIn" ? "signUp" : "signIn")}
+        >
+          <Text style={s.switchAction}>{text.switchAction}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -343,7 +265,6 @@ const s = StyleSheet.create({
     marginTop: 8,
     marginBottom: 22,
   },
-  strong: { color: palette.text, fontWeight: "700" },
   google: {
     flexDirection: "row",
     alignItems: "center",
@@ -368,11 +289,7 @@ const s = StyleSheet.create({
   dividerText: { color: palette.muted, fontSize: 12 },
   errorBox: { marginBottom: 14, gap: 6 },
   error: { color: palette.danger, fontSize: 13 },
-  errorAction: { color: "#22304A", fontSize: 13, fontWeight: "800" },
   actions: { gap: 10 },
-  resend: { alignSelf: "center", paddingVertical: 8 },
-  resendText: { color: "#22304A", fontSize: 13, fontWeight: "700" },
-  resendWait: { color: palette.muted },
   trust: {
     color: palette.muted,
     fontSize: 12,

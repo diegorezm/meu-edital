@@ -117,6 +117,7 @@ export function Field({
   keyboardType,
   autoComplete,
   autoFocus,
+  secure = false,
   onSubmitEditing,
 }: {
   label: string;
@@ -125,10 +126,18 @@ export function Field({
   placeholder?: string;
   multiline?: boolean;
   keyboardType?: "numeric" | "default" | "email-address";
-  autoComplete?: "email" | "one-time-code" | "off";
+  autoComplete?:
+    | "email"
+    | "current-password"
+    | "new-password"
+    | "one-time-code"
+    | "off";
   autoFocus?: boolean;
+  /** Esconde o texto digitado (senhas). */
+  secure?: boolean;
   onSubmitEditing?: () => void;
 }) {
+  const plain = keyboardType === "email-address" || secure;
   return (
     <View style={s.field}>
       <Text style={s.label}>{label}</Text>
@@ -140,8 +149,9 @@ export function Field({
         multiline={multiline}
         keyboardType={keyboardType}
         autoComplete={autoComplete}
-        autoCapitalize={keyboardType === "email-address" ? "none" : undefined}
-        autoCorrect={keyboardType === "email-address" ? false : undefined}
+        secureTextEntry={secure}
+        autoCapitalize={plain ? "none" : undefined}
+        autoCorrect={plain ? false : undefined}
         autoFocus={autoFocus}
         onSubmitEditing={onSubmitEditing}
         submitBehavior={onSubmitEditing ? "blurAndSubmit" : undefined}

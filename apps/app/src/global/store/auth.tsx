@@ -12,9 +12,9 @@ type Auth = {
   enabled: boolean;
   status: "loading" | "signedOut" | "signedIn";
   session: Session | null;
-  /** `signUp` cria a conta se o e-mail for novo; `signIn` só aceita contas existentes. */
-  sendCode: (email: string, mode: "signIn" | "signUp") => Promise<void>;
-  verifyCode: (email: string, code: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  /** Cria a conta e já entra. Depende de "Confirm email" desligado no Supabase. */
+  signUp: (email: string, password: string) => Promise<void>;
   /** Abre o login com Google. Cria a conta no primeiro acesso. */
   signInWithGoogle: () => Promise<void>;
   /** Erro devolvido pelo Google na volta do redirecionamento (web). */
@@ -22,10 +22,19 @@ type Auth = {
   signOut: () => Promise<void>;
 };
 
-export class AccountNotFoundError extends Error {
-  constructor() {
-    super("Não encontramos uma conta com esse e-mail.");
-  }
+/** Traduz as mensagens do Supabase Auth que a pessoa pode ver no login. */
+function authError(message: string) {
+  if (/invalid login credentials/i.test(message))
+    return new Error("E-mail ou senha incorretos.");
+  if (/already registered|already exists/i.test(message))
+    return new Error("Já existe uma conta com esse e-mail. Entre com ela.");
+  if (/password should be at least/i.test(message))
+    return new Error("A senha precisa ter pelo menos 6 caracteres.");
+  if (/email not confirmed/i.test(message))
+    return new Error("Confirme o e-mail pelo link que enviamos antes de entrar.");
+  if (/signups? not allowed/i.test(message))
+    return new Error("Os cadastros estão fechados por enquanto.");
+  return new Error(message);
 }
 
 const Context = createContext<Auth | null>(null);
@@ -54,29 +63,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     enabled: Boolean(supabase),
     status: loading ? "loading" : session ? "signedIn" : "signedOut",
     session,
-    async sendCode(email, mode) {
-      const { error } = await supabase!.auth.signInWithOtp({
+    async signIn(email, password) {
+      const { error } = await supabase!.auth.signInWithPassword({
         email: email.trim(),
-        options: { shouldCreateUser: mode === "signUp" },
+        password,
       });
-      if (!error) return;
-      // Sem permissão para criar conta, o Supabase recusa e-mails desconhecidos.
-      if (
-        mode === "signIn" &&
-        /signups? not allowed|not found/i.test(error.message)
-      )
-        throw new AccountNotFoundError();
-      if (/signups? not allowed/i.test(error.message))
-        throw new Error("Os cadastros estão fechados por enquanto.");
-      throw new Error(error.message);
+      if (error) throw authError(error.message);
     },
-    async verifyCode(email, code) {
-      const { error } = await supabase!.auth.verifyOtp({
+    async signUp(email, password) {
+      const { data, error } = await supabase!.auth.signUp({
         email: email.trim(),
-        token: code.trim(),
-        type: "email",
+        password,
       });
-      if (error) throw new Error(error.message);
+      if (error) throw authError(error.message);
+      // Com a confirmação ligada o Supabase não devolve sessão nem erro.
+      if (!data.session)
+        throw new Error(
+          "Conta criada. Confirme pelo link no e-mail e depois entre.",
+        );
     },
     async signInWithGoogle() {
       await openGoogleSignIn(supabase!);

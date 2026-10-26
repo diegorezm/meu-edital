@@ -52,7 +52,7 @@ O mesmo pacote (`@meu-edital/agent-context`) já gera mensagens + schema para um
 
 ## Dados e conta
 
-- **Com Supabase configurado:** login com Google ou por código enviado ao e-mail. O banco é a fonte da verdade, com RLS (cada usuário só vê os próprios dados). Cada aparelho guarda uma cópia e uma fila de alterações, então dá para estudar offline. Ao voltar para o app ou para a aba, ele busca o que mudou em outro aparelho.
+- **Com Supabase configurado:** login com Google ou com e-mail e senha. O banco é a fonte da verdade, com RLS (cada usuário só vê os próprios dados). Cada aparelho guarda uma cópia e uma fila de alterações, então dá para estudar offline. Ao voltar para o app ou para a aba, ele busca o que mudou em outro aparelho.
 - **Sem Supabase (modo local):** sem conta, dados só no aparelho, com um concurso de demonstração (DETRAN-SP).
 
 ## Tecnologia e estrutura
@@ -86,7 +86,7 @@ Sem configurar nada, o app abre no modo local.
 
 1. Crie um projeto no [Supabase](https://supabase.com).
 2. Aplique as migrações de `supabase/migrations` (no SQL Editor ou com `npx supabase link` + `npx supabase db push`).
-3. Em **Authentication → Email Templates → Magic Link**, inclua `{{ .Token }}` no e-mail. O login usa esse código.
+3. Em **Authentication → Sign In / Providers → Email**, deixe o provedor ativo e desligue **Confirm email**. O login por e-mail usa senha e entra direto após o cadastro, sem enviar e-mail.
 4. Login com Google (opcional):
    - No [Google Cloud Console](https://console.cloud.google.com/apis/credentials), crie um ID de cliente OAuth do tipo **Aplicativo da Web**. Em **URIs de redirecionamento autorizados**, use `https://<seu-projeto>.supabase.co/auth/v1/callback`.
    - No Supabase, em **Authentication → Sign In / Providers → Google**, ative o provedor e cole o Client ID e o Client Secret.

@@ -50,7 +50,7 @@ export const faq = [
   },
   {
     q: "Preciso criar senha?",
-    a: "Não. Você entra com um código enviado ao seu e-mail.",
+    a: "Só se entrar com e-mail. Com a conta Google, é um clique.",
   },
   {
     q: "Funciona sem internet?",

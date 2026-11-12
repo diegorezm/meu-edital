@@ -16,6 +16,17 @@ import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as VerifiqueSeuEmailRouteImport } from './routes/verifique-seu-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppConquistasRouteImport } from './routes/_app/conquistas'
+import { Route as AppContaRouteImport } from './routes/_app/conta'
+import { Route as AppDesempenhoRouteImport } from './routes/_app/desempenho'
+import { Route as AppEditalRouteImport } from './routes/_app/edital'
+import { Route as AppEstudarRouteImport } from './routes/_app/estudar'
+import { Route as AppGuildaRouteImport } from './routes/_app/guilda'
+import { Route as AppJornadaRouteImport } from './routes/_app/jornada'
+import { Route as AppOraculoRouteImport } from './routes/_app/oraculo'
+import { Route as AppRevisoesRouteImport } from './routes/_app/revisoes'
+import { Route as AppSemanaRouteImport } from './routes/_app/semana'
+import { Route as AppSimuladosRouteImport } from './routes/_app/simulados'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -51,6 +62,61 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConquistasRoute = AppConquistasRouteImport.update({
+  id: '/conquistas',
+  path: '/conquistas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppContaRoute = AppContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDesempenhoRoute = AppDesempenhoRouteImport.update({
+  id: '/desempenho',
+  path: '/desempenho',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEditalRoute = AppEditalRouteImport.update({
+  id: '/edital',
+  path: '/edital',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstudarRoute = AppEstudarRouteImport.update({
+  id: '/estudar',
+  path: '/estudar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGuildaRoute = AppGuildaRouteImport.update({
+  id: '/guilda',
+  path: '/guilda',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJornadaRoute = AppJornadaRouteImport.update({
+  id: '/jornada',
+  path: '/jornada',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOraculoRoute = AppOraculoRouteImport.update({
+  id: '/oraculo',
+  path: '/oraculo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRevisoesRoute = AppRevisoesRouteImport.update({
+  id: '/revisoes',
+  path: '/revisoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSemanaRoute = AppSemanaRouteImport.update({
+  id: '/semana',
+  path: '/semana',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSimuladosRoute = AppSimuladosRouteImport.update({
+  id: '/simulados',
+  path: '/simulados',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -59,6 +125,17 @@ export interface FileRoutesByFullPath {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/conquistas': typeof AppConquistasRoute
+  '/conta': typeof AppContaRoute
+  '/desempenho': typeof AppDesempenhoRoute
+  '/edital': typeof AppEditalRoute
+  '/estudar': typeof AppEstudarRoute
+  '/guilda': typeof AppGuildaRoute
+  '/jornada': typeof AppJornadaRoute
+  '/oraculo': typeof AppOraculoRoute
+  '/revisoes': typeof AppRevisoesRoute
+  '/semana': typeof AppSemanaRoute
+  '/simulados': typeof AppSimuladosRoute
 }
 export interface FileRoutesByTo {
   '/criar-conta': typeof CriarContaRoute
@@ -66,6 +143,17 @@ export interface FileRoutesByTo {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/conquistas': typeof AppConquistasRoute
+  '/conta': typeof AppContaRoute
+  '/desempenho': typeof AppDesempenhoRoute
+  '/edital': typeof AppEditalRoute
+  '/estudar': typeof AppEstudarRoute
+  '/guilda': typeof AppGuildaRoute
+  '/jornada': typeof AppJornadaRoute
+  '/oraculo': typeof AppOraculoRoute
+  '/revisoes': typeof AppRevisoesRoute
+  '/semana': typeof AppSemanaRoute
+  '/simulados': typeof AppSimuladosRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -76,6 +164,17 @@ export interface FileRoutesById {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/_app/conquistas': typeof AppConquistasRoute
+  '/_app/conta': typeof AppContaRoute
+  '/_app/desempenho': typeof AppDesempenhoRoute
+  '/_app/edital': typeof AppEditalRoute
+  '/_app/estudar': typeof AppEstudarRoute
+  '/_app/guilda': typeof AppGuildaRoute
+  '/_app/jornada': typeof AppJornadaRoute
+  '/_app/oraculo': typeof AppOraculoRoute
+  '/_app/revisoes': typeof AppRevisoesRoute
+  '/_app/semana': typeof AppSemanaRoute
+  '/_app/simulados': typeof AppSimuladosRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -87,6 +186,17 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/conquistas'
+    | '/conta'
+    | '/desempenho'
+    | '/edital'
+    | '/estudar'
+    | '/guilda'
+    | '/jornada'
+    | '/oraculo'
+    | '/revisoes'
+    | '/semana'
+    | '/simulados'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/criar-conta'
@@ -94,6 +204,17 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/conquistas'
+    | '/conta'
+    | '/desempenho'
+    | '/edital'
+    | '/estudar'
+    | '/guilda'
+    | '/jornada'
+    | '/oraculo'
+    | '/revisoes'
+    | '/semana'
+    | '/simulados'
     | '/'
   id:
     | '__root__'
@@ -103,6 +224,17 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/_app/conquistas'
+    | '/_app/conta'
+    | '/_app/desempenho'
+    | '/_app/edital'
+    | '/_app/estudar'
+    | '/_app/guilda'
+    | '/_app/jornada'
+    | '/_app/oraculo'
+    | '/_app/revisoes'
+    | '/_app/semana'
+    | '/_app/simulados'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -166,14 +298,113 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/conquistas': {
+      id: '/_app/conquistas'
+      path: '/conquistas'
+      fullPath: '/conquistas'
+      preLoaderRoute: typeof AppConquistasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/conta': {
+      id: '/_app/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof AppContaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/desempenho': {
+      id: '/_app/desempenho'
+      path: '/desempenho'
+      fullPath: '/desempenho'
+      preLoaderRoute: typeof AppDesempenhoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/edital': {
+      id: '/_app/edital'
+      path: '/edital'
+      fullPath: '/edital'
+      preLoaderRoute: typeof AppEditalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/estudar': {
+      id: '/_app/estudar'
+      path: '/estudar'
+      fullPath: '/estudar'
+      preLoaderRoute: typeof AppEstudarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/guilda': {
+      id: '/_app/guilda'
+      path: '/guilda'
+      fullPath: '/guilda'
+      preLoaderRoute: typeof AppGuildaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jornada': {
+      id: '/_app/jornada'
+      path: '/jornada'
+      fullPath: '/jornada'
+      preLoaderRoute: typeof AppJornadaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/oraculo': {
+      id: '/_app/oraculo'
+      path: '/oraculo'
+      fullPath: '/oraculo'
+      preLoaderRoute: typeof AppOraculoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/revisoes': {
+      id: '/_app/revisoes'
+      path: '/revisoes'
+      fullPath: '/revisoes'
+      preLoaderRoute: typeof AppRevisoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/semana': {
+      id: '/_app/semana'
+      path: '/semana'
+      fullPath: '/semana'
+      preLoaderRoute: typeof AppSemanaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/simulados': {
+      id: '/_app/simulados'
+      path: '/simulados'
+      fullPath: '/simulados'
+      preLoaderRoute: typeof AppSimuladosRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppConquistasRoute: typeof AppConquistasRoute
+  AppContaRoute: typeof AppContaRoute
+  AppDesempenhoRoute: typeof AppDesempenhoRoute
+  AppEditalRoute: typeof AppEditalRoute
+  AppEstudarRoute: typeof AppEstudarRoute
+  AppGuildaRoute: typeof AppGuildaRoute
+  AppJornadaRoute: typeof AppJornadaRoute
+  AppOraculoRoute: typeof AppOraculoRoute
+  AppRevisoesRoute: typeof AppRevisoesRoute
+  AppSemanaRoute: typeof AppSemanaRoute
+  AppSimuladosRoute: typeof AppSimuladosRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppConquistasRoute: AppConquistasRoute,
+  AppContaRoute: AppContaRoute,
+  AppDesempenhoRoute: AppDesempenhoRoute,
+  AppEditalRoute: AppEditalRoute,
+  AppEstudarRoute: AppEstudarRoute,
+  AppGuildaRoute: AppGuildaRoute,
+  AppJornadaRoute: AppJornadaRoute,
+  AppOraculoRoute: AppOraculoRoute,
+  AppRevisoesRoute: AppRevisoesRoute,
+  AppSemanaRoute: AppSemanaRoute,
+  AppSimuladosRoute: AppSimuladosRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

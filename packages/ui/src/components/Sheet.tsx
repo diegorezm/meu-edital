@@ -6,11 +6,13 @@ import { Ribbon } from "./Ribbon";
 export function Sheet({
   title,
   tone,
+  ribbonSize = "md",
   className,
   children,
 }: {
   title?: string;
   tone?: "teal" | "gold" | "maroon";
+  ribbonSize?: "sm" | "md" | "lg";
   className?: string;
   children: ReactNode;
 }) {
@@ -24,9 +26,11 @@ export function Sheet({
       )}
     >
       {title && (
-        <h1 className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <Ribbon tone={tone}>{title}</Ribbon>
-        </h1>
+        <h2 className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+          <Ribbon tone={tone} size={ribbonSize}>
+            {title}
+          </Ribbon>
+        </h2>
       )}
       {children}
     </section>

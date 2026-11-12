@@ -63,3 +63,17 @@ export function startExam(data: AppData, input: StartExamInput): AppData {
   };
   return { ...next, cycle: [...next.cycle, ...buildCycle(next, examId)] };
 }
+
+/** Concurso de exemplo, para conhecer o app antes de montar o próprio edital. */
+export const EXAMPLE_EXAM: StartExamInput = {
+  name: "Concurso de exemplo",
+  role: "Técnico",
+  hoursPerWeek: 20,
+  subjects: [
+    { name: "Português", topics: ["Interpretação de textos", "Crase", "Concordância", "Pontuação"] },
+    { name: "Raciocínio Lógico", topics: ["Proposições", "Porcentagem", "Probabilidade"] },
+    { name: "Direito Constitucional", topics: ["Direitos fundamentais", "Organização do Estado"] },
+    { name: "Direito Administrativo", topics: ["Atos administrativos", "Licitações", "Agentes públicos"] },
+    { name: "Informática", topics: ["Segurança da informação", "Redes", "Planilhas"] },
+  ],
+};

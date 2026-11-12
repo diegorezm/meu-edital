@@ -213,3 +213,22 @@ O celular é um desenho próprio, com os mesmos componentes:
 - Os componentes vivem em `packages/ui`, um arquivo por componente, com os estados descritos aqui.
 - As fontes são servidas pelo próprio app (arquivos locais), não por CDN, para funcionar offline e dentro do app mobile.
 - O efeito de contorno em formas recortadas (faixa, flâmula) usa `filter: drop-shadow` em um elemento pai, porque `clip-path` corta a borda.
+
+## No código
+
+Os componentes acima vivem em `packages/ui/src/components`, um por arquivo:
+
+| Componente | Arquivo |
+| --- | --- |
+| Folha | `Sheet` (com `title` vira faixa pendurada) |
+| Faixa e flâmula | `Ribbon`, `Pennant` |
+| Botão e campo | `Button`, `Field` |
+| Carta de bloco | `BlockCard` (estados `done`, `now`, `next`, `boss`; `toRoman` para o numeral) |
+| Selo, carimbo e contador | `Tag`, `Stamp`, `Badge` |
+| Recurso e placa de data | `Resource`, `DatePlate` |
+| Ficha | `Portrait`, `Mascot` (corpo + chapéu), `XpBar` |
+| Navegação | `navItemClass` + `NavItemContent` (lateral), `tabItemClass` + `TabItemContent` (barra inferior) |
+| Contrato e listas | `ContractRow`, `CheckBox`, `ListRow`, `SheetHead` |
+| Matéria | `Crest` (brasão com sigla), `SubjectAttribute`, `Stars` |
+| Folha que sobe da base | `BottomSheet` (diálogo centrado no desktop; comportamento do Radix) |
+| Ícones | `Icon`: o conjunto base mais ícones de ação no mesmo traço (mais, fechar, editar, excluir, tocar, pausar, voltar, sair, sincronizar) |

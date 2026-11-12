@@ -1,20 +1,15 @@
-import { Button, Field } from "@meu-edital/ui";
+import { Button, Field, Sheet } from "@meu-edital/ui";
 import type { useAccount } from "../hooks/useAccount";
-import { AuthLayout } from "./AuthLayout";
 import { FormShell } from "./FormShell";
 
-/**
- * Tela provisória da fase 1: mostra a conta, sair e excluir. O Início de
- * verdade chega com o design system (fase 4) e o núcleo (fase 5).
- */
+/** Conta: dados, estado do sync, sair e excluir (exigência da LGPD e das lojas). */
 export function AccountView({ form }: { form: ReturnType<typeof useAccount> }) {
   if (!form.user) return null;
   return (
-    <AuthLayout title="Sua conta">
+    <Sheet title="Sua conta" className="mx-auto max-w-md">
       <FormShell onSubmit={form.deleteAccount} error={form.error}>
         <p>
-          Olá, <strong>{form.user.name}</strong>! A sede da guilda ainda está em obra, mas sua
-          conta já existe.
+          <strong>{form.user.name}</strong>
         </p>
         <p className="text-sm text-ink-muted">
           {form.user.email} · {form.syncStatus}
@@ -53,6 +48,6 @@ export function AccountView({ form }: { form: ReturnType<typeof useAccount> }) {
           </Button>
         )}
       </FormShell>
-    </AuthLayout>
+    </Sheet>
   );
 }

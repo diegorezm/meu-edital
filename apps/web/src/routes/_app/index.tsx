@@ -1,4 +1,4 @@
-import { AccountPage } from "@features/conta";
+import { HomePage } from "@features/inicio";
 import { searchText } from "@global/guards";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
@@ -11,5 +11,5 @@ export const Route = createFileRoute("/_app/")({
     if (search.conta === "criar") throw redirect({ to: "/criar-conta" });
     if (search.conta === "entrar") throw redirect({ to: "/entrar" });
   },
-  component: AccountPage,
+  component: HomePage,
 });

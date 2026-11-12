@@ -39,3 +39,4 @@ export function ResetPasswordPage({ token, error }: { token?: string; error?: st
 export function AccountPage() {
   return <AccountView form={useAccount()} />;
 }
+

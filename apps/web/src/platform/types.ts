@@ -13,6 +13,15 @@ export type Platform = {
   localStore(name: string): LocalStore;
   /** Apaga o banco local (ao excluir a conta). */
   clearLocalStore(name: string): Promise<void>;
+  /**
+   * Preferências pequenas e síncronas do aparelho (estado do cronômetro).
+   * localStorage na web; Preferences do Capacitor no app.
+   */
+  preferences: {
+    get(key: string): string | null;
+    set(key: string, value: string): void;
+    remove(key: string): void;
+  };
   /** Guarda segredos (token de sessão no app). Na web, a sessão é cookie. */
   secureStorage: {
     get(key: string): Promise<string | null>;

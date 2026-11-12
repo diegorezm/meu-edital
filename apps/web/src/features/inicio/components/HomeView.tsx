@@ -1,4 +1,5 @@
-import { Button, Mascot, Sheet } from "@meu-edital/ui";
+import { buttonClass, Mascot, Sheet, textLinkClass } from "@meu-edital/ui";
+import { Link } from "@tanstack/react-router";
 import { useLayout } from "@global/hooks/useLayout";
 import type { useHome } from "../hooks/useHome";
 import { JourneySheet } from "./JourneySheet";
@@ -19,11 +20,13 @@ export function HomeView({ home }: { home: ReturnType<typeof useHome> }) {
       <Sheet title="Bem-vindo à guilda" ribbonSize="lg" className="mx-auto max-w-xl pt-10">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-40" />
-          <p>Sua jornada começa com um edital. A montagem do seu concurso chega na próxima etapa.</p>
-          <p className="text-sm text-ink-muted">
-            Enquanto isso, dá para explorar com um concurso de exemplo e apagar depois.
-          </p>
-          <Button onClick={home.useExample}>Explorar exemplo</Button>
+          <p>Sua jornada começa com um edital. Leva um minuto.</p>
+          <Link to="/comecar" className={buttonClass()}>
+            Começar
+          </Link>
+          <button type="button" onClick={home.useExample} className={`${textLinkClass} text-sm`}>
+            Só quero explorar um exemplo
+          </button>
         </div>
       </Sheet>
     );

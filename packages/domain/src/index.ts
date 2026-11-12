@@ -11,4 +11,6 @@ export * from "./weekTargets";
 export * from "./seed";
 export * from "./catalog";
 export * from "./onboarding";
+export * from "./syllabus";
+export * from "./timer";
 export * from "./game";

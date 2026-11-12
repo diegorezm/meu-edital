@@ -1,6 +1,4 @@
-import { UnderConstruction } from "@global/components/UnderConstruction";
+import { ReviewsPage } from "@features/revisoes";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_app/revisoes")({
-  component: () => <UnderConstruction title="Revisões" />,
-});
+export const Route = createFileRoute("/_app/revisoes")({ component: ReviewsPage });

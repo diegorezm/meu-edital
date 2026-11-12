@@ -15,7 +15,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "check": "turbo run lint typecheck test",
-    "deploy:preview": "turbo run build --filter=@meu-edital/web && bun run --cwd apps/api deploy:preview"
+    "deploy:preview": "turbo run build --filter=@meu-edital/web && bun run --cwd apps/api deploy:preview",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

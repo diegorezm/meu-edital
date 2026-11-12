@@ -38,6 +38,7 @@ bun run --cwd apps/web build             # app web em apps/web/dist
 bun run dev                              # Worker (:8787) + Vite (:5173); use http://localhost:5173
 bun run --cwd apps/api dev               # só o Worker, servindo o build de apps/web/dist em :8787
 bun run --cwd apps/api db:migrate:local  # aplica as migrações no D1 local
+bun run e2e                              # fluxo principal no Playwright (sobe o Worker local)
 bun run deploy:preview                   # build do app + migrações + deploy em preview
 ```
 
@@ -86,6 +87,7 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
 - Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração, e depois o cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
 - Aliases: `@features/*`, `@global/*`, `@platform/*`. Importações externas primeiro.
 - Nenhum arquivo de tela com mais de ~300 linhas.
+- Cronômetro: `global/timer/` (estado em `platform.preferences`, título da aba e aviso de fim no `TimerTicker`). Comemorações: `celebrationStore.show(...)` depois de registrar estudo.
 
 ## UI
 

@@ -1,10 +1,33 @@
 import { BottomSheet, Sheet } from "@meu-edital/ui";
-import { type ReactNode, useState } from "react";
+import { ensureWeekTarget } from "@meu-edital/domain";
+import { type ReactNode, useEffect, useState } from "react";
+import { CelebrationOverlay } from "../celebrations/CelebrationOverlay";
 import { useLayout } from "../hooks/useLayout";
 import { usePlayer } from "../hooks/usePlayer";
 import { DesktopBeam, MobileBeam } from "./Beam";
 import { SideNav, TabBar } from "./Navigation";
+import { useStore } from "../store/useStore";
+import { TimerTicker } from "../timer/TimerTicker";
 import { PlayerCard } from "./PlayerCard";
+
+/** Salva o retrato da meta da semana do concurso ativo assim que ela começa. */
+function useWeekSnapshot() {
+  const store = useStore();
+  const examId = store.data.activeExamId;
+  useEffect(() => {
+    if (examId) store.update((data) => ensureWeekTarget(data, examId));
+  }, [examId, store]);
+}
+
+/** Peças sem desenho próprio que acompanham todo o app logado. */
+function Companions() {
+  return (
+    <>
+      <TimerTicker />
+      <CelebrationOverlay />
+    </>
+  );
+}
 
 /** Parede rosa com as tábuas verticais, atrás das folhas. */
 const wall =
@@ -19,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const view = usePlayer();
   const { mobile } = useLayout();
   const [profile, setProfile] = useState(false);
+  useWeekSnapshot();
 
   if (mobile)
     return (
@@ -26,6 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <MobileBeam view={view} onOpenProfile={() => setProfile(true)} />
         <main className="px-2.5 pt-7 pb-28">{children}</main>
         <TabBar dueReviews={view.dueReviews} />
+        <Companions />
         <BottomSheet open={profile} onOpenChange={setProfile} title="Sua ficha">
           <PlayerCard view={view} />
         </BottomSheet>
@@ -46,6 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
         <main className="min-w-0">{children}</main>
       </div>
+      <Companions />
     </div>
   );
 }

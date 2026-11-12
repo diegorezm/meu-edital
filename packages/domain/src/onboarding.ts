@@ -77,3 +77,73 @@ export const EXAMPLE_EXAM: StartExamInput = {
     { name: "Informática", topics: ["Segurança da informação", "Redes", "Planilhas"] },
   ],
 };
+
+/**
+ * Concursos populares para o primeiro passo: nome, cargo comum e matérias
+ * iniciais com assuntos. É um ponto de partida; o edital real pode ser
+ * importado pelo Oráculo e tudo é editável.
+ */
+export const POPULAR_EXAMS: { name: string; role: string; subjects: StarterSubject[] }[] = [
+  {
+    name: "INSS",
+    role: "Técnico do Seguro Social",
+    subjects: [
+      { name: "Português", topics: ["Interpretação de textos", "Ortografia", "Crase", "Concordância", "Regência", "Pontuação"] },
+      { name: "Direito Previdenciário", topics: ["Seguridade social", "Segurados e dependentes", "Benefícios", "Custeio"] },
+      { name: "Direito Constitucional", topics: ["Direitos e garantias fundamentais", "Organização do Estado", "Administração pública"] },
+      { name: "Direito Administrativo", topics: ["Atos administrativos", "Agentes públicos", "Lei 9.784/1999"] },
+      { name: "Raciocínio Lógico", topics: ["Proposições", "Porcentagem", "Análise combinatória"] },
+      { name: "Informática", topics: ["Windows", "Planilhas", "Segurança da informação"] },
+      { name: "Ética no Serviço Público", topics: ["Decreto 1.171/1994", "Lei 8.112/1990"] },
+    ],
+  },
+  {
+    name: "Banco do Brasil",
+    role: "Escriturário",
+    subjects: [
+      { name: "Português", topics: ["Interpretação de textos", "Concordância", "Pontuação"] },
+      { name: "Matemática Financeira", topics: ["Juros simples", "Juros compostos", "Amortização"] },
+      { name: "Conhecimentos Bancários", topics: ["Sistema Financeiro Nacional", "Produtos bancários", "Prevenção à lavagem de dinheiro"] },
+      { name: "Vendas e Negociação", topics: ["Marketing", "Técnicas de vendas", "Código de Defesa do Consumidor"] },
+      { name: "Informática", topics: ["Navegadores", "Planilhas", "Segurança da informação"] },
+      { name: "Inglês", topics: ["Interpretação de textos"] },
+    ],
+  },
+  {
+    name: "Polícia Federal",
+    role: "Agente",
+    subjects: [
+      { name: "Português", topics: ["Interpretação de textos", "Sintaxe", "Pontuação"] },
+      { name: "Direito Constitucional", topics: ["Direitos fundamentais", "Segurança pública"] },
+      { name: "Direito Administrativo", topics: ["Poderes administrativos", "Atos administrativos"] },
+      { name: "Direito Penal", topics: ["Teoria do crime", "Crimes contra a administração pública"] },
+      { name: "Direito Processual Penal", topics: ["Inquérito policial", "Prisões"] },
+      { name: "Raciocínio Lógico", topics: ["Lógica proposicional", "Probabilidade"] },
+      { name: "Informática", topics: ["Redes", "Segurança da informação", "Banco de dados"] },
+    ],
+  },
+  {
+    name: "Receita Federal",
+    role: "Auditor-Fiscal",
+    subjects: [
+      { name: "Português", topics: ["Interpretação de textos", "Coesão e coerência"] },
+      { name: "Direito Tributário", topics: ["Competência tributária", "Obrigação tributária", "Crédito tributário"] },
+      { name: "Contabilidade", topics: ["Balanço patrimonial", "DRE", "Lançamentos"] },
+      { name: "Legislação Tributária", topics: ["Imposto de renda", "IPI", "Contribuições"] },
+      { name: "Direito Constitucional", topics: ["Sistema tributário nacional", "Direitos fundamentais"] },
+      { name: "Direito Administrativo", topics: ["Atos administrativos", "Licitações"] },
+    ],
+  },
+  {
+    name: "TRT",
+    role: "Técnico Judiciário",
+    subjects: [
+      { name: "Português", topics: ["Interpretação de textos", "Crase", "Concordância"] },
+      { name: "Direito do Trabalho", topics: ["Contrato de trabalho", "Jornada", "Férias"] },
+      { name: "Direito Processual do Trabalho", topics: ["Procedimentos", "Recursos"] },
+      { name: "Direito Constitucional", topics: ["Direitos sociais", "Poder Judiciário"] },
+      { name: "Direito Administrativo", topics: ["Lei 8.112/1990", "Atos administrativos"] },
+      { name: "Raciocínio Lógico", topics: ["Proposições", "Sequências"] },
+    ],
+  },
+];

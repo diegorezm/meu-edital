@@ -16,6 +16,7 @@ import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as VerifiqueSeuEmailRouteImport } from './routes/verifique-seu-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppComecarRouteImport } from './routes/_app/comecar'
 import { Route as AppConquistasRouteImport } from './routes/_app/conquistas'
 import { Route as AppContaRouteImport } from './routes/_app/conta'
 import { Route as AppDesempenhoRouteImport } from './routes/_app/desempenho'
@@ -60,6 +61,11 @@ const VerifiqueSeuEmailRoute = VerifiqueSeuEmailRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppComecarRoute = AppComecarRouteImport.update({
+  id: '/comecar',
+  path: '/comecar',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConquistasRoute = AppConquistasRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/comecar': typeof AppComecarRoute
   '/conquistas': typeof AppConquistasRoute
   '/conta': typeof AppContaRoute
   '/desempenho': typeof AppDesempenhoRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/comecar': typeof AppComecarRoute
   '/conquistas': typeof AppConquistasRoute
   '/conta': typeof AppContaRoute
   '/desempenho': typeof AppDesempenhoRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
+  '/_app/comecar': typeof AppComecarRoute
   '/_app/conquistas': typeof AppConquistasRoute
   '/_app/conta': typeof AppContaRoute
   '/_app/desempenho': typeof AppDesempenhoRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/comecar'
     | '/conquistas'
     | '/conta'
     | '/desempenho'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/comecar'
     | '/conquistas'
     | '/conta'
     | '/desempenho'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/redefinir-senha'
     | '/verifique-seu-email'
+    | '/_app/comecar'
     | '/_app/conquistas'
     | '/_app/conta'
     | '/_app/desempenho'
@@ -296,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/comecar': {
+      id: '/_app/comecar'
+      path: '/comecar'
+      fullPath: '/comecar'
+      preLoaderRoute: typeof AppComecarRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/conquistas': {
@@ -379,6 +398,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppComecarRoute: typeof AppComecarRoute
   AppConquistasRoute: typeof AppConquistasRoute
   AppContaRoute: typeof AppContaRoute
   AppDesempenhoRoute: typeof AppDesempenhoRoute
@@ -394,6 +414,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppComecarRoute: AppComecarRoute,
   AppConquistasRoute: AppConquistasRoute,
   AppContaRoute: AppContaRoute,
   AppDesempenhoRoute: AppDesempenhoRoute,

@@ -16,3 +16,24 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
       - run: bun run check
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      # Segredos de teste: só valem no Worker local do teste.
+      - run: |
+          printf 'BETTER_AUTH_SECRET=%s\nTURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA\n' "$(openssl rand -hex 32)" > apps/api/.dev.vars
+      - run: bun run e2e
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright
+          path: test-results/

@@ -12,6 +12,11 @@ const storage = () => {
 export const webPlatform: Platform = {
   localStore: indexedDbStore,
   clearLocalStore: clearIndexedDbStore,
+  preferences: {
+    get: (key) => storage()?.getItem(key) ?? null,
+    set: (key, value) => storage()?.setItem(key, value),
+    remove: (key) => storage()?.removeItem(key),
+  },
   secureStorage: {
     async get(key) {
       return storage()?.getItem(key) ?? null;

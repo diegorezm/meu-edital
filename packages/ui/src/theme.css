@@ -106,6 +106,13 @@
   }
 }
 
+/* Comemoração: o mascote dá um pulo, uma vez. */
+@keyframes pop {
+  0% { transform: scale(0.8) translateY(8px); }
+  60% { transform: scale(1.05) translateY(-6px); }
+  100% { transform: none; }
+}
+
 @utility font-title {
   font-family: var(--font-display);
   font-weight: 700;

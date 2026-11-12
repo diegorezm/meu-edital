@@ -1,6 +1,4 @@
-import { UnderConstruction } from "@global/components/UnderConstruction";
+import { WeekPage } from "@features/semana";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_app/semana")({
-  component: () => <UnderConstruction title="Semana" />,
-});
+export const Route = createFileRoute("/_app/semana")({ component: WeekPage });

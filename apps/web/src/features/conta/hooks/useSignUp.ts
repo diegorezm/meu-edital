@@ -1,0 +1,54 @@
+import { authClient, authErrorMessage } from "@global/auth";
+import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useAuthConfig } from "./useAuthConfig";
+import { useSubmit } from "./useSubmit";
+
+export function useSignUp() {
+  const navigate = useNavigate();
+  const { turnstileSiteKey, googleEnabled } = useAuthConfig();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const form = useSubmit();
+
+  const submit = () =>
+    form.run(async () => {
+      if (password.length < 8) return form.setError("A senha precisa de pelo menos 8 caracteres.");
+      if (turnstileSiteKey && !captchaToken)
+        return form.setError("Confirme que você não é um robô.");
+      const { data, error } = await authClient.signUp.email({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        callbackURL: "/",
+        fetchOptions: captchaToken ? { headers: { "x-captcha-response": captchaToken } } : {},
+      });
+      if (error) return form.setError(authErrorMessage(error));
+      // Sem confirmação de e-mail, o cadastro já devolve a sessão.
+      if (data?.token) await navigate({ to: "/" });
+      else await navigate({ to: "/verifique-seu-email", search: { email: email.trim() } });
+    });
+
+  const signUpWithGoogle = () =>
+    form.run(async () => {
+      const { error } = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+      if (error) form.setError(authErrorMessage(error));
+    });
+
+  return {
+    signUpWithGoogle,
+    name,
+    setName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    turnstileSiteKey,
+    setCaptchaToken,
+    googleEnabled,
+    submit,
+    ...form,
+  };
+}

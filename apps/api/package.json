@@ -1,0 +1,30 @@
+{
+  "name": "@meu-edital/api",
+  "version": "0.0.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler d1 migrations apply DB --local && wrangler dev",
+    "lint": "eslint .",
+    "typecheck": "wrangler types --check && tsc --noEmit",
+    "types": "wrangler types",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:preview": "wrangler d1 migrations apply DB --remote --env preview",
+    "deploy:preview": "wrangler d1 migrations apply DB --remote --env preview && wrangler deploy --env preview"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.22",
+    "@meu-edital/db": "workspace:*",
+    "@meu-edital/domain": "workspace:*",
+    "better-auth": "^1.7.22",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.18",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.8.1",
+    "wrangler": "^4.161.0"
+  }
+}

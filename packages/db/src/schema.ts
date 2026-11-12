@@ -1,0 +1,237 @@
+import { sql } from "drizzle-orm";
+import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { StudyType } from "@meu-edital/domain";
+
+const now = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
+const timestamp = (name: string) => integer(name, { mode: "timestamp_ms" });
+
+// --- Conta (Better Auth). Os nomes das propriedades seguem o Better Auth. ---
+
+export const user = sqliteTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+  image: text("image"),
+  createdAt: timestamp("created_at").notNull().default(now),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(now)
+    .$onUpdate(() => new Date()),
+});
+
+export const session = sqliteTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: timestamp("expires_at").notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: timestamp("created_at").notNull().default(now),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(now)
+      .$onUpdate(() => new Date()),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (t) => [index("session_user_id_idx").on(t.userId)],
+);
+
+export const account = sqliteTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: timestamp("created_at").notNull().default(now),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(now)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("account_user_id_idx").on(t.userId)],
+);
+
+export const verification = sqliteTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().default(now),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(now)
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
+// --- Dados de estudo ---
+//
+// Toda linha pertence a um usuário e carrega os campos de sincronização:
+// `updatedAt` (ms), `deletedAt` (exclusão lógica, para propagar a outros
+// aparelhos) e `version`, um contador crescente por usuário atribuído pelo
+// servidor. Não há chaves estrangeiras entre tabelas de estudo: o sync usa
+// "vence a última escrita" por linha e as mutações podem chegar fora de ordem.
+// Só `userId` aponta para `user`, para a exclusão da conta apagar tudo.
+
+const owned = () => ({
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  updatedAt: integer("updated_at").notNull(),
+  deletedAt: integer("deleted_at"),
+  version: integer("version").notNull(),
+});
+
+export const exams = sqliteTable(
+  "exams",
+  {
+    ...owned(),
+    name: text("name").notNull(),
+    role: text("role").notNull(),
+    board: text("board"),
+    examDate: text("exam_date"),
+    hoursPerWeek: real("hours_per_week").notNull(),
+    createdAt: text("created_at").notNull(),
+    cyclePosition: integer("cycle_position").notNull().default(0),
+    cycleLaps: integer("cycle_laps").notNull().default(0),
+    lastCycleSessionId: text("last_cycle_session_id"),
+  },
+  (t) => [index("exams_user_version_idx").on(t.userId, t.version)],
+);
+
+export const subjects = sqliteTable(
+  "subjects",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    name: text("name").notNull(),
+    position: integer("position").notNull(),
+    weight: real("weight"),
+    questions: integer("questions"),
+    pointsPerQuestion: real("points_per_question"),
+  },
+  (t) => [index("subjects_user_version_idx").on(t.userId, t.version)],
+);
+
+export const topics = sqliteTable(
+  "topics",
+  {
+    ...owned(),
+    subjectId: text("subject_id").notNull(),
+    parentId: text("parent_id"),
+    name: text("name").notNull(),
+    position: integer("position").notNull(),
+  },
+  (t) => [index("topics_user_version_idx").on(t.userId, t.version)],
+);
+
+export const cycleItems = sqliteTable(
+  "cycle_items",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    subjectId: text("subject_id").notNull(),
+    minutes: integer("minutes").notNull(),
+    order: integer("sort_order").notNull(),
+  },
+  (t) => [index("cycle_items_user_version_idx").on(t.userId, t.version)],
+);
+
+export const studySessions = sqliteTable(
+  "study_sessions",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    subjectId: text("subject_id").notNull(),
+    topicId: text("topic_id").notNull(),
+    cycleItemId: text("cycle_item_id"),
+    type: text("type").$type<StudyType>().notNull(),
+    minutes: integer("minutes").notNull(),
+    date: text("date").notNull(),
+    questions: integer("questions"),
+    correct: integer("correct"),
+    note: text("note"),
+  },
+  (t) => [
+    index("study_sessions_user_version_idx").on(t.userId, t.version),
+    index("study_sessions_user_date_idx").on(t.userId, t.date),
+  ],
+);
+
+export const reviews = sqliteTable(
+  "reviews",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    topicId: text("topic_id").notNull(),
+    sessionId: text("session_id").notNull(),
+    dueDate: text("due_date").notNull(),
+    stage: integer("stage").notNull(),
+    completedBySessionId: text("completed_by_session_id"),
+  },
+  (t) => [index("reviews_user_version_idx").on(t.userId, t.version)],
+);
+
+export const weekTargets = sqliteTable(
+  "week_targets",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    weekStart: text("week_start").notNull(),
+    totalMinutes: integer("total_minutes").notNull(),
+    subjects: text("subjects", { mode: "json" })
+      .$type<{ subjectId: string; minutes: number }[]>()
+      .notNull(),
+  },
+  (t) => [index("week_targets_user_version_idx").on(t.userId, t.version)],
+);
+
+/** Preferências do usuário. Uma linha por usuário; o id é o próprio `userId`. */
+export const userSettings = sqliteTable(
+  "user_settings",
+  {
+    ...owned(),
+    activeExamId: text("active_exam_id"),
+    reviewOffsets: text("review_offsets", { mode: "json" }).$type<number[]>().notNull(),
+  },
+  (t) => [index("user_settings_user_version_idx").on(t.userId, t.version)],
+);
+
+/** Último `version` atribuído a cada usuário. O próximo é sempre este + 1. */
+export const syncCounters = sqliteTable("sync_counters", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  version: integer("version").notNull().default(0),
+});
+
+/** Tabelas de estudo, na ordem pais antes dos filhos. */
+export const studyTables = {
+  exams,
+  subjects,
+  topics,
+  cycleItems,
+  studySessions,
+  reviews,
+  weekTargets,
+  userSettings,
+} as const;
+export type StudyTableName = keyof typeof studyTables;

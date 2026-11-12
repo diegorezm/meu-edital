@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Edital · Design system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Alegreya+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Cópia de tokens.css, para a página abrir sozinha. A fonte da verdade é tokens.css. */
+  :root {
+    --wall: #c2a09a; --wood: #7a5548; --wood-dark: #5d3f37;
+    --paper: #f1e3cc; --paper-raised: #f8eedb; --paper-sunken: #e7d5b8; --rule: #d6bf9f;
+    --ink: #5b3b33; --ink-muted: #6f5246;
+    --teal: #5f9aa0; --teal-strong: #3f7379; --gold: #e3b04b; --gold-strong: #b9862b;
+    --maroon: #6e3b45; --rose: #c9797a; --rose-strong: #9c4a4f;
+    --green: #8aa776; --green-strong: #4c6a3c; --plum: #9a86b3;
+    --card-done: #e6e3c8; --card-now: #fff7e3; --card-boss: #edd3cc;
+    --subject-6: #c2906c; --subject-7: #8499ba; --subject-8: #a39a5a;
+    --font-display: "Amatic SC", "Alegreya Sans", sans-serif;
+    --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+    --radius: 6px; --stroke: 2px;
+    --shadow-sheet: 4px 5px 0 rgb(91 59 51 / .3); --shadow-press: 0 3px 0 var(--ink);
+    --inset-rule: inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--rule);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--ink); }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  :focus-visible { outline: 3px solid var(--teal-strong); outline-offset: 2px; }
+  .display, h1, h2, h3, .ribbon, .pennant, .num, .btn, .stamp { font-family: var(--font-display); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  .stage { background: var(--wall); border-radius: 22px; padding: 16px; background-image: repeating-linear-gradient(90deg, transparent 0 126px, rgba(91, 59, 51, .09) 126px 128px); }
+  .intro { background: var(--wood); border: 2px solid var(--wood-dark); border-radius: var(--radius); color: var(--paper-raised); padding: 14px 18px; margin-bottom: 30px; }
+  h1 { font-size: 40px; line-height: 1; }
+  .intro p { font-size: 15px; margin-top: 4px; opacity: .92; }
+  .grid { display: grid; gap: 30px 18px; grid-template-columns: repeat(12, 1fr); }
+  .s12 { grid-column: span 12; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s8 { grid-column: span 8; }
+  @media (max-width: 640px) { .grid > * { grid-column: span 12; } }
+
+  .sheet { background: var(--paper); border: var(--stroke) solid var(--ink); border-radius: var(--radius); box-shadow: var(--inset-rule), var(--shadow-sheet); padding: 28px 16px 16px; position: relative; min-width: 0; }
+  .ol { filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink)); }
+  .hang { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+  .ribbon { display: inline-block; color: var(--paper-raised); background: var(--teal-strong); padding: 1px 30px 3px; font-size: 22px; line-height: 1.15; clip-path: polygon(0 0, 100% 0, calc(100% - 13px) 50%, 100% 100%, 0 100%, 13px 50%); }
+  .ribbon.lg { font-size: 28px; padding: 2px 38px 4px; }
+  .ribbon.gold { background: var(--gold); color: var(--ink); }
+  .ribbon.maroon { background: var(--maroon); }
+  .pennant { display: inline-block; background: var(--paper-raised); font-size: 18px; padding: 1px 12px 9px; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 7px), 0 100%); }
+  h3 { font-size: 20px; line-height: 1; margin: 20px 0 8px; color: var(--ink-muted); }
+  .hang + h3 { margin-top: 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center; }
+  .note { font-size: 13px; color: var(--ink-muted); margin-top: 8px; }
+
+  /* Cores */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  .sw { border: var(--stroke) solid var(--ink); border-radius: var(--radius); overflow: hidden; background: var(--paper-raised); font-size: 12px; line-height: 1.25; }
+  .sw i { display: block; height: 40px; border-bottom: var(--stroke) solid var(--ink); }
+  .sw span { display: block; padding: 4px 6px 5px; }
+  .sw b { display: block; font-weight: 800; }
+
+  /* Tipografia */
+  .type > div { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 10px; padding: 5px 0; border-bottom: 1.5px dashed var(--rule); }
+  .type > div:last-child { border: 0; }
+  .type small { font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+
+  /* Botões e selos */
+  .btn { border: var(--stroke) solid var(--ink); border-radius: 5px; font-size: 20px; line-height: 1; padding: 4px 16px 6px; box-shadow: var(--shadow-press); background: var(--teal-strong); color: var(--paper-raised); transition: transform 80ms, box-shadow 80ms; }
+  .btn:active, .btn.pressed { transform: translateY(3px); box-shadow: none; }
+  .btn.gold { background: var(--gold); color: var(--ink); }
+  .btn.quiet { background: var(--paper-raised); color: var(--ink); }
+  .btn[disabled] { background: var(--paper-sunken); color: var(--ink-muted); box-shadow: none; border-style: dashed; cursor: not-allowed; }
+  .tag { display: inline-flex; align-items: center; gap: 3px; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 4px; padding: 0 6px; font-size: 12.5px; font-weight: 800; }
+  .tag .ic { width: 12px; height: 12px; }
+  .badge { font-size: 11.5px; font-weight: 800; padding: 0 7px; border-radius: 3px; background: var(--paper-sunken); color: var(--ink-muted); border: 1.5px solid var(--rule); }
+  .res { display: inline-flex; align-items: center; gap: 7px; background: var(--paper); border: var(--stroke) solid var(--ink); border-radius: 5px; padding: 2px 11px 3px 8px; font-size: 13px; white-space: nowrap; }
+  .res b { font-family: var(--font-display); font-size: 21px; line-height: 1.1; letter-spacing: .05em; }
+  .beam { background: var(--wood); border: 2px solid var(--wood-dark); border-radius: var(--radius); padding: 9px 12px; }
+  .stamp { display: inline-block; border: 2px solid var(--green-strong); color: var(--green-strong); font-size: 18px; line-height: 1; padding: 1px 8px 3px; border-radius: 4px; transform: rotate(-5deg); }
+
+  /* Cartas */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: 22px 12px; padding-top: 6px; }
+  .card { position: relative; background: var(--paper-raised); border: var(--stroke) solid var(--ink); border-radius: var(--radius); padding: 18px 8px 10px; text-align: center; box-shadow: inset 0 0 0 3px var(--paper-raised), inset 0 0 0 4px var(--rule); min-height: 172px; display: flex; flex-direction: column; align-items: center; }
+  .num { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--paper-sunken); border: var(--stroke) solid var(--ink); border-radius: 4px; font-size: 18px; line-height: 1; padding: 1px 10px 3px; white-space: nowrap; }
+  .shield { width: 46px; height: 52px; }
+  .shield text { font-family: var(--font-display); font-weight: 700; font-size: 22px; fill: var(--ink); }
+  .card b { font-weight: 800; font-size: 14.5px; line-height: 1.15; margin-top: 4px; }
+  .card small { font-size: 12px; color: var(--ink-muted); line-height: 1.2; }
+  .card .foot { margin-top: auto; padding-top: 6px; display: flex; gap: 5px; align-items: center; justify-content: center; }
+  .card.done { background: var(--card-done); box-shadow: inset 0 0 0 3px var(--card-done), inset 0 0 0 4px #cdd0a8; }
+  .card.now { background: var(--card-now); box-shadow: inset 0 0 0 3px var(--card-now), inset 0 0 0 5px var(--gold), 0 0 0 4px rgb(227 176 75 / .45); }
+  .card.now .num { background: var(--gold); }
+  .card.locked { background: var(--paper-sunken); box-shadow: inset 0 0 0 3px var(--paper-sunken), inset 0 0 0 4px #d2bd9b; }
+  .card.locked b { color: var(--ink-muted); }
+  .lock { width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(#fff3cf 30%, transparent 70%); display: grid; place-items: center; margin: 2px 0; }
+  .lock .ic { width: 30px; height: 30px; fill: var(--gold); stroke-width: 1.6; }
+  .card.boss { background: var(--card-boss); box-shadow: inset 0 0 0 3px var(--card-boss), inset 0 0 0 4px #d9aea6; }
+  .card.boss .num { background: var(--maroon); color: var(--paper-raised); }
+  .skull { width: 46px; height: 46px; stroke: var(--ink); fill: var(--paper-raised); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .state { font-size: 12px; color: var(--ink-muted); text-align: center; margin-top: 8px; }
+
+  /* Ficha, barra, navegação */
+  .hero { text-align: center; max-width: 220px; margin: 0 auto; }
+  .portrait { width: 116px; height: 124px; margin: 0 auto; border: var(--stroke) solid var(--ink); border-radius: 58px 58px 6px 6px; background: linear-gradient(180deg, #3f7379, #2f565c); box-shadow: inset 0 0 0 3px var(--gold), inset 0 0 0 5px var(--ink); display: grid; place-items: end center; overflow: hidden; }
+  .portrait svg { width: 96px; margin-bottom: -4px; }
+  .name { margin-top: -12px; position: relative; }
+  .xp { height: 14px; border: var(--stroke) solid var(--ink); border-radius: 3px; background: var(--paper-sunken); margin-top: 8px; position: relative; overflow: hidden; }
+  .xp span { display: block; height: 100%; background: var(--gold); border-right: var(--stroke) solid var(--ink); }
+  .xp::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgb(91 59 51 / .35) calc(10% - 1px) 10%); }
+  .xpl { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-muted); margin-top: 3px; }
+  .nav { display: grid; gap: 3px; }
+  .nav a { display: flex; align-items: center; gap: 9px; padding: 5px 9px; color: var(--ink); text-decoration: none; font-weight: 700; border: var(--stroke) solid transparent; border-radius: 5px; }
+  .nav a:hover { background: var(--paper-raised); border-color: var(--rule); }
+  .nav a.on { background: var(--maroon); color: var(--paper-raised); border-color: var(--ink); box-shadow: var(--shadow-press); }
+  .nav .badge { margin-left: auto; }
+  .nav a.on .badge { background: var(--gold); color: var(--ink); border-color: var(--ink); }
+
+  /* Listas */
+  .contract { display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1.5px dashed var(--rule); font-weight: 700; font-size: 14px; }
+  .contract:last-child { border: 0; }
+  .box { width: 18px; height: 18px; border: var(--stroke) solid var(--ink); border-radius: 3px; background: var(--paper-raised); display: grid; place-items: center; }
+  .box .ic { width: 12px; height: 12px; stroke-width: 3; stroke: var(--green-strong); }
+  .contract.ok span { text-decoration: line-through; color: var(--ink-muted); }
+  .line { display: grid; grid-template-columns: 1fr auto; gap: 6px; font-size: 14px; padding: 4px 0; border-bottom: 1.5px dashed var(--rule); }
+  .line i { font-style: normal; color: var(--rose-strong); font-weight: 800; font-size: 12.5px; }
+  .field label { display: block; font-weight: 800; font-size: 13px; margin-bottom: 3px; }
+  .field input { width: 100%; font: inherit; color: var(--ink); background: var(--paper-raised); border: var(--stroke) solid var(--ink); border-radius: 5px; padding: 6px 9px; }
+  .field .err { color: var(--rose-strong); font-size: 12.5px; font-weight: 700; margin-top: 3px; }
+  .field.bad input { border-color: var(--rose-strong); }
+
+  /* Matérias */
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 10px; }
+  .person { text-align: center; }
+  .frame { height: 62px; border: var(--stroke) solid var(--ink); border-radius: 5px 5px 0 0; display: grid; place-items: center; }
+  .frame .shield { width: 38px; height: 44px; }
+  .person .plate { display: block; background: var(--paper-raised); border: var(--stroke) solid var(--ink); border-top: 0; padding: 0 4px 2px; font-family: var(--font-display); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stars { display: flex; justify-content: center; gap: 1px; margin-top: 4px; }
+  .stars svg { width: 14px; height: 14px; stroke: var(--ink); stroke-width: 1.6; fill: var(--paper-raised); }
+  .stars svg.f { fill: var(--gold); }
+  .person small { font-size: 12px; color: var(--ink-muted); }
+
+  /* Ícones */
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+  .icons div { text-align: center; font-size: 11.5px; color: var(--ink-muted); background: var(--paper-raised); border: 1.5px solid var(--rule); border-radius: 5px; padding: 8px 2px 5px; }
+  .icons .ic { width: 24px; height: 24px; color: var(--ink); display: block; margin: 0 auto 3px; }
+
+  /* Celular */
+  .phone { width: 300px; max-width: 100%; margin: 0 auto; border: 3px solid var(--ink); border-radius: 26px; overflow: hidden; background: var(--wall); }
+  .phone .top { background: var(--wood); border-bottom: 3px solid var(--wood-dark); padding: 8px 10px; display: flex; gap: 6px; align-items: center; }
+  .phone .top .res { padding: 0 7px 1px 5px; font-size: 11px; gap: 4px; }
+  .phone .top .res b { font-size: 18px; }
+  .phone .top .res .ic { width: 14px; height: 14px; }
+  .mini { width: 34px; height: 34px; margin-left: auto; border: 2px solid var(--ink); border-radius: 17px 17px 4px 4px; background: #3f7379; box-shadow: inset 0 0 0 2px var(--gold); overflow: hidden; display: grid; place-items: end center; }
+  .mini svg { width: 28px; margin-bottom: -2px; }
+  .phone .body { padding: 26px 10px 12px; }
+  .phone .sheet { padding: 24px 0 12px; }
+  .strip { display: flex; gap: 10px; overflow: hidden; padding: 12px 0 6px; justify-content: center; }
+  .strip .card { flex: none; width: 104px; min-height: 142px; padding: 16px 6px 8px; }
+  .strip .card.now { width: 132px; min-height: 172px; }
+  .strip .card.side { opacity: .9; margin-top: 16px; }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--paper); border-top: 3px solid var(--ink); padding: 6px 6px 8px; }
+  .tabbar a { display: grid; justify-items: center; gap: 1px; font-size: 10.5px; font-weight: 800; color: var(--ink); text-decoration: none; padding: 4px 0; border: 2px solid transparent; border-radius: 5px; }
+  .tabbar a.on { background: var(--maroon); color: var(--paper-raised); border-color: var(--ink); }
+  .tabbar a.go { background: var(--teal-strong); color: var(--paper-raised); border-color: var(--ink); box-shadow: var(--shadow-press); margin-top: -12px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-castle" viewBox="0 0 24 24"><path d="M4 20V9h3V6h3v3h4V6h3v3h3v11Z"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z"/><path d="M9 4v14M15 6v14"/></symbol>
+  <symbol id="i-sword" viewBox="0 0 24 24"><path d="M19 4L9 14M19 4v3M19 4h-3M6 12l6 6M4 20l4-4"/></symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M17 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8h3V6a2 2 0 0 0-2-2"/><path d="M8 9h5M8 13h5"/></symbol>
+  <symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 0-7 7c0 3 1.5 4.5 3 5.5V19h8v-3.5c1.500-1 3-2.500 3-5.500a7 7 0 0 0-7-7Z"/><circle cx="9.200" cy="10.500" r="1.700" fill="#5b3b33" stroke="none"/><circle cx="14.800" cy="10.500" r="1.700" fill="#5b3b33" stroke="none"/><path d="M11 19v-2M13 19v-2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M4 21V5M8 7h7"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16M8 16v-5M12 16V8M16 16v-9"/></symbol>
+  <symbol id="i-cup" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0ZM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="16.500" cy="9" r="2.500"/><path d="M3 20a6 6 0 0 1 12 0M15 15.500a5 5 0 0 1 6 4.500"/></symbol>
+  <symbol id="i-orb" viewBox="0 0 24 24"><circle cx="12" cy="10" r="7"/><path d="M7 20h10M9 17h6M10 7l1 2 2 1-2 1-1 2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none"/><rect x="5" y="10" width="14" height="10" rx="2"/><circle cx="12" cy="15" r="1.400" fill="#5b3b33"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3c3 4 5 6 5 9.500a5 5 0 0 1-10 0c0-2 1-3 2-5 .8 1.500 1.600 1.800 2-.2.300-1.600.300-2.800 1-4.300Z"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/></symbol>
+  <symbol id="i-quill" viewBox="0 0 24 24"><path d="M20 4c-8 0-13 5-14 13l-2 3M6 17c5 0 9-2 11-6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.700 5.600 6.100.8-4.500 4.300 1.100 6.100L12 16.900 6.600 19.800l1.100-6.100L3.200 9.400l6.100-.8Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/></symbol>
+  <symbol id="shield" viewBox="0 0 46 52"><path d="M23 3l19 6v15c0 13-8 21-19 25C12 45 4 37 4 24V9Z" stroke="#5b3b33" stroke-width="2.500" stroke-linejoin="round"/><path d="M23 8l14 4.500V24c0 10-6 16-14 19.500" fill="rgba(255,255,255,.18)" stroke="none"/></symbol>
+  <symbol id="axo" viewBox="0 0 200 210">
+    <path d="M136 172 C172 172 192 146 182 116 C176 142 160 152 134 152Z" fill="#eba9b9" stroke="#5b3b33" stroke-width="3" stroke-linejoin="round"/>
+    <g fill="#f6c1cd" stroke="#5b3b33" stroke-width="3"><ellipse cx="78" cy="190" rx="13" ry="7"/><ellipse cx="122" cy="190" rx="13" ry="7"/></g>
+    <ellipse cx="100" cy="160" rx="42" ry="30" fill="#f6c1cd" stroke="#5b3b33" stroke-width="3"/>
+    <ellipse cx="100" cy="166" rx="25" ry="18" fill="#fde6ea"/>
+    <g stroke="#5b3b33" stroke-width="16" stroke-linecap="round"><path d="M48 76 L20 46"/><path d="M42 94 L8 92"/><path d="M48 112 L20 134"/><path d="M152 76 L180 46"/><path d="M158 94 L192 92"/><path d="M152 112 L180 134"/></g>
+    <g stroke="#e8839c" stroke-width="11" stroke-linecap="round"><path d="M48 76 L20 46"/><path d="M42 94 L8 92"/><path d="M48 112 L20 134"/><path d="M152 76 L180 46"/><path d="M158 94 L192 92"/><path d="M152 112 L180 134"/></g>
+    <ellipse cx="100" cy="92" rx="62" ry="48" fill="#f6c1cd" stroke="#5b3b33" stroke-width="3"/>
+    <g fill="#5b3b33"><circle cx="68" cy="92" r="7.500"/><circle cx="132" cy="92" r="7.500"/></g>
+    <g fill="#fff"><circle cx="70.500" cy="89.500" r="2.600"/><circle cx="134.500" cy="89.500" r="2.600"/></g>
+    <g fill="#f08fa6" opacity=".55"><ellipse cx="54" cy="106" rx="9" ry="6"/><ellipse cx="146" cy="106" rx="9" ry="6"/></g>
+    <path d="M80 106 Q100 122 120 106" fill="none" stroke="#5b3b33" stroke-width="3.500" stroke-linecap="round"/>
+    <rect x="80" y="38" width="40" height="12" rx="4" fill="#3a2d22"/>
+    <path d="M100 16 L148 33 L100 50 L52 33Z" fill="#5b3b33" stroke="#3a2d22" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M148 33 v20" stroke="#e3b04b" stroke-width="3.500" stroke-linecap="round"/><circle cx="148" cy="57" r="6" fill="#e3b04b" stroke="#b9862b" stroke-width="2"/>
+  </symbol>
+</svg>
+
+<div class="stage">
+  <div class="intro">
+    <h1>Guilda de pergaminho</h1>
+    <p>Design system do Meu Edital: papel e tinta, sombra dura, paleta terrosa. Regras em design-system.md.</p>
+  </div>
+
+  <div class="grid">
+
+    <section class="sheet s12">
+      <div class="hang ol"><div class="ribbon lg">Cores</div></div>
+      <h3>Cenário, papel e tinta</h3>
+      <div class="swatches">
+        <div class="sw"><i style="background:var(--wall)"></i><span><b>wall</b>#c2a09a</span></div>
+        <div class="sw"><i style="background:var(--wood)"></i><span><b>wood</b>#7a5548</span></div>
+        <div class="sw"><i style="background:var(--paper)"></i><span><b>paper</b>#f1e3cc</span></div>
+        <div class="sw"><i style="background:var(--paper-raised)"></i><span><b>paper-raised</b>#f8eedb</span></div>
+        <div class="sw"><i style="background:var(--paper-sunken)"></i><span><b>paper-sunken</b>#e7d5b8</span></div>
+        <div class="sw"><i style="background:var(--rule)"></i><span><b>rule</b>#d6bf9f</span></div>
+        <div class="sw"><i style="background:var(--ink)"></i><span><b>ink</b>#5b3b33</span></div>
+        <div class="sw"><i style="background:var(--ink-muted)"></i><span><b>ink-muted</b>#6f5246</span></div>
+      </div>
+      <h3>Acentos: a versão forte é a que recebe texto</h3>
+      <div class="swatches">
+        <div class="sw"><i style="background:var(--teal)"></i><span><b>teal</b>#5f9aa0</span></div>
+        <div class="sw"><i style="background:var(--teal-strong)"></i><span><b>teal-strong</b>#3f7379</span></div>
+        <div class="sw"><i style="background:var(--gold)"></i><span><b>gold</b>#e3b04b</span></div>
+        <div class="sw"><i style="background:var(--maroon)"></i><span><b>maroon</b>#6e3b45</span></div>
+        <div class="sw"><i style="background:var(--rose)"></i><span><b>rose</b>#c9797a</span></div>
+        <div class="sw"><i style="background:var(--rose-strong)"></i><span><b>rose-strong</b>#9c4a4f</span></div>
+        <div class="sw"><i style="background:var(--green)"></i><span><b>green</b>#8aa776</span></div>
+        <div class="sw"><i style="background:var(--green-strong)"></i><span><b>green-strong</b>#4c6a3c</span></div>
+      </div>
+      <h3>Matérias: cor sempre junto de brasão e sigla</h3>
+      <div class="row">
+        <svg class="shield" style="fill:var(--teal)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Pt</text></svg>
+        <svg class="shield" style="fill:var(--rose)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Co</text></svg>
+        <svg class="shield" style="fill:var(--gold)"><use href="#shield"/><text x="23" y="33" text-anchor="middle" style="fill:var(--ink)">Rl</text></svg>
+        <svg class="shield" style="fill:var(--green)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Ad</text></svg>
+        <svg class="shield" style="fill:var(--plum)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">In</text></svg>
+        <svg class="shield" style="fill:var(--subject-6)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Pe</text></svg>
+        <svg class="shield" style="fill:var(--subject-7)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Pr</text></svg>
+        <svg class="shield" style="fill:var(--subject-8)"><use href="#shield"/><text x="23" y="33" text-anchor="middle" style="fill:var(--ink)">Et</text></svg>
+      </div>
+    </section>
+
+    <section class="sheet s7 type">
+      <div class="hang ol"><div class="ribbon gold">Tipografia</div></div>
+      <div><span class="display" style="font-size:30px;line-height:1.1">Jornada · volta 3</span><small>título de faixa · 30</small></div>
+      <div><span class="display" style="font-size:24px;line-height:1.1">Revisões vencidas</span><small>título de seção · 24</small></div>
+      <div><span><span class="display" style="font-size:32px;line-height:1">12h05</span> de 20h</span><small>numeral + unidade</small></div>
+      <div><span style="font-weight:800">Direito Constitucional</span><small>corpo forte · 15</small></div>
+      <div><span>Controle de constitucionalidade, na ordem do edital.</span><small>corpo · 15</small></div>
+      <div><span style="font-size:13px;color:var(--ink-muted)">78% de acertos nas últimas 6 semanas</span><small>apoio · 13</small></div>
+    </section>
+
+    <section class="sheet s5">
+      <div class="hang ol"><div class="ribbon gold">Faixas e flâmulas</div></div>
+      <div class="row">
+        <span class="ol"><span class="ribbon">Principal</span></span>
+        <span class="ol"><span class="ribbon gold">Secundária</span></span>
+        <span class="ol"><span class="ribbon maroon">Nome</span></span>
+        <span class="ol"><span class="pennant">Flâmula</span></span>
+      </div>
+      <p class="note">Uma faixa por folha, pendurada no topo. Verde-azulada só no painel principal da tela.</p>
+    </section>
+
+    <section class="sheet s6">
+      <div class="hang ol"><div class="ribbon gold">Botões e selos</div></div>
+      <div class="row">
+        <button class="btn">Partir</button>
+        <button class="btn gold">Revisar</button>
+        <button class="btn quiet">Pular</button>
+        <button class="btn pressed">Pressionado</button>
+        <button class="btn" disabled>Inativo</button>
+      </div>
+      <h3>Selos</h3>
+      <div class="row">
+        <span class="tag"><svg class="ic"><use href="#i-glass"/></svg>60 min</span>
+        <span class="tag"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg>+120</span>
+        <span class="badge">3</span>
+        <span class="badge">em breve</span>
+        <span class="stamp">Concluída</span>
+      </div>
+      <h3>Recursos, sobre a viga</h3>
+      <div class="beam row">
+        <span class="res"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg><b>1.240</b> XP</span>
+        <span class="res"><svg class="ic" style="fill:var(--rose)"><use href="#i-flame"/></svg><b>4</b> semanas</span>
+        <span class="res"><svg class="ic"><use href="#i-glass"/></svg><b>12h05</b> de 20h</span>
+      </div>
+    </section>
+
+    <section class="sheet s6">
+      <div class="hang ol"><div class="ribbon gold">Listas e campos</div></div>
+      <div class="contract ok"><i class="box"><svg class="ic"><use href="#i-check"/></svg></i><span>Concluir 1 bloco da jornada</span><b class="tag">+50</b></div>
+      <div class="contract"><i class="box"></i><span>Fazer 2 revisões vencidas</span><b class="tag">+40</b></div>
+      <h3>Lista com prazo</h3>
+      <div class="line"><span>Proposições e conectivos</span><i>há 2 dias</i></div>
+      <div class="line"><span>Atos administrativos</span><i>ontem</i></div>
+      <h3>Campo</h3>
+      <div class="row" style="align-items:flex-start">
+        <div class="field" style="flex:1;min-width:130px"><label for="f1">Minutos estudados</label><input id="f1" value="45"></div>
+        <div class="field bad" style="flex:1;min-width:130px"><label for="f2">Acertos</label><input id="f2" value="24"><div class="err">Mais acertos que questões.</div></div>
+      </div>
+    </section>
+
+    <section class="sheet s12">
+      <div class="hang ol"><div class="ribbon lg">Carta de bloco</div></div>
+      <div class="cards">
+        <div><div class="card done"><span class="num">V</span>
+          <svg class="shield" style="fill:var(--teal)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Pt</text></svg>
+          <b>Português</b><small>Crase</small><div class="foot"><span class="stamp">Concluída</span></div></div><p class="state">Concluída</p></div>
+        <div><div class="card now"><span class="num">VII</span>
+          <svg class="shield" style="fill:var(--rose)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Co</text></svg>
+          <b>Constitucional</b><small>Controle de constitucionalidade</small>
+          <div class="foot"><span class="tag"><svg class="ic"><use href="#i-glass"/></svg>60 min</span><span class="tag"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg>+120</span></div>
+          <button class="btn" style="margin-top:7px">Partir</button></div><p class="state">Atual</p></div>
+        <div><div class="card locked"><span class="num">VIII</span>
+          <span class="lock"><svg class="ic"><use href="#i-lock"/></svg></span>
+          <b>Informática</b><small>Segurança da informação</small>
+          <div class="foot"><span class="tag"><svg class="ic"><use href="#i-glass"/></svg>45</span><span class="tag"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg>+90</span></div></div><p class="state">Próxima</p></div>
+        <div><div class="card boss"><span class="num">Chefe</span>
+          <svg class="skull" viewBox="0 0 24 24"><use href="#i-skull"/></svg>
+          <b>Simulado da volta</b><small>ao fim do bloco 18</small>
+          <div class="foot"><span class="tag"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg>+500</span></div></div><p class="state">Chefe</p></div>
+      </div>
+    </section>
+
+    <section class="sheet s4">
+      <div class="hang ol"><div class="ribbon gold">Ficha</div></div>
+      <div class="hero">
+        <div class="portrait"><svg viewBox="0 0 200 210"><use href="#axo"/></svg></div>
+        <div class="name ol"><div class="ribbon maroon">Diego</div></div>
+        <div class="note" style="margin-top:2px">Analista · nível 12</div>
+        <div class="xp"><span style="width:62%"></span></div>
+        <div class="xpl"><span>1.240 / 2.000 XP</span><span>nível 13</span></div>
+      </div>
+    </section>
+
+    <section class="sheet s4">
+      <div class="hang ol"><div class="ribbon gold">Navegação</div></div>
+      <nav class="nav">
+        <a class="on" href="#"><svg class="ic"><use href="#i-castle"/></svg> Início</a>
+        <a href="#"><svg class="ic"><use href="#i-map"/></svg> Jornada</a>
+        <a href="#"><svg class="ic"><use href="#i-sword"/></svg> Estudar</a>
+        <a href="#"><svg class="ic"><use href="#i-scroll"/></svg> Revisões <span class="badge">3</span></a>
+        <a href="#"><svg class="ic"><use href="#i-people"/></svg> Guilda <span class="badge">em breve</span></a>
+      </nav>
+    </section>
+
+    <section class="sheet s4">
+      <div class="hang ol"><div class="ribbon gold">Matéria</div></div>
+      <div class="people">
+        <div class="person"><div class="frame" style="background:#cfe0df"><svg class="shield" style="fill:var(--teal)"><use href="#shield"/></svg></div><span class="plate">Português</span><div class="stars" data-n="4"></div><small>78% de acertos</small></div>
+        <div class="person"><div class="frame" style="background:#f3e2b8"><svg class="shield" style="fill:var(--gold)"><use href="#shield"/></svg></div><span class="plate">Rac. Lógico</span><div class="stars" data-n="2"></div><small>54% de acertos</small></div>
+      </div>
+    </section>
+
+    <section class="sheet s7">
+      <div class="hang ol"><div class="ribbon gold">Ícones</div></div>
+      <div class="icons">
+        <div><svg class="ic"><use href="#i-castle"/></svg>início</div>
+        <div><svg class="ic"><use href="#i-map"/></svg>jornada</div>
+        <div><svg class="ic"><use href="#i-sword"/></svg>estudar</div>
+        <div><svg class="ic"><use href="#i-scroll"/></svg>revisões</div>
+        <div><svg class="ic"><use href="#i-skull"/></svg>simulados</div>
+        <div><svg class="ic"><use href="#i-book"/></svg>edital</div>
+        <div><svg class="ic"><use href="#i-chart"/></svg>desempenho</div>
+        <div><svg class="ic"><use href="#i-cup"/></svg>conquistas</div>
+        <div><svg class="ic"><use href="#i-people"/></svg>guilda</div>
+        <div><svg class="ic"><use href="#i-orb"/></svg>oráculo</div>
+        <div><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg>XP</div>
+        <div><svg class="ic" style="fill:var(--rose)"><use href="#i-flame"/></svg>ofensiva</div>
+        <div><svg class="ic"><use href="#i-glass"/></svg>tempo</div>
+        <div><svg class="ic"><use href="#i-quill"/></svg>questões</div>
+        <div><svg class="ic" style="fill:var(--gold)"><use href="#i-lock"/></svg>próxima</div>
+        <div><svg class="ic" style="fill:var(--gold)"><use href="#i-star"/></svg>nível</div>
+      </div>
+      <p class="note">Traço de 2 px na cor do texto. Preenchimento só quando carrega significado. Emoji não é ícone.</p>
+    </section>
+
+    <section class="sheet s5">
+      <div class="hang ol"><div class="ribbon gold">Celular</div></div>
+      <div class="phone">
+        <div class="top">
+          <span class="res"><svg class="ic" style="fill:var(--gold)"><use href="#i-coin"/></svg><b>1.240</b></span>
+          <span class="res"><svg class="ic"><use href="#i-glass"/></svg><b>12h05</b></span>
+          <span class="res"><svg class="ic"><use href="#i-scroll"/></svg><b>3</b></span>
+          <span class="mini"><svg viewBox="0 0 200 210"><use href="#axo"/></svg></span>
+        </div>
+        <div class="body">
+          <div class="sheet">
+            <div class="hang ol"><div class="ribbon">Jornada · volta 3</div></div>
+            <div class="strip">
+              <div class="card done side"><span class="num">VI</span><svg class="shield" style="fill:var(--green);width:36px;height:41px"><use href="#shield"/></svg><b>Administr.</b><div class="foot"><span class="stamp" style="font-size:15px">Feita</span></div></div>
+              <div class="card now"><span class="num">VII</span><svg class="shield" style="fill:var(--rose)"><use href="#shield"/><text x="23" y="33" text-anchor="middle">Co</text></svg><b>Constitucional</b><small>Controle de constit.</small><div class="foot"><span class="tag">60 min</span><span class="tag">+120</span></div><button class="btn" style="margin-top:6px">Partir</button></div>
+              <div class="card locked side"><span class="num">VIII</span><span class="lock" style="width:40px;height:40px"><svg class="ic" style="width:24px;height:24px"><use href="#i-lock"/></svg></span><b>Informática</b><div class="foot"><span class="tag">+90</span></div></div>
+            </div>
+          </div>
+        </div>
+        <nav class="tabbar">
+          <a class="on" href="#"><svg class="ic"><use href="#i-castle"/></svg>Início</a>
+          <a href="#"><svg class="ic"><use href="#i-map"/></svg>Jornada</a>
+          <a class="go" href="#"><svg class="ic"><use href="#i-sword"/></svg>Estudar</a>
+          <a href="#"><svg class="ic"><use href="#i-scroll"/></svg>Revisões</a>
+          <a href="#"><svg class="ic"><use href="#i-more"/></svg>Mais</a>
+        </nav>
+      </div>
+    </section>
+
+  </div>
+</div>
+<script>
+  document.querySelectorAll(".stars").forEach((el) => {
+    const n = Number(el.dataset.n);
+    el.innerHTML = Array.from({ length: 5 }, (_, i) =>
+      `<svg viewBox="0 0 24 24" class="${i < n ? "f" : ""}"><use href="#i-star"/></svg>`).join("");
+  });
+</script>
+</body>
+</html>

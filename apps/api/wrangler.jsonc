@@ -1,0 +1,82 @@
+// Worker único: API em /api/* e o app web (apps/web/dist) como static assets,
+// na mesma origem. Ambientes: o topo é o desenvolvimento local; `preview` e
+// `production` são publicados com `wrangler deploy --env <nome>`.
+// Bindings e vars não são herdados: repita em cada ambiente.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "meu-edital",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-12",
+  "upload_source_maps": true,
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+  "vars": {
+    // Local: o Vite (5173) faz proxy de /api para o Worker; o Worker também
+    // serve o build direto em 8787. Os dois endereços são confiáveis.
+    "APP_URL": "http://localhost:5173",
+    "EXTRA_ORIGINS": "http://localhost:8787",
+    "EMAIL_MODE": "log",
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "meu-edital-preview",
+      "database_id": "53511197-bdfd-4941-b313-dd8b207a1bd2",
+      "migrations_dir": "../../packages/db/migrations"
+    }
+  ],
+  "ratelimits": [
+    { "name": "AUTH_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "API_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } }
+  ],
+  "env": {
+    "preview": {
+      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+      "vars": {
+        "APP_URL": "https://meu-edital-preview.WORKERS_SUBDOMAIN.workers.dev",
+        "EXTRA_ORIGINS": "",
+        "EMAIL_MODE": "log",
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "meu-edital-preview",
+          "database_id": "53511197-bdfd-4941-b313-dd8b207a1bd2",
+          "migrations_dir": "../../packages/db/migrations"
+        }
+      ],
+      "ratelimits": [
+        { "name": "AUTH_LIMITER", "namespace_id": "1011", "simple": { "limit": 20, "period": 60 } },
+        { "name": "API_LIMITER", "namespace_id": "1012", "simple": { "limit": 300, "period": 60 } }
+      ]
+    },
+    "production": {
+      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+      "vars": {
+        "APP_URL": "https://meu-edital.WORKERS_SUBDOMAIN.workers.dev",
+        "EXTRA_ORIGINS": "",
+        "EMAIL_MODE": "log",
+        "TURNSTILE_SITE_KEY": ""
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "meu-edital-production",
+          "database_id": "85fbc175-38b8-447c-ae85-ba513056bf1d",
+          "migrations_dir": "../../packages/db/migrations"
+        }
+      ],
+      "ratelimits": [
+        { "name": "AUTH_LIMITER", "namespace_id": "1021", "simple": { "limit": 20, "period": 60 } },
+        { "name": "API_LIMITER", "namespace_id": "1022", "simple": { "limit": 300, "period": 60 } }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# Projeto antigo, só para consulta durante a reconstrução.
+_old/
+
+node_modules/
+dist/
+.turbo/
+.wrangler/
+coverage/
+test-results/
+playwright-report/
+
+# Segredos locais
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example

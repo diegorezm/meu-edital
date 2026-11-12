@@ -1,0 +1,7 @@
+# Copie para .dev.vars (ignorado pelo git) para rodar `wrangler dev`.
+BETTER_AUTH_SECRET=troque-por-um-segredo-longo-e-aleatorio
+# Chave de teste do Turnstile que sempre aprova. Em produção, use a real.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+# Login com Google: deixe vazio até ter as credenciais.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

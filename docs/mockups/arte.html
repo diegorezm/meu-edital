@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Edital · Arte (rascunho vetorial)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Nunito, ui-rounded, "Segoe UI", system-ui, sans-serif; font-weight: 700; color: #4a3a2c; }
+  .stage { background: linear-gradient(180deg, #f3c9a4, #e6d6c3); border-radius: 22px; padding: 16px; display: grid; gap: 14px; grid-template-columns: repeat(6, 1fr); }
+  .tile { background: #fbf5ea; border: 1.5px solid #dccdb6; border-radius: 18px; box-shadow: 0 4px 0 #dccdb6; padding: 14px; text-align: center; }
+  .big { grid-column: span 3; }
+  .small { grid-column: span 2; }
+  .tile svg { width: 100%; max-height: 230px; display: block; }
+  .small svg { max-height: 120px; }
+  b { display: block; font-weight: 900; font-size: 15px; margin-top: 8px; }
+  small { color: #8c7a66; font-size: 12px; }
+  text { font-family: inherit; font-weight: 900; }
+  @media (max-width: 520px) { .big, .small { grid-column: span 6; } }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="tile big">
+    <svg viewBox="0 0 200 210" role="img" aria-label="Mascote: axolote rosa com capelo">
+      <ellipse cx="100" cy="199" rx="54" ry="8" fill="#4a3a2c" opacity=".12"/>
+      <path d="M136 172 C172 172 192 146 182 116 C176 142 160 152 134 152Z" fill="#eba9b9" stroke="#d98fa2" stroke-width="3" stroke-linejoin="round"/>
+      <g fill="#f6c1cd" stroke="#d98fa2" stroke-width="3"><ellipse cx="78" cy="190" rx="13" ry="7"/><ellipse cx="122" cy="190" rx="13" ry="7"/></g>
+      <!-- volume: a mesma forma, mais escura, deslocada para baixo -->
+      <ellipse cx="100" cy="165" rx="42" ry="30" fill="#d98fa2"/><ellipse cx="100" cy="160" rx="42" ry="30" fill="#f6c1cd"/>
+      <ellipse cx="100" cy="166" rx="25" ry="18" fill="#fde6ea"/>
+      <g fill="#f6c1cd" stroke="#d98fa2" stroke-width="3"><ellipse cx="58" cy="158" rx="9" ry="13" transform="rotate(25 58 158)"/><ellipse cx="142" cy="158" rx="9" ry="13" transform="rotate(-25 142 158)"/></g>
+      <!-- brânquias -->
+      <g stroke="#e8839c" stroke-width="13" stroke-linecap="round"><path d="M48 76 L20 46"/><path d="M42 94 L8 92"/><path d="M48 112 L20 134"/><path d="M152 76 L180 46"/><path d="M158 94 L192 92"/><path d="M152 112 L180 134"/></g>
+      <g stroke="#f5a9bb" stroke-width="5" stroke-linecap="round"><path d="M44 72 L22 48"/><path d="M38 94 L11 92"/><path d="M44 115 L22 132"/><path d="M156 72 L178 48"/><path d="M162 94 L189 92"/><path d="M156 115 L178 132"/></g>
+      <ellipse cx="100" cy="97" rx="62" ry="48" fill="#d98fa2"/><ellipse cx="100" cy="92" rx="62" ry="48" fill="#f6c1cd"/>
+      <g fill="#4a3a2c"><circle cx="68" cy="92" r="7.5"/><circle cx="132" cy="92" r="7.5"/></g>
+      <g fill="#fff"><circle cx="70.5" cy="89.5" r="2.6"/><circle cx="134.5" cy="89.5" r="2.6"/></g>
+      <g fill="#f08fa6" opacity=".55"><ellipse cx="54" cy="106" rx="9" ry="6"/><ellipse cx="146" cy="106" rx="9" ry="6"/></g>
+      <path d="M80 106 Q100 122 120 106" fill="none" stroke="#4a3a2c" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="80" y="38" width="40" height="12" rx="5" fill="#3a2d22"/>
+      <path d="M100 16 L148 33 L100 50 L52 33Z" fill="#4a3a2c" stroke="#3a2d22" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M148 33 v20" stroke="#f7df8e" stroke-width="3.5" stroke-linecap="round"/><circle cx="148" cy="57" r="6" fill="#f7df8e" stroke="#d9b955" stroke-width="2"/>
+    </svg>
+    <b>Mascote</b><small>axolote: avatar do jogador, anda pela trilha</small>
+  </div>
+
+  <div class="tile big">
+    <svg viewBox="0 0 200 210" role="img" aria-label="Chefe da volta: monstro laranja segurando uma prova">
+      <ellipse cx="100" cy="198" rx="60" ry="8" fill="#4a3a2c" opacity=".12"/>
+      <g fill="#fbf5ea" stroke="#dccdb6" stroke-width="3" stroke-linejoin="round"><path d="M56 66 C34 44 38 20 50 12 C54 34 68 44 82 50Z"/><path d="M144 66 C166 44 162 20 150 12 C146 34 132 44 118 50Z"/></g>
+      <path d="M100 45 C156 45 176 89 172 133 C168 175 140 193 100 193 C60 193 32 175 28 133 C24 89 44 45 100 45Z" fill="#cf8650"/>
+      <path d="M100 40 C156 40 176 84 172 128 C168 170 140 188 100 188 C60 188 32 170 28 128 C24 84 44 40 100 40Z" fill="#f3ae7d"/>
+      <g fill="#e89a66"><circle cx="52" cy="140" r="7"/><circle cx="64" cy="160" r="5"/><circle cx="150" cy="96" r="6"/></g>
+      <g fill="#fff" stroke="#cf8650" stroke-width="2.5"><ellipse cx="72" cy="106" rx="16" ry="14"/><ellipse cx="124" cy="106" rx="16" ry="14"/></g>
+      <g fill="#4a3a2c"><circle cx="76" cy="108" r="6.5"/><circle cx="120" cy="108" r="6.5"/></g>
+      <g stroke="#4a3a2c" stroke-width="7" stroke-linecap="round"><path d="M52 84 L90 96"/><path d="M144 84 L106 96"/></g>
+      <path d="M68 142 Q98 126 128 142 Q98 164 68 142Z" fill="#4a3a2c"/>
+      <g fill="#fff"><path d="M80 138 l6 11 6 -12z"/><path d="M104 137 l6 12 6 -11z"/></g>
+      <g transform="rotate(12 152 162)">
+        <rect x="130" y="136" width="46" height="58" rx="6" fill="#fff" stroke="#dccdb6" stroke-width="2.5"/>
+        <text x="153" y="152" font-size="9" text-anchor="middle" fill="#4a3a2c">PROVA</text>
+        <g stroke="#dccdb6" stroke-width="3" stroke-linecap="round"><path d="M138 162 h30"/><path d="M138 171 h30"/><path d="M138 180 h20"/></g>
+      </g>
+      <circle cx="134" cy="166" r="11" fill="#f3ae7d" stroke="#cf8650" stroke-width="3"/>
+    </svg>
+    <b>Chefe da volta</b><small>o simulado no fim de cada volta</small>
+  </div>
+
+  <div class="tile small">
+    <svg viewBox="0 0 120 130" role="img" aria-label="Conquista: primeira volta">
+      <path d="M60 13 L108 39 V95 L60 123 L12 95 V39Z" fill="#86ad63" stroke="#86ad63" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M60 8 L108 34 V90 L60 118 L12 90 V34Z" fill="#b7d59a" stroke="#b7d59a" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M44 38 V96" stroke="#4a3a2c" stroke-width="5" stroke-linecap="round"/>
+      <rect x="46" y="38" width="36" height="26" rx="3" fill="#fff" stroke="#4a3a2c" stroke-width="2.5"/>
+      <g fill="#4a3a2c"><rect x="46" y="38" width="9" height="8.7"/><rect x="64" y="38" width="9" height="8.7"/><rect x="55" y="46.7" width="9" height="8.7"/><rect x="73" y="46.7" width="9" height="8.7"/><rect x="46" y="55.3" width="9" height="8.7"/><rect x="64" y="55.3" width="9" height="8.7"/></g>
+    </svg>
+    <b>Primeira volta</b>
+  </div>
+
+  <div class="tile small">
+    <svg viewBox="0 0 120 130" role="img" aria-label="Conquista: cem questões">
+      <path d="M60 13 L108 39 V95 L60 123 L12 95 V39Z" fill="#6a5bbd" stroke="#6a5bbd" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M60 8 L108 34 V90 L60 118 L12 90 V34Z" fill="#d9d0f7" stroke="#d9d0f7" stroke-width="8" stroke-linejoin="round"/>
+      <text x="60" y="74" font-size="34" text-anchor="middle" fill="#6a5bbd">100</text>
+      <path d="M36 86 q24 10 48 0" fill="none" stroke="#6a5bbd" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <b>100 questões</b>
+  </div>
+
+  <div class="tile small">
+    <svg viewBox="0 0 120 130" role="img" aria-label="Conquista: semanas na meta">
+      <path d="M60 13 L108 39 V95 L60 123 L12 95 V39Z" fill="#d9b955" stroke="#d9b955" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M60 8 L108 34 V90 L60 118 L12 90 V34Z" fill="#f7df8e" stroke="#f7df8e" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M60 26 C78 46 88 58 88 76 A28 28 0 0 1 32 76 C32 62 42 56 46 44 C50 54 56 56 58 48 C60 40 58 34 60 26Z" fill="#f3ae7d" stroke="#cf8650" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M60 62 C70 72 73 80 73 86 A13 13 0 0 1 47 86 C47 78 54 72 60 62Z" fill="#fff8ec"/>
+    </svg>
+    <b>4 semanas na meta</b>
+  </div>
+
+</div>
+</body>
+</html>

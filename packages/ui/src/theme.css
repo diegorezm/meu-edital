@@ -1,0 +1,103 @@
+/*
+ * Tokens do design system "guilda de pergaminho" no Tailwind v4.
+ * Fonte da verdade: docs/design-system/tokens.css. Os nomes seguem os de lá
+ * com o prefixo do Tailwind (--color-paper, --font-display...).
+ * Fase 1: só o necessário para as telas de conta. A fase 4 completa.
+ */
+@import "@fontsource/alegreya-sans/500.css";
+@import "@fontsource/alegreya-sans/700.css";
+@import "@fontsource/alegreya-sans/800.css";
+@import "@fontsource/amatic-sc/700.css";
+
+@theme {
+  --color-*: initial;
+  --color-wall: #c2a09a;
+  --color-wood: #7a5548;
+  --color-wood-dark: #5d3f37;
+  --color-paper: #f1e3cc;
+  --color-paper-raised: #f8eedb;
+  --color-paper-sunken: #e7d5b8;
+  --color-rule: #d6bf9f;
+  --color-ink: #5b3b33;
+  --color-ink-muted: #6f5246;
+  --color-teal: #5f9aa0;
+  --color-teal-strong: #3f7379;
+  --color-gold: #e3b04b;
+  --color-gold-strong: #b9862b;
+  --color-maroon: #6e3b45;
+  --color-rose: #c9797a;
+  --color-rose-strong: #9c4a4f;
+  --color-green: #8aa776;
+  --color-green-strong: #4c6a3c;
+  --color-plum: #9a86b3;
+  --color-card-done: #e6e3c8;
+  --color-card-now: #fff7e3;
+  --color-card-boss: #edd3cc;
+  --color-subject-1: #5f9aa0;
+  --color-subject-2: #c9797a;
+  --color-subject-3: #e3b04b;
+  --color-subject-4: #8aa776;
+  --color-subject-5: #9a86b3;
+  --color-subject-6: #c2906c;
+  --color-subject-7: #8499ba;
+  --color-subject-8: #a39a5a;
+
+  --font-display: "Amatic SC", "Alegreya Sans", sans-serif;
+  --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-display-sm: 20px;
+  --text-display-md: 24px;
+  --text-display-lg: 30px;
+  --text-display-xl: 40px;
+  --tracking-display: 0.05em;
+
+  --radius-sm: 3px;
+  --radius: 6px;
+  --radius-pill: 999px;
+
+  --shadow-sheet: 4px 5px 0 rgb(91 59 51 / 0.3);
+  --shadow-press: 0 3px 0 var(--color-ink);
+  --shadow-inset-rule: inset 0 0 0 4px var(--color-paper), inset 0 0 0 5px var(--color-rule);
+
+  --default-transition-duration: 180ms;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: var(--text-base);
+    color: var(--color-ink);
+  }
+  body {
+    background: var(--color-wall);
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-teal-strong);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}
+
+@utility font-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+}
+
+/* Contorno de tinta em formas recortadas (faixa, flâmula): clip-path corta a borda. */
+@utility ink-outline {
+  filter: drop-shadow(1.5px 0 0 var(--color-ink)) drop-shadow(-1.5px 0 0 var(--color-ink))
+    drop-shadow(0 1.5px 0 var(--color-ink)) drop-shadow(0 -1.5px 0 var(--color-ink));
+}

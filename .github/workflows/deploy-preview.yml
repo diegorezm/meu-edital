@@ -1,0 +1,46 @@
+# Publica uma versão de prévia do Worker (app + API) para cada PR, no
+# ambiente `preview`, e comenta a URL no PR. Usa o D1 de preview.
+# Segredos do repositório: CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID.
+name: Deploy preview
+
+on:
+  pull_request:
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run --cwd apps/web build
+      - name: Migrações do D1 de preview
+        run: bunx wrangler d1 migrations apply DB --remote --env preview
+        working-directory: apps/api
+      - name: Versão de prévia
+        id: upload
+        working-directory: apps/api
+        run: |
+          bunx wrangler versions upload --env preview --preview-alias pr-${{ github.event.pull_request.number }} | tee upload.log
+          echo "url=$(grep -oE 'https://[^ ]+workers.dev' upload.log | tail -1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: `Prévia publicada: ${{ steps.upload.outputs.url }}`,
+            });

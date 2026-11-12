@@ -13,3 +13,4 @@ Uma decisão por arquivo: contexto, escolha e alternativas descartadas. Para mud
 | [0007](0007-excluir-sessao.md) | "Estudado" derivado das sessões e efeitos de excluir uma sessão |
 | [0008](0008-tempo-real-durable-objects.md) | Tempo real com um Durable Object por usuário |
 | [0009](0009-email-sem-dominio.md) | E-mail em log até existir domínio |
+| [0010](0010-protocolo-de-sync.md) | Protocolo de sync (push, pull, fila e banco local) |

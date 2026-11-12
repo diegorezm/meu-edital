@@ -1,3 +1,4 @@
+import { clearIndexedDbStore, indexedDbStore } from "./indexedDb";
 import type { Platform } from "./types";
 
 const storage = () => {
@@ -9,6 +10,8 @@ const storage = () => {
 };
 
 export const webPlatform: Platform = {
+  localStore: indexedDbStore,
+  clearLocalStore: clearIndexedDbStore,
   secureStorage: {
     async get(key) {
       return storage()?.getItem(key) ?? null;

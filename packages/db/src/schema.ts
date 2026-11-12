@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { StudyType } from "@meu-edital/domain";
 
 const now = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
@@ -222,6 +222,26 @@ export const syncCounters = sqliteTable("sync_counters", {
     .references(() => user.id, { onDelete: "cascade" }),
   version: integer("version").notNull().default(0),
 });
+
+/**
+ * Mutações já aplicadas, por id, para que reenviar um lote não aplique nada
+ * duas vezes. Linhas antigas podem ser apagadas: um aparelho não reenvia
+ * mutações depois de recebê-las como aceitas.
+ */
+export const syncMutations = sqliteTable(
+  "sync_mutations",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    mutationId: text("mutation_id").notNull(),
+    appliedAt: integer("applied_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.mutationId] }),
+    index("sync_mutations_applied_idx").on(t.appliedAt),
+  ],
+);
 
 /** Tabelas de estudo, na ordem pais antes dos filhos. */
 export const studyTables = {

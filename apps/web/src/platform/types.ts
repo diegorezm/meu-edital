@@ -1,8 +1,18 @@
+import type { LocalStore } from "@meu-edital/sync";
+
 /**
  * Recursos que mudam entre a web e o app nativo (Capacitor, fase de mobile).
  * Telas usam só esta interface e nunca verificam a plataforma.
  */
 export type Platform = {
+  /**
+   * Banco local de um usuário: dados, fila de mutações e cursor do sync.
+   * IndexedDB na web; SQLite no app, porque o sistema pode limpar o
+   * armazenamento do WebView e a fila guarda estudo ainda não enviado.
+   */
+  localStore(name: string): LocalStore;
+  /** Apaga o banco local (ao excluir a conta). */
+  clearLocalStore(name: string): Promise<void>;
   /** Guarda segredos (token de sessão no app). Na web, a sessão é cookie. */
   secureStorage: {
     get(key: string): Promise<string | null>;

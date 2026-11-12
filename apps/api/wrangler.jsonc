@@ -14,6 +14,9 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
+  // Um Durable Object por usuário para os avisos de sync em tempo real.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UserHub"] }],
+  "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
   "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
   "vars": {
     // Local: o Vite (5173) faz proxy de /api para o Worker; o Worker também
@@ -37,6 +40,7 @@
   ],
   "env": {
     "preview": {
+      "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital-preview.WORKERS_SUBDOMAIN.workers.dev",
@@ -58,6 +62,7 @@
       ]
     },
     "production": {
+      "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital.WORKERS_SUBDOMAIN.workers.dev",

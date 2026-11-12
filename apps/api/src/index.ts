@@ -7,10 +7,13 @@ import { userData } from "./data/access";
 import { type AppContext, emailEnabled, googleEnabled } from "./env";
 import { clientIp, rateLimit } from "./http/rateLimit";
 import { requireUser } from "./http/session";
+import { syncRoutes } from "./sync/routes";
 
 const app = new Hono<AppContext>().basePath("/api");
 
-app.use("*", secureHeaders());
+// A resposta 101 do WebSocket tem cabeçalhos imutáveis.
+const headers = secureHeaders();
+app.use("*", (c, next) => (c.req.header("upgrade") ? next() : headers(c, next)));
 
 // Só as ações (POST) contam para o limite; ler a sessão não.
 app.use("/auth/*", async (c, next) =>
@@ -26,6 +29,7 @@ app.use("/me/*", requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")));
 app.use("/me", requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")));
 
 const routes = app
+  .route("/sync", syncRoutes)
   .get("/health", (c) => c.json({ ok: true }))
   /** O que a tela de login precisa saber antes de existir sessão. */
   .get("/config", (c) =>
@@ -55,3 +59,4 @@ routes.onError((error, c) => {
 /** Tipo das rotas para o cliente tipado (`hc`) do app web. */
 export type ApiRoutes = typeof routes;
 export default routes;
+export { UserHub } from "./sync/hub";

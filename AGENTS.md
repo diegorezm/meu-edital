@@ -12,6 +12,7 @@ Monorepo com Bun workspaces e Turborepo. Tudo roda na Cloudflare: um Worker (Hon
 | `apps/api` | `@meu-edital/api` | Worker Hono: auth (Better Auth), dados, e depois sync, exportação e MCP. |
 | `packages/domain` | `@meu-edital/domain` | Modelos e regras de estudo, puros. Depois, a gamificação. |
 | `packages/agent-context` | `@meu-edital/agent-context` | `StudyContext`, tarefas e propostas para IA externa (Zod). |
+| `packages/sync` | `@meu-edital/sync` | Protocolo de sync: schemas das linhas, `diffData`, `applyPulled` e o `SyncEngine`. |
 | `packages/db` | `@meu-edital/db` | Schema Drizzle e migrações do D1. |
 | `packages/ui` | `@meu-edital/ui` | Design system: tema Tailwind, componentes e arte (`art/`). |
 | `docs/design-system` | — | Referência visual (tokens, componentes, mockups). Não é código. |
@@ -70,6 +71,7 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
 - A auth aceita cookie (web) e `Authorization: Bearer` (app mobile).
 - Rate limiting pelos bindings `AUTH_LIMITER` e `API_LIMITER`.
 - Resposta de IA é dado não confiável: valide com o schema de `agent-context`, mostre a prévia e aplique só com confirmação.
+- Sync: `POST /api/sync/push`, `GET /api/sync/pull?since=`, `GET /api/sync/ws` (avisos pelo Durable Object `UserHub`). Detalhes em [0010](docs/decisions/0010-protocolo-de-sync.md).
 - Testes da API rodam no runtime de Workers (`@cloudflare/vitest-plugin`) com D1 local. Os e-mails ficam em `outbox` (modo `memory`).
 
 ## App web
@@ -80,6 +82,7 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
   - `components/` só desenham;
   - `index.tsx` é a entrada pública.
 - Uma feature não importa o interior de outra.
+- Dados de estudo: `useStore()` (`src/global/store/`). Leia `store.data` e altere só com `store.update((data) => funcaoDeDominio(data, ...))`; o sync cuida do resto. Nunca chame a API de sync direto de uma tela.
 - Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração, e depois o cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
 - Aliases: `@features/*`, `@global/*`, `@platform/*`. Importações externas primeiro.
 - Nenhum arquivo de tela com mais de ~300 linhas.

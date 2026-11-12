@@ -16,7 +16,9 @@ export function AccountView({ form }: { form: ReturnType<typeof useAccount> }) {
           Olá, <strong>{form.user.name}</strong>! A sede da guilda ainda está em obra, mas sua
           conta já existe.
         </p>
-        <p className="text-sm text-ink-muted">{form.user.email}</p>
+        <p className="text-sm text-ink-muted">
+          {form.user.email} · {form.syncStatus}
+        </p>
         <Button variant="gold" disabled={form.pending} onClick={form.signOut}>
           Sair
         </Button>

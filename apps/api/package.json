@@ -18,6 +18,7 @@
     "@better-auth/drizzle-adapter": "^1.7.22",
     "@meu-edital/db": "workspace:*",
     "@meu-edital/domain": "workspace:*",
+    "@meu-edital/sync": "workspace:*",
     "better-auth": "^1.7.22",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.18",

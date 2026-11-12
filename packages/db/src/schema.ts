@@ -211,6 +211,11 @@ export const userSettings = sqliteTable(
     ...owned(),
     activeExamId: text("active_exam_id"),
     reviewOffsets: text("review_offsets", { mode: "json" }).$type<number[]>().notNull(),
+    skin: text("skin").notNull().default("rosa"),
+    seenCelebrations: text("seen_celebrations", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
   },
   (t) => [index("user_settings_user_version_idx").on(t.userId, t.version)],
 );

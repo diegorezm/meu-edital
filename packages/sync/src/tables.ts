@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AppData } from "@meu-edital/domain";
+import { type AppData, SKINS } from "@meu-edital/domain";
 
 /**
  * Tabelas sincronizadas, na ordem pais antes dos filhos. Inserções seguem
@@ -32,6 +32,8 @@ export const rowSchemas = {
     id: z.literal(SETTINGS_ID),
     activeExamId: id.nullable(),
     reviewOffsets: z.array(z.number().int().min(1).max(365)).max(10),
+    skin: z.enum(SKINS.map((s) => s.id) as [string, ...string[]]),
+    seenCelebrations: z.array(z.string().max(200)).max(200),
   }),
   exams: z.strictObject({
     id,
@@ -116,4 +118,6 @@ export const settingsRow = (data: AppData): Row<"userSettings"> => ({
   id: SETTINGS_ID,
   activeExamId: data.activeExamId,
   reviewOffsets: data.reviewOffsets,
+  skin: data.skin,
+  seenCelebrations: data.seenCelebrations,
 });

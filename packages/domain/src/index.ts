@@ -11,3 +11,4 @@ export * from "./weekTargets";
 export * from "./seed";
 export * from "./catalog";
 export * from "./onboarding";
+export * from "./game";

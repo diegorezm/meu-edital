@@ -1,3 +1,5 @@
+import type { SkinId } from "./game/constants";
+
 export type StudyType = "Teoria" | "Questões" | "Revisão";
 
 export type Exam = {
@@ -104,6 +106,10 @@ export type AppData = {
   weekTargets: WeekTarget[];
   activeExamId: string | null;
   reviewOffsets: number[];
+  /** Skin escolhida para o mascote (cosmético). */
+  skin: SkinId;
+  /** Ids das comemorações já vistas, para não repetir em outro aparelho. */
+  seenCelebrations: string[];
 };
 
 export const emptyData = (): AppData => ({
@@ -117,4 +123,6 @@ export const emptyData = (): AppData => ({
   weekTargets: [],
   activeExamId: null,
   reviewOffsets: [1, 7, 30],
+  skin: "rosa",
+  seenCelebrations: [],
 });

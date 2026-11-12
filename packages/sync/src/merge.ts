@@ -29,6 +29,8 @@ export function applyPulled(data: AppData, changes: PulledRow[], outbox: Mutatio
       const settings = change.row as Row<"userSettings">;
       next.activeExamId = settings.activeExamId;
       next.reviewOffsets = settings.reviewOffsets;
+      next.skin = settings.skin as AppData["skin"];
+      next.seenCelebrations = settings.seenCelebrations;
       continue;
     }
     const rows = rowsOf(collectionOf[change.table]);

@@ -52,8 +52,9 @@ export function proposalsData(db: Db, userId: string) {
       if (proposalSize(input) > MAX_PROPOSAL_BYTES)
         throw new ProposalError("A proposta é grande demais. Divida em partes menores.");
       const data = await loadAppData(db, userId);
-      const examId = meta.examId ?? data.activeExamId;
-      if (!examId || !data.exams.some((e) => e.id === examId))
+      const examId = meta.examId ?? data.activeExamId ?? "";
+      // Um concurso novo não depende do ativo; o resto precisa de um concurso.
+      if (input.payload.kind !== "exam" && !data.exams.some((e) => e.id === examId))
         throw new ProposalError("O estudante ainda não tem um concurso ativo.");
       try {
         previewProposal(data, examId, input.payload);

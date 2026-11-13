@@ -13,7 +13,8 @@
 - **Escopos:** `estudo:ler` (ler o contexto) e `estudo:propor` (propor alterações). Não existe escopo de escrita.
 - **Ferramentas:** uma por arquivo em `apps/api/src/mcp/tools/`, listadas em `tools/index.ts` com o escopo que cada uma exige.
   - `contexto_de_estudo` devolve o `StudyContext` versionado, sem ids.
-  - `propor_alteracoes` valida com os schemas do `agent-context`, confere se as matérias citadas existem e grava uma proposta pendente. Ela nunca altera dados.
+  - `propor_alteracoes` valida com os schemas do `agent-context`, confere se as matérias citadas existem e grava uma proposta pendente. Ela nunca altera dados. Além de peso, meta e jornada, pode propor matéria nova no concurso ativo (`addSubject`, com assuntos e, se quiser, um bloco na jornada). As alterações valem em ordem, então um `setCycle` pode citar a matéria criada antes.
+  - `propor_concurso` propõe um concurso novo inteiro (payload `exam`). Funciona mesmo sem concurso ativo; ao ser aplicado, usa `startExam` e vira o ativo. Recusa nome de concurso repetido.
 - **Caixa de propostas:** tabela `proposals`, fora do sync de linhas. As propostas expiram em 7 dias e têm no máximo 64 KB.
   - A resposta colada (copiar e colar) entra na mesma caixa por `POST /api/proposals`.
   - O app aplica uma proposta pelas funções de domínio (`applyProposal`) e pelo sync normal, e marca o resultado em `POST /api/proposals/:id/status`.

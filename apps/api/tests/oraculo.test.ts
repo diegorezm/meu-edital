@@ -133,6 +133,7 @@ describe("Oráculo por MCP", () => {
     expect(tools.body.result.tools.map((t: { name: string }) => t.name).sort()).toEqual([
       "contexto_de_estudo",
       "propor_alteracoes",
+      "propor_concurso",
     ]);
 
     const context = await mcp(token, "tools/call", { name: "contexto_de_estudo", arguments: {} });
@@ -167,6 +168,69 @@ describe("Oráculo por MCP", () => {
     });
     expect(result.body.result.isError).toBe(true);
     expect(result.body.result.content[0].text).toMatch(/Não encontramos a matéria/);
+  });
+
+  it("propõe matéria nova no concurso ativo sem criá-la", async () => {
+    const student = await studentWithExam();
+    const token = await connect(student.cookie);
+    const result = await mcp(token, "tools/call", {
+      name: "propor_alteracoes",
+      arguments: {
+        motivo: "O edital cobra Ética.",
+        alteracoes: [{ op: "addSubject", subject: "Ética", topics: ["Código de ética"], cycleMinutes: 30 }],
+      },
+    });
+    expect(result.body.result.isError).toBeFalsy();
+    const repeated = await mcp(token, "tools/call", {
+      name: "propor_alteracoes",
+      arguments: { motivo: "x", alteracoes: [{ op: "addSubject", subject: "Português" }] },
+    });
+    expect(repeated.body.result.isError).toBe(true);
+    expect(repeated.body.result.content[0].text).toMatch(/já existe/);
+
+    const pulled = await call("/api/sync/pull?since=0", { cookie: student.cookie });
+    const rows = ((await pulled.json()) as { changes: { table: string; row: { name?: string } }[] }).changes;
+    expect(rows.some((r) => r.table === "subjects" && r.row.name === "Ética")).toBe(false);
+  });
+
+  it("propõe concurso novo mesmo sem concurso ativo, só na caixa do próprio estudante", async () => {
+    const ana = await verifiedUser();
+    const bia = await studentWithExam();
+    const token = await connect(ana.cookie);
+    const context = await mcp(token, "tools/call", { name: "contexto_de_estudo", arguments: {} });
+    expect(context.body.result.content[0].text).toMatch(/propor_concurso/);
+
+    const result = await mcp(token, "tools/call", {
+      name: "propor_concurso",
+      arguments: {
+        motivo: "Edital do INSS saiu.",
+        concurso: { name: "INSS", hoursPerWeek: 12, subjects: [{ name: "Direito Previdenciário", weight: 3 }] },
+      },
+    });
+    expect(result.body.result.isError).toBeFalsy();
+
+    const anaInbox = (await (await call("/api/proposals", { cookie: ana.cookie })).json()) as {
+      proposals: { payload: { kind: string } }[];
+    };
+    expect(anaInbox.proposals.map((p) => p.payload.kind)).toEqual(["exam"]);
+    const biaInbox = (await (await call("/api/proposals", { cookie: bia.cookie })).json()) as { proposals: unknown[] };
+    expect(biaInbox.proposals).toEqual([]);
+
+    // Nada foi criado: Ana continua sem concurso.
+    const pulled = await call("/api/sync/pull?since=0", { cookie: ana.cookie });
+    const rows = ((await pulled.json()) as { changes: { table: string }[] }).changes;
+    expect(rows.some((r) => r.table === "exams")).toBe(false);
+  });
+
+  it("recusa concurso com o mesmo nome de um que já existe", async () => {
+    const student = await studentWithExam();
+    const token = await connect(student.cookie);
+    const result = await mcp(token, "tools/call", {
+      name: "propor_concurso",
+      arguments: { motivo: "x", concurso: { name: "trt", hoursPerWeek: 10, subjects: [{ name: "Português" }] } },
+    });
+    expect(result.body.result.isError).toBe(true);
+    expect(result.body.result.content[0].text).toMatch(/Já existe um concurso/);
   });
 
   it("sem token não entra, e revogar a conexão derruba o token", async () => {

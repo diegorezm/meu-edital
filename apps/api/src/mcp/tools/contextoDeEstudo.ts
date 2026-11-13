@@ -16,7 +16,8 @@ export const contextoDeEstudo = defineTool({
   }),
   async run(args, { env, props }) {
     const data = await loadAppData(createDb(env.DB), props.userId);
-    if (!data.activeExamId) return text("O estudante ainda não montou um concurso no app.", true);
+    if (!data.activeExamId)
+      return text("O estudante ainda não montou um concurso no app. Use propor_concurso para sugerir o edital.");
     const context = buildStudyContext(data, data.activeExamId, {
       weeks: args.semanas,
       includeTopics: args.incluirAssuntos ?? true,

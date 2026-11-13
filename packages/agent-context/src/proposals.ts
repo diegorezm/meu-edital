@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { addDays, type AppData, subjectsInOrder } from "@meu-edital/domain";
 import { applyChanges, ChangeSchema, type ChangePreview, previewChanges } from "./changes";
+import { applyNewExam, NewExamSchema, previewNewExam } from "./exam";
 import { importSyllabus, SyllabusImportSchema } from "./syllabus";
 
 /** Propostas pendentes expiram depois deste prazo. */
@@ -22,6 +23,10 @@ export const ProposalPayloadSchema = z.discriminatedUnion("kind", [
     kind: z.literal("syllabus"),
     syllabus: SyllabusImportSchema,
   }),
+  z.strictObject({
+    kind: z.literal("exam"),
+    exam: NewExamSchema,
+  }),
 ]);
 export type ProposalPayload = z.infer<typeof ProposalPayloadSchema>;
 
@@ -33,7 +38,7 @@ export type Proposal = {
   source: z.infer<typeof ProposalSourceSchema>;
   /** Nome legível da conexão de IA que propôs (ex.: "Claude"). */
   author: string;
-  /** Concurso a que a proposta se refere. */
+  /** Concurso a que a proposta se refere. Vazio num concurso novo sem concurso ativo. */
   examId: string;
   reason: string;
   payload: ProposalPayload;
@@ -67,6 +72,7 @@ export function proposalSize(input: unknown): number {
 /** Prévia antes → depois de uma proposta. Lança erro se algo não existe nos dados. */
 export function previewProposal(data: AppData, examId: string, payload: ProposalPayload): ChangePreview[] {
   if (payload.kind === "changes") return previewChanges(data, examId, payload.changes);
+  if (payload.kind === "exam") return previewNewExam(data, payload.exam);
   const existing = new Map(
     subjectsInOrder(data, examId).map((s) => [s.name.toLocaleLowerCase("pt-BR"), s]),
   );
@@ -85,6 +91,7 @@ export function previewProposal(data: AppData, examId: string, payload: Proposal
 /** Aplica a proposta pelas funções de domínio. */
 export function applyProposal(data: AppData, examId: string, payload: ProposalPayload): AppData {
   if (payload.kind === "changes") return applyChanges(data, examId, payload.changes);
+  if (payload.kind === "exam") return applyNewExam(data, payload.exam);
   return importSyllabus(data, examId, payload.syllabus);
 }
 

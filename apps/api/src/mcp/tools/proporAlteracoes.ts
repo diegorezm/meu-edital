@@ -12,7 +12,7 @@ export const proporAlteracoes = defineTool({
   name: "propor_alteracoes",
   title: "Propor alterações",
   description:
-    "Propõe alterações no plano do estudante: peso de uma matéria (setSubjectWeight), meta de horas por semana (setHoursPerWeek) ou a jornada inteira (setCycle). Nada é aplicado: a proposta vai para a caixa do Oráculo e o estudante decide. Use os nomes exatos das matérias do contexto_de_estudo.",
+    "Propõe alterações no concurso ativo: matéria nova com assuntos (addSubject, com cycleMinutes para já entrar na jornada), peso de uma matéria (setSubjectWeight), meta de horas por semana (setHoursPerWeek) ou a jornada inteira (setCycle). As alterações valem em ordem, então um setCycle pode citar a matéria criada antes na mesma proposta. Nada é aplicado: a proposta vai para a caixa do Oráculo e o estudante decide. Use os nomes exatos das matérias do contexto_de_estudo. Para um concurso novo, use propor_concurso.",
   inputSchema: z.object({
     motivo: z.string().min(1).max(1000).describe("Por que propor isso, em português, curto."),
     alteracoes: z.array(ChangeSchema).min(1).max(30),

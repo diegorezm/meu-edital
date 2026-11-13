@@ -8,6 +8,8 @@ export type StarterSubject = {
   /** Questões e pontos por questão, quando o edital informa (viram o peso). */
   questions?: number;
   pointsPerQuestion?: number;
+  /** Peso direto, quando o edital não detalha questões. */
+  weight?: number;
   /** Assuntos iniciais, em ordem. Sem eles a matéria ganha um assunto genérico. */
   topics?: string[];
 };
@@ -44,7 +46,11 @@ export function startExam(data: AppData, input: StartExamInput): AppData {
       examId,
       name,
       position: subjects.length,
-      ...(starter.questions ? { questions: starter.questions, pointsPerQuestion: starter.pointsPerQuestion ?? 1 } : {}),
+      ...(starter.questions
+        ? { questions: starter.questions, pointsPerQuestion: starter.pointsPerQuestion ?? 1 }
+        : starter.weight
+          ? { weight: starter.weight }
+          : {}),
     };
     subjects.push(subject);
     const names = (starter.topics || []).map((t) => t.trim()).filter(Boolean);

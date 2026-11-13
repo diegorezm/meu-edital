@@ -75,7 +75,9 @@ export function useOracle() {
           title:
             proposal.payload.kind === "syllabus"
               ? `${proposal.author} · importar edital`
-              : proposal.author,
+              : proposal.payload.kind === "exam"
+                ? `${proposal.author} · novo concurso`
+                : proposal.author,
         };
       }),
     [proposals, data, now],
@@ -88,7 +90,13 @@ export function useOracle() {
       if (status === "aplicada") store.update((d) => applyProposal(d, proposal.examId, proposal.payload));
       await sendJson(`/proposals/${proposal.id}/status`, "POST", { status });
       setProposals((list) => (list ?? []).filter((p) => p.id !== proposal.id));
-      setNotice(status === "aplicada" ? "Proposta aplicada. A jornada já está atualizada." : "Proposta descartada.");
+      setNotice(
+        status === "descartada"
+          ? "Proposta descartada."
+          : proposal.payload.kind === "exam"
+            ? "Concurso criado. Ele já é o seu concurso ativo."
+            : "Proposta aplicada. A jornada já está atualizada.",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não deu certo agora.");
     } finally {

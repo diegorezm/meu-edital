@@ -6,8 +6,94 @@
 <title>Meu Edital · Propostas das fases 6 a 8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Alegreya+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../design-system/tokens.css">
+
 <style>
+  /* Cópia de docs/design-system/tokens.css, para a página abrir sozinha. */
+:root {
+  /* Cenário */
+  --wall: #c2a09a;          /* parede atrás das folhas */
+  --wood: #7a5548;          /* viga do topo */
+  --wood-dark: #5d3f37;
+
+  /* Papel */
+  --paper: #f1e3cc;         /* folha padrão */
+  --paper-raised: #f8eedb;  /* cartas, campos, itens sobre a folha */
+  --paper-sunken: #e7d5b8;  /* bloqueado, trilho de barra */
+  --rule: #d6bf9f;          /* filete interno e divisórias */
+
+  /* Tinta */
+  --ink: #5b3b33;           /* texto e todo contorno */
+  --ink-muted: #6f5246;     /* texto secundário (AA sobre qualquer papel) */
+
+  /* Acentos. A versão -strong é a que recebe texto. */
+  --teal: #5f9aa0;          /* decorativo: barras, brasões */
+  --teal-strong: #3f7379;   /* ação principal, faixas com texto claro */
+  --gold: #e3b04b;          /* recompensa, XP, destaque (texto em --ink) */
+  --gold-strong: #b9862b;
+  --maroon: #6e3b45;        /* item ativo, identidade, chefe */
+  --rose: #c9797a;          /* decorativo */
+  --rose-strong: #9c4a4f;   /* atraso, erro (texto) */
+  --green: #8aa776;         /* decorativo */
+  --green-strong: #4c6a3c;  /* concluído (texto e carimbo) */
+  --plum: #9a86b3;
+
+  /* Estados da carta de bloco */
+  --card-done: #e6e3c8;
+  --card-now: #fff7e3;
+  --card-boss: #edd3cc;
+
+  /* Matérias: atribuídas pela ordem de criação, em ciclo. Sempre com brasão e sigla em --ink (contraste >= 3). */
+  --subject-1: #5f9aa0;
+  --subject-2: #c9797a;
+  --subject-3: #e3b04b;
+  --subject-4: #8aa776;
+  --subject-5: #9a86b3;
+  --subject-6: #c2906c;
+  --subject-7: #8499ba;
+  --subject-8: #a39a5a;
+
+  /* Tipografia */
+  --font-display: "Amatic SC", "Alegreya Sans", sans-serif;   /* títulos, faixas, numerais */
+  --font-body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --display-sm: 20px;       /* menor tamanho permitido para a fonte de título */
+  --display-md: 24px;
+  --display-lg: 30px;
+  --display-xl: 40px;
+  --tracking-display: 0.05em;
+
+  /* Espaço (base 4) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 32px;
+
+  /* Forma */
+  --radius-sm: 3px;
+  --radius: 6px;            /* folhas, cartas, botões: cantos quase retos */
+  --radius-pill: 999px;     /* só a placa de data */
+  --stroke: 2px;            /* contorno de tinta */
+  --stroke-thin: 1.5px;
+
+  /* Profundidade: sombra dura, nunca desfocada */
+  --shadow-sheet: 4px 5px 0 rgb(91 59 51 / 0.3);
+  --shadow-press: 0 3px 0 var(--ink);
+  --inset-rule: inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--rule);
+
+  /* Movimento */
+  --motion-fast: 80ms;
+  --motion: 180ms;
+
+  /* Foco */
+  --focus-ring: 3px solid var(--teal-strong);
+  --focus-offset: 2px;
+}
+
   * { box-sizing: border-box; margin: 0; }
   body { font-family: var(--font-body); font-weight: 500; font-size: 15px; color: var(--ink); background: var(--wall); padding: 24px 16px 60px;
     background-image: repeating-linear-gradient(90deg, transparent 0 126px, rgba(91,59,51,.09) 126px 128px); }

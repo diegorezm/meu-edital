@@ -164,9 +164,15 @@ Tom dos textos: português do Brasil, curto, amigável, com humor leve. Sem culp
 
 ## Movimento
 
-- Pressionar: 80 ms. Transições de estado: 180 ms.
+- Pressionar: 80 ms. Transições de estado: 180 ms. Curva `--ease-out-soft`.
+- Troca de tela: a página sobe 8 px e aparece (`animate-rise`, 220 ms).
+- Listas de cartas e linhas entram em cascata (`stagger`): 30 ms entre itens, até o oitavo.
+- Cartas se levantam 2 px no hover (`lift`), só onde há mouse.
+- Números da viga contam até o valor novo (`CountUp`, 600 ms). Na carga, aparecem direto.
+- Ao registrar estudo: a barra de XP enche com um brilho, o carimbo cai na carta e a marca do contrato salta. Só em mudanças, nunca na carga.
+- Folhas sobem da base no celular; no desktop, o diálogo aparece com leve escala. Ambos saem com animação.
 - Comemorações (subir de nível, fechar a volta, conquista) são a única animação longa: até 1,2 s, uma vez, e podem ser puladas.
-- Nada pisca ou se move em repouso, exceto o halo da carta atual.
+- Nada pisca ou se move em repouso, exceto o halo da carta atual e a respiração do mascote na tela inicial (`<Mascot idle />`).
 - Com `prefers-reduced-motion`, tudo vira troca instantânea.
 
 ## Acessibilidade

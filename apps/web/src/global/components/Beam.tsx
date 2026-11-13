@@ -1,4 +1,4 @@
-import { DatePlate, Portrait, Resource } from "@meu-edital/ui";
+import { CountUp, DatePlate, Portrait, Resource } from "@meu-edital/ui";
 import type { PlayerView } from "../hooks/usePlayer";
 import { formatDuration, formatNumber, formatShortDate } from "../utils/format";
 
@@ -23,10 +23,10 @@ export function DesktopBeam({ view }: { view: PlayerView }) {
       <Logo />
       <span className="flex-1" />
       <nav aria-label="Recursos" className="flex flex-wrap items-center justify-center gap-3">
-        <Resource icon="coin" value={formatNumber(view.player.xp)} unit="XP" />
+        <Resource icon="coin" value={<CountUp value={view.player.xp} format={formatNumber} />} unit="XP" />
         <Resource icon="flame" value={view.streak} unit={view.streak === 1 ? "semana na meta" : "semanas na meta"} />
-        <Resource icon="glass" value={formatDuration(view.week?.minutes ?? 0)} unit={weekText(view)} />
-        <Resource icon="quill" value={formatNumber(view.questions)} unit="questões" />
+        <Resource icon="glass" value={<CountUp value={view.week?.minutes ?? 0} format={formatDuration} />} unit={weekText(view)} />
+        <Resource icon="quill" value={<CountUp value={view.questions} format={formatNumber} />} unit="questões" />
         <Resource icon="scroll" value={view.dueReviews} unit={view.dueReviews === 1 ? "revisão" : "revisões"} />
       </nav>
       <span className="flex-1" />
@@ -50,8 +50,8 @@ export function DesktopBeam({ view }: { view: PlayerView }) {
 export function MobileBeam({ view, onOpenProfile }: { view: PlayerView; onOpenProfile: () => void }) {
   return (
     <header className="sticky top-0 z-30 flex items-center gap-1.5 border-b-[3px] border-wood-dark bg-wood px-2.5 py-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-      <Resource compact icon="coin" value={formatNumber(view.player.xp)} unit="XP" />
-      <Resource compact icon="glass" value={formatDuration(view.week?.minutes ?? 0)} unit="semana" />
+      <Resource compact icon="coin" value={<CountUp value={view.player.xp} format={formatNumber} />} unit="XP" />
+      <Resource compact icon="glass" value={<CountUp value={view.week?.minutes ?? 0} format={formatDuration} />} unit="semana" />
       <Resource compact icon="scroll" value={view.dueReviews} unit="rev." />
       <button
         type="button"

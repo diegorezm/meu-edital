@@ -59,7 +59,7 @@ export function JourneySheet({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-x-3 gap-y-[22px] pt-1">
+        <div className="stagger grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-x-3 gap-y-[22px] pt-1">
           {view.cards.map((item) => (
             <div key={item.key} className="grid">
               {card(item)}

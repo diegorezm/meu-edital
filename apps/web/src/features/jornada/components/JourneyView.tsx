@@ -57,7 +57,7 @@ export function JourneyView({ journey }: { journey: Journey }) {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-x-3 gap-y-[22px]">
+        <div className="stagger grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-x-3 gap-y-[22px]">
           {view.cards.map((card) => (
             <div key={card.id} className="grid">
               <BlockCard

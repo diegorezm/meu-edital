@@ -3,6 +3,8 @@ export { Badge } from "./components/Badge";
 export { BlockCard, type BlockState, toRoman } from "./components/BlockCard";
 export { BottomSheet } from "./components/BottomSheet";
 export { Button, buttonClass } from "./components/Button";
+export { CountUp } from "./components/CountUp";
+export { useCountUp } from "./hooks/motion";
 export { CheckBox } from "./components/CheckBox";
 export { Chip } from "./components/Chip";
 export { ContractRow } from "./components/ContractRow";

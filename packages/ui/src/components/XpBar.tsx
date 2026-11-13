@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useChanged } from "../hooks/motion";
 
 /**
  * Barra de XP: trilho afundado, preenchimento em ouro e marcas a cada 10%.
@@ -6,6 +7,7 @@ import clsx from "clsx";
  */
 export function XpBar({ value, label, className }: { value: number; label: string; className?: string }) {
   const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
+  const grew = useChanged(percent);
   return (
     <div
       role="progressbar"
@@ -20,9 +22,16 @@ export function XpBar({ value, label, className }: { value: number; label: strin
       )}
     >
       <span
-        className={clsx("block h-full bg-gold transition-[width]", percent > 0 && percent < 100 && "border-r-2 border-ink")}
+        className={clsx("relative block h-full overflow-hidden bg-gold transition-[width] duration-700 ease-(--ease-out-soft)", percent > 0 && percent < 100 && "border-r-2 border-ink")}
         style={{ width: `${percent}%` }}
-      />
+      >
+        {grew && (
+          <span
+            key={percent}
+            className="absolute inset-y-0 left-0 w-1/2 animate-shine bg-[linear-gradient(90deg,transparent,rgb(255_255_255/.6),transparent)]"
+          />
+        )}
+      </span>
     </div>
   );
 }

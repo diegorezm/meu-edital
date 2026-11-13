@@ -27,13 +27,15 @@ export function BottomSheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/40" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/40 data-[state=open]:animate-[fade-in_180ms_ease-out] data-[state=closed]:animate-[fade-out_160ms_ease-in]" />
         <Dialog.Content
           onEscapeKeyDown={dismissible ? undefined : (e) => e.preventDefault()}
           onPointerDownOutside={dismissible ? undefined : (e) => e.preventDefault()}
           className={clsx(
             "fixed z-50 flex max-h-[85dvh] flex-col border-2 border-ink bg-paper pt-9 shadow-[var(--shadow-inset-rule),var(--shadow-sheet)]",
             "inset-x-0 bottom-0 rounded-t-[10px]",
+            "data-[state=open]:animate-[sheet-up_240ms_var(--ease-out-soft)] data-[state=closed]:animate-[sheet-down_180ms_ease-in]",
+            "md:data-[state=open]:animate-[dialog-in_200ms_var(--ease-out-soft)] md:data-[state=closed]:animate-[dialog-out_150ms_ease-in]",
             "md:inset-auto md:top-1/2 md:left-1/2 md:w-[min(32rem,calc(100vw-2rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded",
           )}
         >

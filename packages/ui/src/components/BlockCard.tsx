@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
+import { useChanged } from "../hooks/motion";
 import { Crest } from "./Crest";
 import { Icon } from "./Icon";
 import { Stamp } from "./Stamp";
@@ -51,6 +52,7 @@ export function BlockCard({
   className?: string;
 }) {
   const muted = state === "next";
+  const justDone = useChanged(state) && state === "done";
   const body = (
     <>
       <span
@@ -74,7 +76,7 @@ export function BlockCard({
       {topic && <small className={clsx("text-xs leading-tight", "text-ink-muted")}>{topic}</small>}
       <span className="mt-auto flex items-center justify-center gap-1.5 pt-1.5">
         {state === "done" ? (
-          <Stamp />
+          <Stamp animate={justDone} />
         ) : (
           <>
             {minutes !== undefined && (
@@ -93,6 +95,7 @@ export function BlockCard({
   const classes = clsx(
     "relative flex min-h-[158px] flex-col items-center rounded-[6px] border-2 border-ink px-2 pt-[18px] pb-2.5 text-center",
     surfaces[state],
+    state !== "done" && "lift",
     state === "now" && "motion-safe:animate-[halo_2.4s_ease-in-out_infinite]",
     className,
   );

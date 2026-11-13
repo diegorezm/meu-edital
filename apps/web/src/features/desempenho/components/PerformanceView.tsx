@@ -78,7 +78,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
       </tr>
       {perf.open === s.id &&
         s.topics.map((t) => (
-          <tr key={t.id} className="border-b-[1.5px] border-dashed border-rule bg-paper-raised">
+          <tr key={t.id} className="animate-rise border-b-[1.5px] border-dashed border-rule bg-paper-raised">
             <td className="py-1.5 pl-12">{t.name}</td>
             <td>{t.time}</td>
             <td>{t.sessions}</td>

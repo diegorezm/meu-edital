@@ -19,7 +19,7 @@ export function HomeView({ home }: { home: ReturnType<typeof useHome> }) {
     return (
       <Sheet title="Bem-vindo à guilda" ribbonSize="lg" className="mx-auto max-w-xl pt-10">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Mascot pose="dormindo" className="w-40" />
+          <Mascot pose="dormindo" idle className="w-40" />
           <p>Sua jornada começa com um edital. Leva um minuto.</p>
           <Link to="/comecar" className={buttonClass()}>
             Começar
@@ -69,7 +69,7 @@ export function HomeView({ home }: { home: ReturnType<typeof useHome> }) {
   return (
     <div className="flex flex-col gap-[22px]">
       {center}
-      <div className="grid grid-cols-2 items-start gap-[18px] gap-y-[26px]">{side}</div>
+      <div className="stagger grid grid-cols-2 items-start gap-[18px] gap-y-[26px]">{side}</div>
     </div>
   );
 }

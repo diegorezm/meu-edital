@@ -64,6 +64,13 @@
   --shadow-inset-rule: inset 0 0 0 4px var(--color-paper), inset 0 0 0 5px var(--color-rule);
 
   --default-transition-duration: 180ms;
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.3, 1);
+
+  --animate-rise: rise 220ms var(--ease-out-soft) both;
+  --animate-stamp: stamp 320ms var(--ease-out-soft) both;
+  --animate-tick: tick 260ms var(--ease-out-soft) both;
+  --animate-shine: shine 700ms ease-out;
+  --animate-breathe: breathe 4.8s ease-in-out infinite;
 }
 
 @layer base {
@@ -85,6 +92,7 @@
     *, *::before, *::after {
       transition-duration: 0ms !important;
       animation-duration: 0ms !important;
+      animation-delay: 0ms !important;
     }
   }
 }
@@ -124,4 +132,62 @@
 @utility ink-outline {
   filter: drop-shadow(1.5px 0 0 var(--color-ink)) drop-shadow(-1.5px 0 0 var(--color-ink))
     drop-shadow(0 1.5px 0 var(--color-ink)) drop-shadow(0 -1.5px 0 var(--color-ink));
+}
+
+/* Entrada de tela e de itens: sobe 8 px e aparece. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* Carimbo de "Concluída": cai na carta. */
+@keyframes stamp {
+  0% { opacity: 0; transform: rotate(-5deg) scale(1.6); }
+  70% { opacity: 1; transform: rotate(-5deg) scale(0.94); }
+  100% { transform: rotate(-5deg); }
+}
+
+/* Marca do contrato cumprido. */
+@keyframes tick {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.25); }
+}
+
+/* Brilho que atravessa a barra de XP quando ela enche. */
+@keyframes shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+/* Respiração do mascote na tela inicial: a exceção ao "nada se move em repouso". */
+@keyframes breathe {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-2px) scaleY(1.015); }
+}
+
+/* Folhas e diálogos (Radix marca data-state). */
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-down { to { transform: translateY(100%); } }
+@keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(0.97); } }
+@keyframes dialog-out { to { opacity: 0; transform: translateY(12px) scale(0.97); } }
+
+/* Filhos entram em cascata (30 ms entre eles, até o oitavo). */
+@utility stagger {
+  & > * { animation: var(--animate-rise); }
+  & > :nth-child(2) { animation-delay: 30ms; }
+  & > :nth-child(3) { animation-delay: 60ms; }
+  & > :nth-child(4) { animation-delay: 90ms; }
+  & > :nth-child(5) { animation-delay: 120ms; }
+  & > :nth-child(6) { animation-delay: 150ms; }
+  & > :nth-child(7) { animation-delay: 180ms; }
+  & > :nth-child(n + 8) { animation-delay: 210ms; }
+}
+
+/* Carta que se levanta da mesa ao passar o mouse. */
+@utility lift {
+  transition: transform 180ms var(--ease-out-soft), filter 180ms var(--ease-out-soft);
+  @media (hover: hover) {
+    &:hover { transform: translateY(-2px); filter: drop-shadow(0 4px 0 rgb(91 59 51 / 0.22)); }
+  }
 }

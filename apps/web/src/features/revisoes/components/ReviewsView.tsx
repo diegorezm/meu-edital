@@ -14,34 +14,36 @@ export function ReviewsView({ reviews }: { reviews: Reviews }) {
         </Chip>
       </div>
       {reviews.rows.length ? (
-        reviews.rows.map((row) => (
-          <ListRow
-            key={row.id}
-            aside={
-              reviews.tab === "due" ? (
-                <Button variant="gold" onClick={() => reviews.review(row.topicId)}>
-                  Revisar
-                </Button>
-              ) : (
-                <span className="text-xs text-ink-muted">{row.when}</span>
-              )
-            }
-          >
-            <span className="flex items-center gap-2.5 py-1">
-              <Crest name={row.subject} index={row.subjectIndex} size={26} showInitials={false} />
-              <span className="min-w-0">
-                <span className="block">{row.topic}</span>
-                <span className="text-xs text-ink-muted">
-                  {row.subject} · {row.stage}ª revisão
-                  {reviews.tab === "due" && (
-                    <b className={row.late ? "text-rose-strong" : ""}> · {row.when}</b>
-                  )}
+        <div className="stagger">
+          {reviews.rows.map((row) => (
+            <ListRow
+              key={row.id}
+              aside={
+                reviews.tab === "due" ? (
+                  <Button variant="gold" onClick={() => reviews.review(row.topicId)}>
+                    Revisar
+                  </Button>
+                ) : (
+                  <span className="text-xs text-ink-muted">{row.when}</span>
+                )
+              }
+            >
+              <span className="flex items-center gap-2.5 py-1">
+                <Crest name={row.subject} index={row.subjectIndex} size={26} showInitials={false} />
+                <span className="min-w-0">
+                  <span className="block">{row.topic}</span>
+                  <span className="text-xs text-ink-muted">
+                    {row.subject} · {row.stage}ª revisão
+                    {reviews.tab === "due" && (
+                      <b className={row.late ? "text-rose-strong" : ""}> · {row.when}</b>
+                    )}
+                  </span>
+                  {row.onTimeToday && <Tag className="ml-2" icon="coin">+{reviews.onTimeXp} XP em dia</Tag>}
                 </span>
-                {row.onTimeToday && <Tag className="ml-2" icon="coin">+{reviews.onTimeXp} XP em dia</Tag>}
               </span>
-            </span>
-          </ListRow>
-        ))
+            </ListRow>
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col items-center gap-2 py-4 text-center">
           <Mascot pose="dormindo" className="w-28" />

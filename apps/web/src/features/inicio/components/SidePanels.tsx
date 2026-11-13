@@ -5,7 +5,7 @@ import type { HomeView } from "../hooks/useHome";
 export function SubjectsSheet({ view }: { view: HomeView }) {
   return (
     <Sheet title="Matérias" tone="gold" ribbonSize="sm" className="pt-[26px]">
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5">
+      <div className="stagger grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5">
         {view.subjects.map((subject) => (
           <SubjectAttribute
             key={subject.id}

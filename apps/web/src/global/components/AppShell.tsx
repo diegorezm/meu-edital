@@ -1,5 +1,6 @@
 import { BottomSheet, Sheet } from "@meu-edital/ui";
 import { ensureWeekTarget } from "@meu-edital/domain";
+import { useRouterState } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
 import { CelebrationOverlay } from "../celebrations/CelebrationOverlay";
 import { useLayout } from "../hooks/useLayout";
@@ -45,12 +46,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { mobile } = useLayout();
   const [profile, setProfile] = useState(false);
   useWeekSnapshot();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const page = (
+    <div key={path} className="animate-rise">
+      {children}
+    </div>
+  );
 
   if (mobile)
     return (
       <div className={wall}>
         <MobileBeam view={view} onOpenProfile={() => setProfile(true)} />
-        <main className="px-2.5 pt-7 pb-28">{children}</main>
+        <main className="px-2.5 pt-7 pb-28">{page}</main>
         <TabBar dueReviews={view.dueReviews} />
         <Companions />
         <BottomSheet open={profile} onOpenChange={setProfile} title="Sua ficha">
@@ -71,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <SideNav dueReviews={view.dueReviews} />
           </Sheet>
         </aside>
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0">{page}</main>
       </div>
       <Companions />
     </div>

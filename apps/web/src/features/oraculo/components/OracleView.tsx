@@ -2,6 +2,7 @@ import { BottomSheet, Button, Chip, Icon, ListRow, Mascot, Notice, Sheet, TextAr
 import { useLayout } from "@global/hooks/useLayout";
 import { useState } from "react";
 import type { Oracle } from "../hooks/useOracle";
+import { ConnectGuide } from "./ConnectGuide";
 import { ProposalCard } from "./ProposalCard";
 
 /** Oráculo: caixa de propostas, conectar uma IA e copiar e colar. */
@@ -36,16 +37,14 @@ export function OracleView({ oracle }: { oracle: Oracle }) {
 
   const connect = (
     <div className="flex flex-col gap-3">
-      <p className="text-sm">Adicione este servidor MCP na sua IA (Claude, ChatGPT ou outra):</p>
+      <p className="text-sm">Conecte o ChatGPT, o Claude ou o Perplexity ao seu estudo com este endereço:</p>
       <div className="flex items-center gap-2">
         <code className="min-h-11 flex-1 truncate rounded-[5px] border-2 border-ink bg-paper-raised px-2.5 py-2.5 text-sm">{oracle.mcpUrl}</code>
         <Button variant="quiet" onClick={() => void oracle.copyUrl()}>
           Copiar
         </Button>
       </div>
-      <p className="text-xs text-ink-muted">
-        No Claude: Configurações, Conectores, Adicionar conector personalizado. No ChatGPT: Configurações, Conectores. A IA vai pedir para você entrar e permitir. Ela só lê seu estudo e propõe; nada muda sem você aplicar.
-      </p>
+      <ConnectGuide />
       {oracle.connections.map((c) => (
         <ListRow
           key={c.id}

@@ -7,6 +7,9 @@
   "name": "meu-edital",
   "main": "src/index.ts",
   "compatibility_date": "2026-11-12",
+  // Exigido pelo CIMD do OAuth (o ChatGPT se identifica por uma URL): o fetch
+  // do Worker só alcança endereços públicos.
+  "compatibility_flags": ["global_fetch_strictly_public"],
   "upload_source_maps": true,
   "observability": { "enabled": true },
   "assets": {

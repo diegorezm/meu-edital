@@ -63,7 +63,7 @@ Veja quanto estudou em cada dia e em cada matéria, corrija ou apague uma sessã
 
 ## O Oráculo: a sua IA como conselheira
 
-Conecte a IA que você já usa (Claude, ChatGPT ou outra) ao seu estudo. Ela lê como foi a sua semana e propõe ajustes de peso, meta e jornada. **Nada muda sem você aprovar**: cada proposta aparece com o antes e o depois.
+Conecte a IA que você já usa (ChatGPT, Claude, Perplexity ou outra) ao seu estudo. Ela lê como foi a sua semana e propõe ajustes de peso, meta e jornada. **Nada muda sem você aprovar**: cada proposta aparece com o antes e o depois.
 
 <p align="center">
   <img src="docs/screenshots/oraculo.png" alt="Oráculo: caixa de propostas da IA e instruções para conectar" width="820" />

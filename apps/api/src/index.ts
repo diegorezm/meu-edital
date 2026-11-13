@@ -22,6 +22,9 @@ const provider = new OAuthProvider({
   authorizeEndpoint: "/authorize",
   tokenEndpoint: "/oauth/token",
   clientRegistrationEndpoint: "/oauth/register",
+  // Claude e Perplexity se registram (DCR); o ChatGPT prefere se identificar
+  // por um documento de metadados numa URL (CIMD).
+  clientIdMetadataDocumentEnabled: true,
   scopesSupported: [...SCOPES],
   resourceMetadata: {
     resource: `${env.APP_URL}/mcp`,

@@ -6,7 +6,7 @@ import { httpTransport, listenForChanges } from "./transport";
 
 export const storeName = (userId: string) => `dados-${userId}`;
 
-/** Intervalo de segurança: sincroniza mesmo sem aviso do servidor. */
+/** Intervalo de segurança, só quando o aviso do servidor está desligado. */
 const SYNC_INTERVAL_MS = 60_000;
 /** Junta alterações seguidas em um envio só. */
 const PUSH_DELAY_MS = 800;
@@ -39,8 +39,13 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
       outbox = state.outbox;
     });
     const onVisible = () => document.visibilityState === "visible" && sync();
-    const live = listenForChanges(sync);
-    const interval = setInterval(sync, SYNC_INTERVAL_MS);
+    // O aviso da própria alteração volta pelo socket; se o cursor já chegou lá, não busca de novo.
+    const live = listenForChanges((notice) => {
+      if (notice.version > instance.getState().cursor) sync();
+    });
+    const interval = setInterval(() => {
+      if (!live.connected()) sync();
+    }, SYNC_INTERVAL_MS);
     window.addEventListener("online", sync);
     document.addEventListener("visibilitychange", onVisible);
 

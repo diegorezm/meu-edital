@@ -1,5 +1,7 @@
 import { platform } from "@platform/index";
+import { queryOptions } from "@tanstack/react-query";
 import { getJson, sendJson } from "../api";
+import { queryClient } from "../query";
 
 export type LegalDocument = "termos" | "privacidade";
 export type PendingDocument = {
@@ -16,14 +18,32 @@ export const LEGAL_TITLES: Record<LegalDocument, string> = {
 };
 export const LEGAL_PATHS = { termos: "/termos", privacidade: "/privacidade" } as const;
 
-export const currentLegal = () =>
-  getJson<{ documents: Accepted[] }>("/legal").then((r) =>
-    r.documents.map(({ document, version }) => ({ document, version })),
-  );
-export const pendingLegal = () =>
-  getJson<{ pending: PendingDocument[] }>("/legal/aceite").then((r) => r.pending);
-export const acceptLegal = (documents: Accepted[]) =>
-  sendJson<{ ok: true }>("/legal/aceite", "POST", { documents });
+/** Versões vigentes dos documentos. Mudam só com deploy: uma busca por carregamento. */
+export const legalDocumentsQuery = queryOptions({
+  queryKey: ["legal", "documentos"],
+  queryFn: () =>
+    getJson<{ documents: Accepted[] }>("/legal").then((r) =>
+      r.documents.map(({ document, version }) => ({ document, version })),
+    ),
+  staleTime: Number.POSITIVE_INFINITY,
+});
+
+export type Acceptance = { document: LegalDocument; version: string; acceptedAt: number };
+
+/** O que falta aceitar e o histórico, numa chamada só (o diálogo e a tela Conta dividem). */
+export const acceptanceQuery = queryOptions({
+  queryKey: ["legal", "aceite"],
+  queryFn: () => getJson<{ pending: PendingDocument[]; history: Acceptance[] }>("/legal/aceite"),
+});
+
+export const currentLegal = () => queryClient.ensureQueryData(legalDocumentsQuery);
+/** Sempre pergunta ao servidor: é chamado quando a API recusa por falta de aceite. */
+export const pendingLegal = () => queryClient.fetchQuery({ ...acceptanceQuery, staleTime: 0 }).then((r) => r.pending);
+export const acceptLegal = async (documents: Accepted[]) => {
+  const result = await sendJson<{ ok: true }>("/legal/aceite", "POST", { documents });
+  void queryClient.invalidateQueries({ queryKey: acceptanceQuery.queryKey });
+  return result;
+};
 
 /**
  * Aceite marcado no cadastro, antes de existir sessão (o e-mail ainda vai ser

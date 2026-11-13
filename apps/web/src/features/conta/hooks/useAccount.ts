@@ -1,4 +1,5 @@
 import { authClient, authErrorMessage, signOut as endSession, useSession } from "@global/auth";
+import { queryClient } from "@global/query";
 import { storeName } from "@global/store/StoreProvider";
 import { syncLabel, useStore } from "@global/store/useStore";
 import { platform } from "@platform/index";
@@ -26,6 +27,7 @@ export function useAccount() {
       const { error } = await authClient.deleteUser(password ? { password } : {});
       if (error) return form.setError(authErrorMessage(error));
       if (userId) await platform.clearLocalStore(storeName(userId));
+      queryClient.clear();
       await navigate({ to: "/entrar", search: { aviso: "conta-excluida" } });
     });
 

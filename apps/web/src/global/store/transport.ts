@@ -73,6 +73,8 @@ export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
   connect();
 
   return {
+    /** Verdadeiro com o aviso do servidor ligado: aí não precisa perguntar de tempos em tempos. */
+    connected: () => socket?.readyState === WebSocket.OPEN,
     close() {
       closed = true;
       clearTimeout(timer);

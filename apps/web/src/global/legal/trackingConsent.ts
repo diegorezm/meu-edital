@@ -1,14 +1,12 @@
 import { tracking, type TrackingChoices } from "@platform/tracking";
 import { getJson, sendJson } from "../api";
+import { currentLegal } from "./legal";
 
 type ServerSaved = { choices: TrackingChoices; policyVersion: string } | null;
 
-let privacyVersion: Promise<string> | undefined;
-/** Versão vigente da política de privacidade, buscada uma vez. */
+/** Versão vigente da política de privacidade (mesmo cache de `/legal`). */
 export const currentPrivacyVersion = () =>
-  (privacyVersion ??= getJson<{ documents: { document: string; version: string }[] }>("/legal").then(
-    (r) => r.documents.find((d) => d.document === "privacidade")?.version ?? "",
-  ));
+  currentLegal().then((documents) => documents.find((d) => d.document === "privacidade")?.version ?? "");
 
 /** Salva no aparelho e, com sessão, no servidor (prova e outros aparelhos). */
 export async function saveTrackingChoices(choices: TrackingChoices, signedIn: boolean) {

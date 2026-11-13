@@ -18,6 +18,7 @@ export type TaskId = "semana" | "edital";
 type Connection = { id: string; name: string; scope: string[]; createdAt: number | null };
 
 const DAY = 86_400_000;
+const NO_PROPOSALS: Proposal[] = [];
 const PROPOSALS = ["oraculo", "propostas"] as const;
 const CONNECTIONS = ["oraculo", "conexoes"] as const;
 
@@ -35,7 +36,7 @@ export function useOracle() {
     queryKey: CONNECTIONS,
     queryFn: () => getJson<{ connections: Connection[] }>("/oraculo/conexoes").then((r) => r.connections),
   });
-  const proposals = inbox.isError ? [] : (inbox.data ?? null);
+  const proposals = inbox.isError ? NO_PROPOSALS : (inbox.data ?? null);
   const connections = connectionsQuery.data ?? [];
   const setProposals = (change: (list: Proposal[]) => Proposal[]) =>
     queryClient.setQueryData<Proposal[]>(PROPOSALS, (list) => change(list ?? []));

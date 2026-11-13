@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { bearer, captcha } from "better-auth/plugins";
 import { account, createDb, session, user, verification } from "@meu-edital/db";
 import { uid } from "@meu-edital/domain";
-import { type AppEnv, emailEnabled, googleEnabled } from "../env";
+import { type AppEnv, emailEnabled, googleEnabled, NATIVE_ORIGINS } from "../env";
 import { resetPasswordEmail, verificationEmail } from "./emails";
 import { createMailer, type Email } from "./mailer";
 
@@ -28,7 +28,7 @@ export function createAuth(env: AppEnv, waitUntil: WaitUntil) {
     baseURL: env.APP_URL,
     basePath: "/api/auth",
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.APP_URL, ...env.EXTRA_ORIGINS.split(",").filter(Boolean)],
+    trustedOrigins: [env.APP_URL, ...env.EXTRA_ORIGINS.split(",").filter(Boolean), ...NATIVE_ORIGINS],
     database: drizzleAdapter(createDb(env.DB), {
       provider: "sqlite",
       schema: { user, session, account, verification },

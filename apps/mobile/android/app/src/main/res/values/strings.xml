@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Meu Edital</string>
+    <string name="title_activity_main">Meu Edital</string>
+    <string name="package_name">app.meuedital</string>
+    <string name="custom_url_scheme">app.meuedital</string>
+</resources>

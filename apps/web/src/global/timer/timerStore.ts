@@ -1,4 +1,4 @@
-import { elapsedMs, type TimerState } from "@meu-edital/domain";
+import { elapsedMs, pauseTimer, type TimerState } from "@meu-edital/domain";
 import { platform } from "@platform/index";
 import { useSyncExternalStore } from "react";
 
@@ -21,31 +21,31 @@ function read(): TimerState | null {
  * fechar a aba porque guarda instantes, não um contador.
  */
 /**
- * Com a aba fechada, quem avisa o fim do bloco é o servidor (Web Push). Se o
- * estudante não ligou os avisos, o pedido é ignorado sem erro.
+ * Mantém os avisos do cronômetro em dia com o estado: o aviso de fim de bloco
+ * com o app fechado e, no app nativo, a notificação com o tempo correndo.
  */
-function syncBlockEndPush(prev: TimerState | null, next: TimerState | null) {
+function syncTimerSideEffects(prev: TimerState | null, next: TimerState | null) {
   const runningPlan = (t: TimerState | null) =>
     t?.runningSince && t.plannedMinutes && !t.notified ? t : null;
   const was = runningPlan(prev);
   const now = runningPlan(next);
   if (now && (!was || was.runningSince !== now.runningSince)) {
     const endsAt = Date.now() + now.plannedMinutes! * 60_000 - elapsedMs(now, Date.now());
-    if (endsAt > Date.now())
-      void fetch("/api/push/fim-de-bloco", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ endsAt: Math.round(endsAt), subject: now.subjectName ?? "o bloco" }),
-      }).catch(() => undefined);
+    if (endsAt > Date.now()) void platform.blockEnd.schedule(Math.round(endsAt), now.subjectName ?? "o bloco");
   } else if (was && !now) {
-    void fetch("/api/push/fim-de-bloco", { method: "DELETE" }).catch(() => undefined);
+    void platform.blockEnd.cancel();
   }
+
+  const subject = next?.subjectName ?? "Estudo";
+  if (!next) void platform.studyTimer.clear();
+  else if (next.runningSince) void platform.studyTimer.showRunning(next.runningSince, next.accumulatedMs, subject);
+  else void platform.studyTimer.showPaused(next.accumulatedMs, subject);
 }
 
 export const timerStore = {
   get: () => current,
   set(next: TimerState | null) {
-    syncBlockEndPush(current, next);
+    syncTimerSideEffects(current, next);
     current = next;
     if (next) platform.preferences.set(KEY, JSON.stringify(next));
     else platform.preferences.remove(KEY);
@@ -56,6 +56,12 @@ export const timerStore = {
     return () => listeners.delete(listener);
   },
 };
+
+// Tocar em "Pausar" na notificação do Android pausa o cronômetro do app.
+platform.studyTimer.onPause(() => {
+  const timer = timerStore.get();
+  if (timer?.runningSince) timerStore.set(pauseTimer(timer, Date.now()));
+});
 
 export function useTimerState(): TimerState | null {
   return useSyncExternalStore(timerStore.subscribe, timerStore.get, () => null);

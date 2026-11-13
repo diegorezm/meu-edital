@@ -21,3 +21,9 @@ export const googleEnabled = (env: AppEnv) =>
  * cadastro não exige confirmação e a recuperação de senha fica desligada.
  */
 export const emailEnabled = (env: AppEnv) => (env.EMAIL_MODE as string) !== "log";
+
+/**
+ * Origens do app nativo (WebView do Capacitor). Nelas não há cookie de mesma
+ * origem: o app usa o token bearer, e a API libera CORS só para elas.
+ */
+export const NATIVE_ORIGINS = ["https://localhost", "capacitor://localhost"];

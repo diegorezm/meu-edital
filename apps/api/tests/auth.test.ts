@@ -157,3 +157,22 @@ describe("sem envio de e-mail (EMAIL_MODE=log)", () => {
     expect(await config.json()).toMatchObject({ emailEnabled: false });
   });
 });
+
+describe("app nativo", () => {
+  it("libera CORS só para a origem do app e expõe o token", async () => {
+    const preflight = await call("/api/me", { method: "OPTIONS" });
+    expect(preflight.headers.get("access-control-allow-origin")).toBeNull();
+    const { app } = await import("../src/index");
+    const native = await app.fetch(
+      new Request(`${env.APP_URL}/api/config`, { headers: { origin: "https://localhost" } }),
+      env,
+    );
+    expect(native.headers.get("access-control-allow-origin")).toBe("https://localhost");
+    expect(native.headers.get("access-control-expose-headers")).toContain("set-auth-token");
+    const stranger = await app.fetch(
+      new Request(`${env.APP_URL}/api/config`, { headers: { origin: "https://site-estranho.com" } }),
+      env,
+    );
+    expect(stranger.headers.get("access-control-allow-origin")).toBeNull();
+  });
+});

@@ -8,6 +8,7 @@ import { DesktopBeam, MobileBeam } from "./Beam";
 import { SideNav, TabBar } from "./Navigation";
 import { useStore } from "../store/useStore";
 import { TimerTicker } from "../timer/TimerTicker";
+import { ReviewReminders } from "./ReviewReminders";
 import { PlayerCard } from "./PlayerCard";
 
 /** Salva o retrato da meta da semana do concurso ativo assim que ela começa. */
@@ -24,6 +25,7 @@ function Companions() {
   return (
     <>
       <TimerTicker />
+      <ReviewReminders />
       <CelebrationOverlay />
     </>
   );

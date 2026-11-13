@@ -2,17 +2,18 @@
  * Chamadas à API do mesmo Worker. Mesma origem: o cookie de sessão vai junto.
  * Os dados de estudo nunca passam por aqui: eles vão pelo sync (`useStore`).
  */
+import { apiFetch } from "./http";
+
 export async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`/api${path}`, { credentials: "same-origin" });
+  const response = await apiFetch(`/api${path}`);
   if (!response.ok) throw new Error(`Falha em ${path}: ${response.status}`);
   return response.json() as Promise<T>;
 }
 
 /** POST/DELETE com JSON. Lança erro com a mensagem amigável da API, quando houver. */
 export async function sendJson<T>(path: string, method: "POST" | "DELETE", body?: unknown): Promise<T> {
-  const response = await fetch(`/api${path}`, {
+  const response = await apiFetch(`/api${path}`, {
     method,
-    credentials: "same-origin",
     headers: body === undefined ? undefined : { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });

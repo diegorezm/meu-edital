@@ -1,4 +1,5 @@
 import { Button, buttonClass, Field, Notice, Sheet } from "@meu-edital/ui";
+import { apiUrl } from "@global/http";
 import type { useAccount } from "../hooks/useAccount";
 import type { useNotifications } from "../hooks/useNotifications";
 import { FormShell } from "./FormShell";
@@ -81,10 +82,10 @@ export function AccountView({
       <Sheet title="Seus dados" tone="gold" ribbonSize="sm" className="pt-[26px]">
         <p className="mb-3 text-sm">Leve seu estudo para onde quiser: tudo em JSON ou as sessões numa planilha.</p>
         <div className="flex flex-wrap gap-2">
-          <a href="/api/export?formato=json" download className={buttonClass("quiet")}>
+          <a href={apiUrl("/api/export?formato=json")} download className={buttonClass("quiet")}>
             Baixar tudo (JSON)
           </a>
-          <a href="/api/export?formato=csv" download className={buttonClass("quiet")}>
+          <a href={apiUrl("/api/export?formato=csv")} download className={buttonClass("quiet")}>
             Baixar sessões (CSV)
           </a>
         </div>

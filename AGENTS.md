@@ -9,6 +9,7 @@ Monorepo com Bun workspaces e Turborepo. Tudo roda na Cloudflare: um Worker (Hon
 | Caminho | Pacote | O que vai lá |
 | --- | --- | --- |
 | `apps/web` | `@meu-edital/web` | SPA React 19 + Vite + TanStack Router. |
+| `apps/mobile` | `@meu-edital/mobile` | Casca Capacitor (Android; iOS num Mac). Ver `apps/mobile/README.md`. |
 | `apps/api` | `@meu-edital/api` | Worker Hono: auth (Better Auth), dados, e depois sync, exportação e MCP. |
 | `packages/domain` | `@meu-edital/domain` | Modelos e regras de estudo, puros. Depois, a gamificação. |
 | `packages/agent-context` | `@meu-edital/agent-context` | `StudyContext`, tarefas e propostas para IA externa (Zod). |
@@ -84,6 +85,7 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
   - `index.tsx` é a entrada pública.
 - Uma feature não importa o interior de outra.
 - Dados de estudo: `useStore()` (`src/global/store/`). Leia `store.data` e altere só com `store.update((data) => funcaoDeDominio(data, ...))`; o sync cuida do resto. Nunca chame a API de sync direto de uma tela.
+- Chamadas à API passam por `apiFetch`/`apiUrl` (`src/global/http.ts`): na web são relativas com cookie; no app nativo usam `VITE_API_ORIGIN` e o token bearer.
 - Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração, e depois o cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
 - Aliases: `@features/*`, `@global/*`, `@platform/*`. Importações externas primeiro.
 - Nenhum arquivo de tela com mais de ~300 linhas.

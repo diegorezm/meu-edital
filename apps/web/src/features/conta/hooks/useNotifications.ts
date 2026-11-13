@@ -14,7 +14,7 @@ export function useNotifications() {
     Promise.all([publicConfig(), platform.push.current()])
       .then(([config, endpoint]) => {
         if (!active) return;
-        setAvailable(Boolean(config.vapidPublicKey) && platform.push.supported());
+        setAvailable(platform.native || (Boolean(config.vapidPublicKey) && platform.push.supported()));
         setEnabled(Boolean(endpoint));
       })
       .catch(() => active && setEnabled(false));
@@ -27,6 +27,13 @@ export function useNotifications() {
     setPending(true);
     setError("");
     try {
+      if (platform.native) {
+        await platform.push.subscribe("");
+        const on = Boolean(await platform.push.current());
+        if (!on) setError("O aparelho não deu permissão para avisos. Dá para liberar nas configurações do app.");
+        setEnabled(on);
+        return;
+      }
       const { vapidPublicKey } = await publicConfig();
       const subscription = vapidPublicKey ? await platform.push.subscribe(vapidPublicKey) : null;
       if (!subscription) {
@@ -46,7 +53,7 @@ export function useNotifications() {
     setPending(true);
     try {
       const endpoint = await platform.push.unsubscribe();
-      if (endpoint) await sendJson("/push/assinatura", "DELETE", { endpoint });
+      if (endpoint && !platform.native) await sendJson("/push/assinatura", "DELETE", { endpoint });
       setEnabled(false);
     } finally {
       setPending(false);

@@ -5,12 +5,12 @@ import {
   type SyncNotice,
   type Transport,
 } from "@meu-edital/sync";
+import { apiFetch, apiUrl, sessionToken } from "../http";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`/api/sync${path}`, {
-      credentials: "same-origin",
+    response = await apiFetch(`/api/sync${path}`, {
       ...init,
       headers: { "content-type": "application/json", ...init?.headers },
     });
@@ -41,8 +41,11 @@ export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
 
   const connect = () => {
     if (closed) return;
-    const url = new URL("/api/sync/ws", window.location.href);
+    const url = new URL(apiUrl("/api/sync/ws"), window.location.href);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    // No app nativo não há cookie: o token vai na URL (só nesta rota).
+    const token = sessionToken();
+    if (token) url.searchParams.set("token", token);
     socket = new WebSocket(url);
     socket.onopen = () => {
       attempts = 0;

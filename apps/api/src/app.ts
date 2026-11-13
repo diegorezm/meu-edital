@@ -1,10 +1,11 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { createDb, user } from "@meu-edital/db";
 import { eq } from "drizzle-orm";
 import { createAuth } from "./auth/auth";
 import { userData } from "./data/access";
-import { type AppContext, emailEnabled, googleEnabled } from "./env";
+import { type AppContext, emailEnabled, googleEnabled, NATIVE_ORIGINS } from "./env";
 import { clientIp, rateLimit } from "./http/rateLimit";
 import { exportRoutes } from "./http/exportRoutes";
 import { proposalRoutes } from "./http/proposalRoutes";
@@ -18,6 +19,18 @@ const app = new Hono<AppContext>().basePath("/api");
 // A resposta 101 do WebSocket tem cabeçalhos imutáveis.
 const headers = secureHeaders();
 app.use("*", (c, next) => (c.req.header("upgrade") ? next() : headers(c, next)));
+
+// O app nativo chama a API de outra origem (WebView); a web é mesma origem.
+app.use(
+  "*",
+  cors({
+    origin: (origin) => (NATIVE_ORIGINS.includes(origin) ? origin : null),
+    allowHeaders: ["authorization", "content-type", "x-captcha-response"],
+    exposeHeaders: ["set-auth-token"],
+    allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
+    maxAge: 600,
+  }),
+);
 
 // Só as ações (POST) contam para o limite; ler a sessão não.
 app.use("/auth/*", async (c, next) =>

@@ -1,0 +1,11 @@
+{
+  "appId": "app.meuedital",
+  "appName": "Meu Edital",
+  "webDir": "../web/dist",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SplashScreen": { "launchAutoHide": false, "backgroundColor": "#c2a09a" },
+    "Keyboard": { "resize": "body" },
+    "LocalNotifications": { "smallIcon": "ic_stat_notify", "iconColor": "#3f7379" }
+  }
+}

@@ -17,3 +17,4 @@ Uma decisão por arquivo: contexto, escolha e alternativas descartadas. Para mud
 | [0011](0011-gamificacao.md) | Gamificação derivada do estudo |
 | [0012](0012-oraculo-mcp.md) | Oráculo: servidor MCP remoto com OAuth do próprio app |
 | [0013](0013-web-push.md) | Avisos com a aba fechada por Web Push |
+| [0014](0014-app-mobile.md) | App mobile com Capacitor |

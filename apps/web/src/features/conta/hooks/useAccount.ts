@@ -1,4 +1,4 @@
-import { authClient, authErrorMessage, useSession } from "@global/auth";
+import { authClient, authErrorMessage, signOut as endSession, useSession } from "@global/auth";
 import { storeName } from "@global/store/StoreProvider";
 import { syncLabel, useStore } from "@global/store/useStore";
 import { platform } from "@platform/index";
@@ -16,7 +16,7 @@ export function useAccount() {
 
   const signOut = () =>
     form.run(async () => {
-      await authClient.signOut();
+      await endSession();
       await navigate({ to: "/entrar" });
     });
 

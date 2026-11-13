@@ -1,7 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
 import { faq, game, pains, steps } from "../content/landing";
-import { appUrl } from "../content/links";
+import Waitlist from "../components/Waitlist.astro";
+import { ctaUrl, waitlist } from "../content/links";
 
 const roman = ["I", "II", "III"];
 ---
@@ -18,8 +19,10 @@ const roman = ["I", "II", "III"];
           O Meu Edital monta uma jornada de estudos pelos pesos do edital e mostra o próximo bloco. Faltou um dia? A
           jornada espera por você.
         </p>
-        <a class="btn big" href={appUrl("criar")}>Começar minha jornada</a>
-        <p class="trust">Grátis · sem cartão · no celular e no navegador · software livre</p>
+        <a class="btn big" href={ctaUrl}>{waitlist ? "Quero ser avisado" : "Começar minha jornada"}</a>
+        <p class="trust">
+          {waitlist ? "Em breve · " : ""}Grátis · sem cartão · no celular e no navegador · software livre
+        </p>
       </div>
       <div class="mascot" aria-hidden="true">
         <img src="/axolote.svg" alt="" width="200" height="210" />
@@ -109,10 +112,20 @@ const roman = ["I", "II", "III"];
       </div>
     </section>
 
-    <section class="center closing">
-      <h2>A jornada espera por você</h2>
-      <p>Seu próximo bloco está a três passos.</p>
-      <a class="btn big gold" href={appUrl("criar")}>Começar minha jornada</a>
-    </section>
+    {
+      waitlist ? (
+        <section>
+          <Waitlist />
+        </section>
+      ) : (
+        <section class="center closing">
+          <h2>A jornada espera por você</h2>
+          <p>Seu próximo bloco está a três passos.</p>
+          <a class="btn big gold" href={ctaUrl}>
+            Começar minha jornada
+          </a>
+        </section>
+      )
+    }
   </main>
 </Base>

@@ -1,6 +1,6 @@
 ---
 import "../styles/site.css";
-import { appUrl } from "../content/links";
+import { appUrl, ctaUrl, waitlist } from "../content/links";
 
 interface Props {
   title: string;
@@ -27,7 +27,7 @@ const { title, description } = Astro.props;
       <span class="ol"><a class="logo t" href="/">Meu Edital</a></span>
       <span class="spacer"></span>
       <a class="btn quiet" href={appUrl("entrar")}>Entrar</a>
-      <a class="btn hide-phone" href={appUrl("criar")}>Criar conta</a>
+      <a class="btn hide-phone" href={ctaUrl}>{waitlist ? "Lista de espera" : "Criar conta"}</a>
     </header>
     <slot />
     <footer>

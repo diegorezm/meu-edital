@@ -113,6 +113,7 @@ describe("configuração pública", () => {
       turnstileSiteKey: null,
       googleEnabled: false,
       emailEnabled: true,
+      signupOpen: true,
       vapidPublicKey: expect.any(String),
     });
   });

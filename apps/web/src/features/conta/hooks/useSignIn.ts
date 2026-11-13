@@ -9,7 +9,7 @@ const safeReturn = (volta?: string) => (volta?.startsWith("/authorize?") ? volta
 
 export function useSignIn(volta?: string) {
   const navigate = useNavigate();
-  const { googleEnabled } = useAuthConfig();
+  const { googleEnabled, signupOpen } = useAuthConfig();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const form = useSubmit();
@@ -30,5 +30,5 @@ export function useSignIn(volta?: string) {
       if (error) form.setError(authErrorMessage(error));
     });
 
-  return { email, setEmail, password, setPassword, googleEnabled, submit, signInWithGoogle, ...form };
+  return { email, setEmail, password, setPassword, googleEnabled, signupOpen, submit, signInWithGoogle, ...form };
 }

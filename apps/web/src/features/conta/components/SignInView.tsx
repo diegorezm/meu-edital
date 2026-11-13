@@ -40,7 +40,7 @@ export function SignInView({ form, notice }: { form: ReturnType<typeof useSignIn
           <p>
             Primeira vez por aqui?{" "}
             <Link to="/criar-conta" className={textLinkClass}>
-              Criar conta
+              {form.signupOpen ? "Criar conta" : "Entrar na lista de espera"}
             </Link>
           </p>
         </div>

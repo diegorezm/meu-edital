@@ -3,7 +3,7 @@ import { betterAuth } from "better-auth";
 import { bearer, captcha } from "better-auth/plugins";
 import { account, createDb, session, user, verification } from "@meu-edital/db";
 import { uid } from "@meu-edital/domain";
-import { type AppEnv, emailEnabled, googleEnabled, NATIVE_ORIGINS } from "../env";
+import { type AppEnv, emailEnabled, googleEnabled, NATIVE_ORIGINS, signupOpen } from "../env";
 import { resetPasswordEmail, verificationEmail } from "./emails";
 import { createMailer, type Email } from "./mailer";
 
@@ -37,6 +37,7 @@ export function createAuth(env: AppEnv, waitUntil: WaitUntil) {
     // posse da conta: o cadastro entra direto e a recuperação de senha some.
     emailAndPassword: {
       enabled: true,
+      disableSignUp: !signupOpen(env),
       requireEmailVerification: canEmail,
       minPasswordLength: 8,
       revokeSessionsOnPasswordReset: true,
@@ -56,6 +57,7 @@ export function createAuth(env: AppEnv, waitUntil: WaitUntil) {
             clientId: env.GOOGLE_CLIENT_ID!,
             clientSecret: env.GOOGLE_CLIENT_SECRET!,
             prompt: "select_account",
+            disableImplicitSignUp: !signupOpen(env),
           },
         }
       : {},

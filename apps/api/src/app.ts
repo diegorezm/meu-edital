@@ -5,11 +5,12 @@ import { createDb, user } from "@meu-edital/db";
 import { eq } from "drizzle-orm";
 import { createAuth } from "./auth/auth";
 import { userData } from "./data/access";
-import { type AppContext, emailEnabled, googleEnabled, NATIVE_ORIGINS } from "./env";
+import { type AppContext, emailEnabled, googleEnabled, NATIVE_ORIGINS, signupOpen } from "./env";
 import { clientIp, rateLimit } from "./http/rateLimit";
 import { exportRoutes } from "./http/exportRoutes";
 import { proposalRoutes } from "./http/proposalRoutes";
 import { requireUser } from "./http/session";
+import { waitlistRoutes } from "./http/waitlistRoutes";
 import { connectionRoutes } from "./mcp/oauth";
 import { pushRoutes } from "./push/routes";
 import { syncRoutes } from "./sync/routes";
@@ -20,16 +21,16 @@ const app = new Hono<AppContext>().basePath("/api");
 const headers = secureHeaders();
 app.use("*", (c, next) => (c.req.header("upgrade") ? next() : headers(c, next)));
 
-// O app nativo chama a API de outra origem (WebView); a web é mesma origem.
-app.use(
-  "*",
+// O app nativo chama a API de outra origem (WebView), e o site de divulgação
+// lê a configuração e manda a lista de espera; a web é mesma origem.
+app.use("*", (c, next) =>
   cors({
-    origin: (origin) => (NATIVE_ORIGINS.includes(origin) ? origin : null),
+    origin: (origin) => (NATIVE_ORIGINS.includes(origin) || origin === c.env.SITE_URL ? origin : null),
     allowHeaders: ["authorization", "content-type", "x-captcha-response"],
     exposeHeaders: ["set-auth-token"],
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
     maxAge: 600,
-  }),
+  })(c, next),
 );
 
 // Só as ações (POST) contam para o limite; ler a sessão não.
@@ -51,6 +52,7 @@ const routes = app
   .route("/export", exportRoutes)
   .route("/push", pushRoutes)
   .route("/oraculo/conexoes", connectionRoutes)
+  .route("/lista-de-espera", waitlistRoutes)
   .get("/health", (c) => c.json({ ok: true }))
   /** O que a tela de login precisa saber antes de existir sessão. */
   .get("/config", (c) =>
@@ -58,6 +60,7 @@ const routes = app
       turnstileSiteKey: c.env.TURNSTILE_SECRET_KEY ? c.env.TURNSTILE_SITE_KEY || null : null,
       googleEnabled: googleEnabled(c.env),
       emailEnabled: emailEnabled(c.env),
+      signupOpen: signupOpen(c.env),
       vapidPublicKey: c.env.VAPID_PRIVATE_KEY ? c.env.VAPID_PUBLIC_KEY : null,
     }),
   )

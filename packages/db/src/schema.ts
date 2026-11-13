@@ -304,6 +304,16 @@ export const pushSubscriptions = sqliteTable(
   (t) => [index("push_subscriptions_user_idx").on(t.userId)],
 );
 
+/**
+ * Lista de espera: e-mails de quem quer ser avisado quando o cadastro abrir.
+ * Não tem dono; só o administrador lê (pelo wrangler).
+ */
+export const waitlist = sqliteTable("waitlist", {
+  email: text("email").primaryKey(),
+  source: text("source").notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
 /** Tabelas de estudo, na ordem pais antes dos filhos. */
 export const studyTables = {
   exams,

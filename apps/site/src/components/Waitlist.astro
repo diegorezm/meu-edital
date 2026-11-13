@@ -1,0 +1,77 @@
+---
+import { APP } from "../content/links";
+---
+
+<div class="sheet waitlist" id="lista">
+  <div class="hang ol"><h2 class="ribbon gold">Lista de espera</h2></div>
+  <form id="lista-form" data-api={APP} novalidate>
+    <p>As vagas ainda não abriram. Deixe seu e-mail e avisamos quando abrirem.</p>
+    <label for="lista-email">Seu e-mail</label>
+    <input id="lista-email" name="email" type="email" autocomplete="email" required />
+    <div id="lista-captcha"></div>
+    <button class="btn big" type="submit">Quero ser avisado</button>
+    <p class="fine">Só para avisar da abertura. Nada de spam. Veja a <a href="/privacidade/">privacidade</a>.</p>
+  </form>
+  <p class="status" id="lista-status" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  type Turnstile = { render(el: HTMLElement, opts: Record<string, unknown>): string; reset(id?: string): void };
+  const w = window as unknown as { turnstile?: Turnstile };
+  const form = document.getElementById("lista-form") as HTMLFormElement;
+  const status = document.getElementById("lista-status")!;
+  const api = form.dataset.api!;
+  let token = "";
+  let siteKey: string | null = null;
+
+  const say = (text: string, error = false) => {
+    status.textContent = text;
+    status.classList.toggle("error", error);
+  };
+
+  fetch(`${api}/api/config`)
+    .then((r) => r.json() as Promise<{ turnstileSiteKey: string | null }>)
+    .then(({ turnstileSiteKey }) => {
+      siteKey = turnstileSiteKey;
+      if (!siteKey) return;
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.onload = () =>
+        w.turnstile?.render(document.getElementById("lista-captcha")!, {
+          sitekey: siteKey,
+          language: "pt-br",
+          callback: (t: string) => (token = t),
+          "expired-callback": () => (token = ""),
+        });
+      document.head.appendChild(script);
+    })
+    .catch(() => undefined);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
+    if (!email.includes("@")) return say("Confira o e-mail.", true);
+    if (siteKey && !token) return say("Confirme que você não é um robô.", true);
+    const button = form.querySelector("button")!;
+    button.disabled = true;
+    say("Enviando...");
+    try {
+      const response = await fetch(`${api}/api/lista-de-espera`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(token ? { "x-captcha-response": token } : {}) },
+        body: JSON.stringify({ email, source: "site" }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(body.error ?? "Não deu certo agora. Tente de novo.");
+      form.hidden = true;
+      say("Pronto! Avisamos você por e-mail quando as vagas abrirem.");
+    } catch (error) {
+      say((error as Error).message, true);
+      w.turnstile?.reset();
+      token = "";
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>

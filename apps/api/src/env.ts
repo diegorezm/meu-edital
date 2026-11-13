@@ -20,6 +20,12 @@ export const googleEnabled = (env: AppEnv) =>
  * Sem domínio, os e-mails só vão para o log (EMAIL_MODE=log). Nesse caso o
  * cadastro não exige confirmação e a recuperação de senha fica desligada.
  */
+/**
+ * Com SIGNUP_MODE=waitlist, ninguém cria conta: quem já tem conta entra, e
+ * os interessados deixam o e-mail na lista de espera.
+ */
+export const signupOpen = (env: AppEnv) => (env.SIGNUP_MODE as string) !== "waitlist";
+
 export const emailEnabled = (env: AppEnv) => (env.EMAIL_MODE as string) !== "log";
 
 /**

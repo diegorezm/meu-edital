@@ -43,6 +43,13 @@
       "when": 1794539493754,
       "tag": "0005_web_push",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794542202878,
+      "tag": "0006_lista_de_espera",
+      "breakpoints": true
     }
   ]
 }

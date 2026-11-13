@@ -8,7 +8,7 @@
 
 Um app gratuito de estudos para concursos públicos que monta uma jornada pelos pesos do edital e mostra sempre o próximo bloco. Faltou um dia? A jornada espera por você.
 
-[**Começar minha jornada**](https://meu-edital.diegommrez12.workers.dev/?conta=criar) · [Conhecer o app](https://meu-edital-site.diegommrez12.workers.dev)
+As vagas ainda não abriram: [**entre na lista de espera**](https://meu-edital-site.diegommrez12.workers.dev/#lista) e avisamos quando abrirem.
 
 </div>
 
@@ -80,6 +80,8 @@ Conecte a IA que você já usa (Claude, ChatGPT ou outra) ao seu estudo. Ela lê
 O app funciona no navegador do computador e do celular, e continua funcionando sem internet: o estudo fica salvo no aparelho e sincroniza quando a conexão volta. Um app para Android está a caminho.
 
 ## Perguntas rápidas
+
+**Como faço para usar?** As vagas ainda não abriram. Deixe seu e-mail na [lista de espera](https://meu-edital-site.diegommrez12.workers.dev/#lista).
 
 **É grátis?** Sim. Sem cartão e sem período de teste.
 

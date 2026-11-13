@@ -45,4 +45,19 @@ O app móvel tem instruções próprias em [apps/mobile/README.md](../apps/mobil
 | Produção | https://meu-edital.diegommrez12.workers.dev | https://meu-edital-site.diegommrez12.workers.dev |
 | Preview | https://meu-edital-preview.diegommrez12.workers.dev | https://meu-edital-site-preview.diegommrez12.workers.dev |
 
+### Cadastro e lista de espera
+
+A variável `SIGNUP_MODE` do `wrangler.jsonc` decide quem cria conta. Com `open` (local e preview), qualquer pessoa cria conta. Com `waitlist` (produção), o cadastro fica fechado: quem já tem conta entra, e os interessados deixam o e-mail na lista de espera (`POST /api/lista-de-espera`), pelo site ou pela tela de criar conta. O site mostra a lista quando é construído com `PUBLIC_WAITLIST=1`.
+
+Para ler a lista:
+
+```bash
+cd apps/api
+bunx wrangler d1 execute DB --remote --env production --command "select email, source, created_at from waitlist order by created_at"
+```
+
+Para abrir o cadastro, troque `SIGNUP_MODE` para `open` em `production`, tire o `PUBLIC_WAITLIST=1` do `deploy:production` do site e publique os dois.
+
+### Publicação automática
+
 Cada push na `main` que passa no CI publica a produção. Cada PR ganha uma versão de prévia. Os workflows precisam dos segredos `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`.

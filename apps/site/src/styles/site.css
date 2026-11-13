@@ -78,3 +78,15 @@ footer a { color: var(--paper-raised); }
   .beam .hide-phone { display: none; }
   .ribbon { font-size: 22px; padding: 2px 28px 4px; }
 }
+
+.waitlist { max-width: 560px; margin: 0 auto; text-align: left; }
+.waitlist form { display: flex; flex-direction: column; gap: 10px; }
+.waitlist form[hidden] { display: none; }
+.waitlist label { font-weight: 800; }
+.waitlist input { font: inherit; color: var(--ink); background: var(--paper-raised); border: 2px solid var(--ink); border-radius: 5px; padding: 10px 12px; min-height: 44px; }
+.waitlist .btn { align-self: flex-start; cursor: pointer; }
+.waitlist .btn:disabled { opacity: 0.6; cursor: default; }
+.waitlist .fine { font-size: 14px; color: var(--ink-muted); }
+.waitlist .status { font-weight: 800; margin-top: 8px; }
+.waitlist .status:empty { display: none; }
+.waitlist .status.error { color: var(--rose-strong); }

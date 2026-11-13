@@ -11,10 +11,15 @@ export async function getJson<T>(path: string): Promise<T> {
 }
 
 /** POST/DELETE com JSON. Lança erro com a mensagem amigável da API, quando houver. */
-export async function sendJson<T>(path: string, method: "POST" | "DELETE", body?: unknown): Promise<T> {
+export async function sendJson<T>(
+  path: string,
+  method: "POST" | "DELETE",
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<T> {
   const response = await apiFetch(`/api${path}`, {
     method,
-    headers: body === undefined ? undefined : { "content-type": "application/json" },
+    headers: body === undefined ? headers : { ...headers, "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const payload = (await response.json().catch(() => ({}))) as T & { error?: string };
@@ -27,6 +32,8 @@ export type PublicConfig = {
   googleEnabled: boolean;
   /** Falso enquanto não há envio de e-mail: sem confirmação e sem recuperar senha. */
   emailEnabled: boolean;
+  /** Falso em produção enquanto o cadastro está fechado: só a lista de espera. */
+  signupOpen: boolean;
   /** Chave pública do Web Push; null quando o servidor não envia avisos. */
   vapidPublicKey: string | null;
 };

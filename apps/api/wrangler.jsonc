@@ -26,6 +26,9 @@
     "APP_URL": "http://localhost:5173",
     "EXTRA_ORIGINS": "http://localhost:8787",
     "EMAIL_MODE": "log",
+    // open: qualquer um cria conta; waitlist: só a lista de espera.
+    "SIGNUP_MODE": "open",
+    "SITE_URL": "http://localhost:4321",
     "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
     "VAPID_PUBLIC_KEY": "BNXF45Si-7YxbCtU3FpFCVh0NrytWVidfYJfs79hzUg2r52PjxODFYI3m3PU7JBPGNxXRYAX8P-VHTGW68ENCdI"
   },
@@ -50,6 +53,8 @@
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital-preview.diegommrez12.workers.dev",
+        "SIGNUP_MODE": "open",
+        "SITE_URL": "https://meu-edital-site-preview.diegommrez12.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
         "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
@@ -76,6 +81,8 @@
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital.diegommrez12.workers.dev",
+        "SIGNUP_MODE": "waitlist",
+        "SITE_URL": "https://meu-edital-site.diegommrez12.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
         "TURNSTILE_SITE_KEY": "0x4AAAAAAF_DhmIY7Yp3ZNGq",

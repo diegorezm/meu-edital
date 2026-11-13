@@ -34,4 +34,11 @@ export type Platform = {
     show(title: string, body: string): Promise<void>;
   };
   vibrate(pattern: number | number[]): void;
+  /** Avisos com o app fechado (Web Push na web). */
+  push: {
+    supported(): boolean;
+    current(): Promise<string | null>;
+    subscribe(vapidPublicKey: string): Promise<PushSubscriptionJSON | null>;
+    unsubscribe(): Promise<string | null>;
+  };
 };

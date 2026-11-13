@@ -12,6 +12,8 @@ export default defineConfig({
           BETTER_AUTH_SECRET: "segredo-de-teste-com-mais-de-32-caracteres",
           // Sem Turnstile e sem Google nos testes, mesmo que o .dev.vars tenha.
           TURNSTILE_SECRET_KEY: "",
+          // Só precisa existir: os testes de envio passam uma chave gerada na hora.
+          VAPID_PRIVATE_KEY: "chave-de-teste",
           GOOGLE_CLIENT_ID: "",
           GOOGLE_CLIENT_SECRET: "",
         },

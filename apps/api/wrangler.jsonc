@@ -19,15 +19,18 @@
   "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
   // Concessões e tokens do OAuth do Oráculo (MCP).
   "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "local-oauth-kv" }],
-  "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+  "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
   "vars": {
     // Local: o Vite (5173) faz proxy de /api para o Worker; o Worker também
     // serve o build direto em 8787. Os dois endereços são confiáveis.
     "APP_URL": "http://localhost:5173",
     "EXTRA_ORIGINS": "http://localhost:8787",
     "EMAIL_MODE": "log",
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "VAPID_PUBLIC_KEY": "BNXF45Si-7YxbCtU3FpFCVh0NrytWVidfYJfs79hzUg2r52PjxODFYI3m3PU7JBPGNxXRYAX8P-VHTGW68ENCdI"
   },
+  // Lembrete diário de revisões vencidas por Web Push (11h UTC = 8h em Brasília).
+  "triggers": { "crons": ["0 11 * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
@@ -44,13 +47,15 @@
     "preview": {
       "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PREVIEW_OAUTH_KV_ID" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
-      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital-preview.WORKERS_SUBDOMAIN.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
-        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "VAPID_PUBLIC_KEY": "PREVIEW_VAPID_PUBLIC_KEY"
       },
+      "triggers": { "crons": ["0 11 * * *"] },
       "d1_databases": [
         {
           "binding": "DB",
@@ -67,13 +72,15 @@
     "production": {
       "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PRODUCTION_OAUTH_KV_ID" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
-      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
+      "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
         "APP_URL": "https://meu-edital.WORKERS_SUBDOMAIN.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
-        "TURNSTILE_SITE_KEY": ""
+        "TURNSTILE_SITE_KEY": "",
+        "VAPID_PUBLIC_KEY": "PRODUCTION_VAPID_PUBLIC_KEY"
       },
+      "triggers": { "crons": ["0 11 * * *"] },
       "d1_databases": [
         {
           "binding": "DB",

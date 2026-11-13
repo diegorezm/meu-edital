@@ -10,6 +10,7 @@ import { exportRoutes } from "./http/exportRoutes";
 import { proposalRoutes } from "./http/proposalRoutes";
 import { requireUser } from "./http/session";
 import { connectionRoutes } from "./mcp/oauth";
+import { pushRoutes } from "./push/routes";
 import { syncRoutes } from "./sync/routes";
 
 const app = new Hono<AppContext>().basePath("/api");
@@ -35,6 +36,7 @@ const routes = app
   .route("/sync", syncRoutes)
   .route("/proposals", proposalRoutes)
   .route("/export", exportRoutes)
+  .route("/push", pushRoutes)
   .route("/oraculo/conexoes", connectionRoutes)
   .get("/health", (c) => c.json({ ok: true }))
   /** O que a tela de login precisa saber antes de existir sessão. */
@@ -43,6 +45,7 @@ const routes = app
       turnstileSiteKey: c.env.TURNSTILE_SECRET_KEY ? c.env.TURNSTILE_SITE_KEY || null : null,
       googleEnabled: googleEnabled(c.env),
       emailEnabled: emailEnabled(c.env),
+      vapidPublicKey: c.env.VAPID_PRIVATE_KEY ? c.env.VAPID_PUBLIC_KEY : null,
     }),
   )
   .get("/me", async (c) => {

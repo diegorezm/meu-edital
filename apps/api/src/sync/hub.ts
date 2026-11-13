@@ -1,9 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
 import type { SyncNotice } from "@meu-edital/sync";
+import { sendPush } from "../push/send";
+
+type BlockEnd = { userId: string; endsAt: number; subject: string };
 
 /**
  * Um por usuário. Guarda os WebSockets dos aparelhos dele (com hibernação,
- * sem custo parado) e avisa todos quando a versão muda. Só leva avisos: os
+ * sem custo parado) e avisa todos quando a versão muda. Também guarda o
+ * alarme do fim de bloco, para avisar por Web Push com a aba fechada. Só leva avisos: os
  * dados vêm sempre pelo pull, então perder a conexão não perde nada.
  */
 export class UserHub extends DurableObject<Env> {
@@ -27,6 +31,29 @@ export class UserHub extends DurableObject<Env> {
       }
     }
     return sockets.length;
+  }
+
+  /** Agenda (ou remarca) o aviso de fim de bloco. */
+  async scheduleBlockEnd(userId: string, endsAt: number, subject: string): Promise<void> {
+    await this.ctx.storage.put<BlockEnd>("blockEnd", { userId, endsAt, subject });
+    await this.ctx.storage.setAlarm(endsAt);
+  }
+
+  async cancelBlockEnd(): Promise<void> {
+    await this.ctx.storage.delete("blockEnd");
+    await this.ctx.storage.deleteAlarm();
+  }
+
+  async alarm(): Promise<void> {
+    const block = await this.ctx.storage.get<BlockEnd>("blockEnd");
+    await this.ctx.storage.delete("blockEnd");
+    if (!block) return;
+    await sendPush(this.env, block.userId, {
+      title: "Bloco concluído",
+      body: `O tempo de ${block.subject} acabou. Registre o estudo quando quiser.`,
+      url: "/estudar",
+      tag: "fim-de-bloco",
+    });
   }
 
   async webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {

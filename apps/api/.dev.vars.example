@@ -5,3 +5,5 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 # Login com Google: deixe vazio até ter as credenciais.
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+# Web Push: gere com `bunx @pushforge/builder vapid` (JWK privada aqui, pública em VAPID_PUBLIC_KEY no wrangler.jsonc).
+VAPID_PRIVATE_KEY=

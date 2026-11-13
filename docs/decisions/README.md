@@ -16,3 +16,4 @@ Uma decisão por arquivo: contexto, escolha e alternativas descartadas. Para mud
 | [0010](0010-protocolo-de-sync.md) | Protocolo de sync (push, pull, fila e banco local) |
 | [0011](0011-gamificacao.md) | Gamificação derivada do estudo |
 | [0012](0012-oraculo-mcp.md) | Oráculo: servidor MCP remoto com OAuth do próprio app |
+| [0013](0013-web-push.md) | Avisos com a aba fechada por Web Push |

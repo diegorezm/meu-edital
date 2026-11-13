@@ -26,6 +26,8 @@ export type PublicConfig = {
   googleEnabled: boolean;
   /** Falso enquanto não há envio de e-mail: sem confirmação e sem recuperar senha. */
   emailEnabled: boolean;
+  /** Chave pública do Web Push; null quando o servidor não envia avisos. */
+  vapidPublicKey: string | null;
 };
 
 let config: Promise<PublicConfig> | undefined;

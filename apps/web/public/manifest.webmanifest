@@ -1,0 +1,14 @@
+{
+  "name": "Meu Edital",
+  "short_name": "Meu Edital",
+  "description": "Jornada de estudos para concursos, pelos pesos do edital.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#c2a09a",
+  "theme_color": "#7a5548",
+  "icons": [
+    { "src": "/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

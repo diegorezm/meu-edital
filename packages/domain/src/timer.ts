@@ -10,6 +10,8 @@ export type TimerState = {
   topicId: string;
   type: StudyType;
   cycleItemId?: string;
+  /** Nome da matéria, para os avisos. */
+  subjectName?: string;
   /** Minutos planejados (do bloco), para o aviso de fim. */
   plannedMinutes?: number;
   /** Instante (ms) em que voltou a correr; null quando pausado. */

@@ -1,9 +1,16 @@
-import { Button, buttonClass, Field, Sheet } from "@meu-edital/ui";
+import { Button, buttonClass, Field, Notice, Sheet } from "@meu-edital/ui";
 import type { useAccount } from "../hooks/useAccount";
+import type { useNotifications } from "../hooks/useNotifications";
 import { FormShell } from "./FormShell";
 
 /** Conta: dados, estado do sync, sair, exportar e excluir (LGPD e lojas). */
-export function AccountView({ form }: { form: ReturnType<typeof useAccount> }) {
+export function AccountView({
+  form,
+  notifications,
+}: {
+  form: ReturnType<typeof useAccount>;
+  notifications: ReturnType<typeof useNotifications>;
+}) {
   if (!form.user) return null;
   return (
     <div className="mx-auto flex max-w-md flex-col gap-[26px]">
@@ -50,6 +57,27 @@ export function AccountView({ form }: { form: ReturnType<typeof useAccount> }) {
           )}
         </FormShell>
       </Sheet>
+      {notifications.available && (
+        <Sheet title="Avisos" tone="gold" ribbonSize="sm" className="pt-[26px]">
+          <p className="mb-3 text-sm">
+            Um aviso quando o tempo do bloco acabar e um lembrete por dia se houver revisão vencida. Nada além disso.
+          </p>
+          {notifications.error && (
+            <div className="mb-3">
+              <Notice tone="error">{notifications.error}</Notice>
+            </div>
+          )}
+          {notifications.enabled ? (
+            <Button variant="quiet" disabled={notifications.pending} onClick={() => void notifications.turnOff()}>
+              Desligar avisos
+            </Button>
+          ) : (
+            <Button disabled={notifications.pending || notifications.enabled === null} onClick={() => void notifications.turnOn()}>
+              Ligar avisos
+            </Button>
+          )}
+        </Sheet>
+      )}
       <Sheet title="Seus dados" tone="gold" ribbonSize="sm" className="pt-[26px]">
         <p className="mb-3 text-sm">Leve seu estudo para onde quiser: tudo em JSON ou as sessões numa planilha.</p>
         <div className="flex flex-wrap gap-2">

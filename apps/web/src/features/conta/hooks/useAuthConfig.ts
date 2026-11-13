@@ -1,7 +1,7 @@
 import { type PublicConfig, publicConfig } from "@global/api";
 import { useEffect, useState } from "react";
 
-const fallback: PublicConfig = { turnstileSiteKey: null, googleEnabled: false, emailEnabled: false };
+const fallback: PublicConfig = { turnstileSiteKey: null, googleEnabled: false, emailEnabled: false, vapidPublicKey: null };
 
 export function useAuthConfig(): PublicConfig {
   const [config, setConfig] = useState(fallback);

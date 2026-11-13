@@ -36,6 +36,13 @@
       "when": 1794538487328,
       "tag": "0004_simulados",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794539493754,
+      "tag": "0005_web_push",
+      "breakpoints": true
     }
   ]
 }

@@ -174,7 +174,9 @@ export function useStudy(search: StudySearch) {
     goFree: () =>
       change({ cycleItemId: undefined, plannedMinutes: undefined }),
     start: () =>
-      active && exam && timerStore.set(startTimer({ ...active, examId: exam.id }, Date.now())),
+      active &&
+      exam &&
+      timerStore.set(startTimer({ ...active, examId: exam.id, subjectName: subject?.name }, Date.now())),
     pause: () => timer && timerStore.set(pauseTimer(timer, Date.now())),
     resume: () => timer && timerStore.set(resumeTimer(timer, Date.now())),
     discard: () => timerStore.set(null),

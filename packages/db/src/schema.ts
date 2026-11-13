@@ -289,6 +289,21 @@ export const proposals = sqliteTable(
   (t) => [index("proposals_user_status_idx").on(t.userId, t.status)],
 );
 
+/** Assinaturas de Web Push (um registro por navegador). */
+export const pushSubscriptions = sqliteTable(
+  "push_subscriptions",
+  {
+    endpoint: text("endpoint").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("push_subscriptions_user_idx").on(t.userId)],
+);
+
 /** Tabelas de estudo, na ordem pais antes dos filhos. */
 export const studyTables = {
   exams,

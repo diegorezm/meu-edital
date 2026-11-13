@@ -1,5 +1,6 @@
 import { clearIndexedDbStore, indexedDbStore } from "./indexedDb";
 import type { Platform } from "./types";
+import { webPush } from "./webPush";
 
 const storage = () => {
   try {
@@ -38,6 +39,7 @@ export const webPlatform: Platform = {
         new Notification(title, { body });
     },
   },
+  push: webPush,
   vibrate(pattern) {
     navigator.vibrate?.(pattern);
   },

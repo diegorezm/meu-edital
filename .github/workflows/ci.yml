@@ -28,7 +28,7 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       # Segredos de teste: só valem no Worker local do teste.
       - run: |
-          printf 'BETTER_AUTH_SECRET=%s\nTURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA\n' "$(openssl rand -hex 32)" > apps/api/.dev.vars
+          printf 'BETTER_AUTH_SECRET=%s\nTURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA\nVAPID_PRIVATE_KEY=\n' "$(openssl rand -hex 32)" > apps/api/.dev.vars
       - run: bun run e2e
         env:
           CI: "true"

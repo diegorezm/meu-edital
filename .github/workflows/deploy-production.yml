@@ -1,4 +1,4 @@
-# Publica o Worker (app + API) em produção a cada push na main, depois que o
+# Publica o Worker (app + API) e o site em produção a cada push na main, depois que o
 # CI passa. Segredos do repositório: CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID.
 name: Deploy production
 
@@ -34,3 +34,6 @@ jobs:
         working-directory: apps/api
       - run: bunx wrangler deploy --env production
         working-directory: apps/api
+      - name: Site de divulgação
+        run: bun run deploy:production
+        working-directory: apps/site

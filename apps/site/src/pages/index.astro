@@ -1,0 +1,118 @@
+---
+import Base from "../layouts/Base.astro";
+import { faq, game, pains, steps } from "../content/landing";
+import { appUrl } from "../content/links";
+
+const roman = ["I", "II", "III"];
+---
+
+<Base
+  title="Meu Edital: jornada de estudos para concurso"
+  description="Monte uma jornada de estudos pelos pesos do edital, saiba o próximo bloco e acompanhe revisões e a meta da semana. Grátis, no celular e no navegador."
+>
+  <main class="wrap">
+    <div class="sheet hero">
+      <div>
+        <h1>Seu edital tem 12 matérias. Hoje você estuda qual?</h1>
+        <p class="lead">
+          O Meu Edital monta uma jornada de estudos pelos pesos do edital e mostra o próximo bloco. Faltou um dia? A
+          jornada espera por você.
+        </p>
+        <a class="btn big" href={appUrl("criar")}>Começar minha jornada</a>
+        <p class="trust">Grátis · sem cartão · no celular e no navegador · software livre</p>
+      </div>
+      <div class="mascot" aria-hidden="true">
+        <img src="/axolote.svg" alt="" width="200" height="210" />
+        <img src="/capelo.svg" alt="" width="200" height="210" />
+      </div>
+    </div>
+
+    <section>
+      <div class="sheet">
+        <div class="hang ol"><h2 class="ribbon maroon">Por que o cronograma quebra</h2></div>
+        <div class="grid3">
+          {
+            pains.map((item) => (
+              <div class="pain">
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sheet">
+        <div class="hang ol"><h2 class="ribbon">Do edital ao primeiro bloco</h2></div>
+        <div class="grid3" style="margin-top: 26px">
+          {
+            steps.map((item, i) => (
+              <div class="card">
+                <span class="num" aria-hidden="true">{roman[i]}</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sheet">
+        <div class="hang ol"><h2 class="ribbon gold">Estudar vira jogo</h2></div>
+        <p class="center" style="max-width: 60ch; margin: 6px auto 0">
+          Só estudo de verdade dá recompensa. Abrir o app e clicar em botão não rende nada, então o vício é em estudar.
+        </p>
+        <div class="game">
+          {
+            game.map((item) => (
+              <div class="tile">
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sheet">
+        <div class="hang ol"><h2 class="ribbon">O Oráculo</h2></div>
+        <div class="two">
+          <p>
+            Conecte a IA que você já usa (Claude, ChatGPT ou outra) ao seu estudo. Ela lê como foi sua semana e propõe
+            ajustes de peso, meta e jornada.
+          </p>
+          <p>
+            <strong>Nada muda sem você aprovar.</strong> Cada proposta aparece como antes e depois. O app não cobra pela
+            IA: quem roda o modelo é a sua conta.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sheet">
+        <div class="hang ol"><h2 class="ribbon gold">Perguntas rápidas</h2></div>
+        {
+          faq.map((item, i) => (
+            <details open={i === 0}>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="center closing">
+      <h2>A jornada espera por você</h2>
+      <p>Seu próximo bloco está a três passos.</p>
+      <a class="btn big gold" href={appUrl("criar")}>Começar minha jornada</a>
+    </section>
+  </main>
+</Base>

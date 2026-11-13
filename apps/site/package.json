@@ -1,0 +1,23 @@
+{
+  "name": "@meu-edital/site",
+  "version": "0.0.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build",
+    "typecheck": "astro check",
+    "deploy:preview": "PUBLIC_APP_URL=https://meu-edital-preview.diegommrez12.workers.dev astro build && wrangler deploy --env preview",
+    "deploy:production": "PUBLIC_APP_URL=https://meu-edital.diegommrez12.workers.dev astro build && wrangler deploy --env production"
+  },
+  "dependencies": {
+    "@fontsource/alegreya-sans": "^5.3.0",
+    "@fontsource/amatic-sc": "^5.3.0",
+    "astro": "^7.4.11"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "wrangler": "^4.161.0"
+  }
+}

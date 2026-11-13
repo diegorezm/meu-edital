@@ -1,0 +1,37 @@
+---
+import "../styles/site.css";
+import { appUrl } from "../content/links";
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#7a5548" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="pt_BR" />
+    <link rel="icon" type="image/png" href="/icone-192.png" />
+  </head>
+  <body>
+    <header class="beam">
+      <span class="ol"><a class="logo t" href="/">Meu Edital</a></span>
+      <span class="spacer"></span>
+      <a class="btn quiet" href={appUrl("entrar")}>Entrar</a>
+      <a class="btn hide-phone" href={appUrl("criar")}>Criar conta</a>
+    </header>
+    <slot />
+    <footer>
+      Meu Edital · software livre (GPL-3.0) · <a href="/privacidade/">Privacidade</a>
+    </footer>
+  </body>
+</html>

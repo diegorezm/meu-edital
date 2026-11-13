@@ -3,6 +3,7 @@ _old/
 
 node_modules/
 dist/
+.astro/
 .turbo/
 .wrangler/
 coverage/

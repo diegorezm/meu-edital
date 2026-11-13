@@ -70,6 +70,7 @@
       ]
     },
     "production": {
+      "name": "meu-edital",
       "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "ca2ce7e92fea4642ba17277e40d98072" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
@@ -77,8 +78,8 @@
         "APP_URL": "https://meu-edital.diegommrez12.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
-        "TURNSTILE_SITE_KEY": "",
-        "VAPID_PUBLIC_KEY": "PRODUCTION_VAPID_PUBLIC_KEY"
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAF_DhmIY7Yp3ZNGq",
+        "VAPID_PUBLIC_KEY": "BLcdxrhtGvlwULgw06k79-NfCgu7heiOB0ZwMfnKqlcnrENvR0DodAxZhyDZNGMNwo4d2UbreFWSS0KuL3Ciras"
       },
       "triggers": { "crons": ["0 11 * * *"] },
       "d1_databases": [

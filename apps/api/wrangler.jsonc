@@ -35,7 +35,7 @@
     {
       "binding": "DB",
       "database_name": "meu-edital-preview",
-      "database_id": "53511197-bdfd-4941-b313-dd8b207a1bd2",
+      "database_id": "50183b85-4528-46e9-9fd7-e7d425158118",
       "migrations_dir": "../../packages/db/migrations"
     }
   ],
@@ -45,22 +45,22 @@
   ],
   "env": {
     "preview": {
-      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PREVIEW_OAUTH_KV_ID" }],
+      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "38022bc855ef4ebc8275f30e05725d88" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
-        "APP_URL": "https://meu-edital-preview.WORKERS_SUBDOMAIN.workers.dev",
+        "APP_URL": "https://meu-edital-preview.diegommrez12.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
         "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
-        "VAPID_PUBLIC_KEY": "PREVIEW_VAPID_PUBLIC_KEY"
+        "VAPID_PUBLIC_KEY": "BJb_UbQ9nkT_s8TjApmlswwpJutJXucjgnjYdfbpC4U9eNusa-G1Re_RpUalNhJUnHJW2AqdyXOUAJVXWunlbCU"
       },
       "triggers": { "crons": ["0 11 * * *"] },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "meu-edital-preview",
-          "database_id": "53511197-bdfd-4941-b313-dd8b207a1bd2",
+          "database_id": "50183b85-4528-46e9-9fd7-e7d425158118",
           "migrations_dir": "../../packages/db/migrations"
         }
       ],
@@ -70,11 +70,11 @@
       ]
     },
     "production": {
-      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PRODUCTION_OAUTH_KV_ID" }],
+      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "ca2ce7e92fea4642ba17277e40d98072" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },
       "vars": {
-        "APP_URL": "https://meu-edital.WORKERS_SUBDOMAIN.workers.dev",
+        "APP_URL": "https://meu-edital.diegommrez12.workers.dev",
         "EXTRA_ORIGINS": "",
         "EMAIL_MODE": "log",
         "TURNSTILE_SITE_KEY": "",
@@ -85,7 +85,7 @@
         {
           "binding": "DB",
           "database_name": "meu-edital-production",
-          "database_id": "85fbc175-38b8-447c-ae85-ba513056bf1d",
+          "database_id": "c0b51811-4533-4359-ae45-58bcf83caa24",
           "migrations_dir": "../../packages/db/migrations"
         }
       ],

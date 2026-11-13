@@ -10,6 +10,9 @@ test("criar conta, montar concurso, estudar e ver a semana", async ({ page }) =>
   await page.getByLabel("Senha").fill("senha-forte-123");
   // Turnstile com a chave de teste aprova sozinho; espera o token chegar.
   await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", { timeout: 20_000 });
+  // Aceite dos termos: o input é oculto (sr-only), então marca pelo teclado.
+  await page.getByRole("checkbox").press("Space");
+  await expect(page.getByRole("checkbox")).toBeChecked();
   await page.getByRole("button", { name: "Criar conta" }).click();
 
   // Primeiro concurso.

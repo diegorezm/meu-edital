@@ -1,5 +1,5 @@
 import { authClient, authErrorMessage } from "@global/auth";
-import { rememberSignupAcceptance } from "@global/legal/legal";
+import { clearSignupAcceptance, rememberSignupAcceptance } from "@global/legal/legal";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthConfig } from "./useAuthConfig";
@@ -21,6 +21,9 @@ export function useSignUp() {
       if (!accepted) return form.setError("Aceite os termos para criar a conta.");
       if (turnstileSiteKey && !captchaToken)
         return form.setError("Confirme que você não é um robô.");
+      // Guarda o aceite antes: a sessão nasce com o cadastro e o app logado
+      // já pode checar os termos antes desta função continuar.
+      await rememberSignupAcceptance();
       const { data, error } = await authClient.signUp.email({
         name: name.trim(),
         email: email.trim(),
@@ -28,8 +31,10 @@ export function useSignUp() {
         callbackURL: "/",
         fetchOptions: captchaToken ? { headers: { "x-captcha-response": captchaToken } } : {},
       });
-      if (error) return form.setError(authErrorMessage(error));
-      await rememberSignupAcceptance();
+      if (error) {
+        clearSignupAcceptance();
+        return form.setError(authErrorMessage(error));
+      }
       // Sem confirmação de e-mail, o cadastro já devolve a sessão.
       if (data?.token) await navigate({ to: "/" });
       else await navigate({ to: "/verifique-seu-email", search: { email: email.trim() } });

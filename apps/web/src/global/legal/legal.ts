@@ -35,9 +35,14 @@ export async function rememberSignupAcceptance() {
   platform.preferences.set(SIGNUP_KEY, JSON.stringify(await currentLegal()));
 }
 
-export function takeSignupAcceptance(): Accepted[] | null {
-  const raw = platform.preferences.get(SIGNUP_KEY);
+/** Esquece o aceite do cadastro (depois de registrado na API). */
+export function clearSignupAcceptance() {
   platform.preferences.remove(SIGNUP_KEY);
+}
+
+/** Aceite feito no cadastro, se ainda não foi registrado. Não apaga: ver `clearSignupAcceptance`. */
+export function peekSignupAcceptance(): Accepted[] | null {
+  const raw = platform.preferences.get(SIGNUP_KEY);
   try {
     return raw ? (JSON.parse(raw) as Accepted[]) : null;
   } catch {

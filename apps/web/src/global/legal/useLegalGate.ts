@@ -4,7 +4,8 @@ import {
   onConsentRequired,
   type PendingDocument,
   pendingLegal,
-  takeSignupAcceptance,
+  clearSignupAcceptance,
+  peekSignupAcceptance,
 } from "./legal";
 
 /** O que falta aceitar; registra o aceite do cadastro quando ele bate com o vigente. */
@@ -17,22 +18,32 @@ export function useLegalGate(onAccepted: () => void) {
     accepted.current = onAccepted;
   });
 
-  const check = useCallback(async () => {
-    let list = await pendingLegal().catch(() => []);
-    const fromSignup = takeSignupAcceptance();
-    const matches =
-      fromSignup &&
-      list.length > 0 &&
-      list.every((p) => fromSignup.some((a) => a.document === p.document && a.version === p.version));
-    if (matches) {
-      await acceptLegal(list.map(({ document, version }) => ({ document, version })))
-        .then(() => {
-          list = [];
-          accepted.current();
-        })
-        .catch(() => undefined);
-    }
-    setPending(list);
+  // Uma verificação por vez: a montagem e o 409 do sync podem disparar juntas,
+  // e a segunda não pode mostrar o diálogo enquanto a primeira registra o aceite.
+  const inflight = useRef<Promise<void> | null>(null);
+  const check = useCallback(() => {
+    const run = async () => {
+      let list = await pendingLegal().catch(() => []);
+      const fromSignup = peekSignupAcceptance();
+      const matches =
+        fromSignup &&
+        list.length > 0 &&
+        list.every((p) => fromSignup.some((a) => a.document === p.document && a.version === p.version));
+      if (matches) {
+        await acceptLegal(list.map(({ document, version }) => ({ document, version })))
+          .then(() => {
+            clearSignupAcceptance();
+            list = [];
+            accepted.current();
+          })
+          .catch(() => undefined);
+      }
+      setPending(list);
+    };
+    inflight.current ??= run().finally(() => {
+      inflight.current = null;
+    });
+    return inflight.current;
   }, []);
 
   useEffect(() => {

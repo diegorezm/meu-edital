@@ -8,7 +8,7 @@
 - **Fluxo de autorização com o login do app.**
   1. `/authorize` valida o pedido.
   2. Sem sessão, manda para `/entrar?volta=...`.
-  3. Com sessão, abre a consulta de consentimento da biblioteca (`beginConsent`) e manda para a tela do app `/oraculo/conectar`.
+  3. Com sessão, abre a consulta de consentimento da biblioteca (`beginConsent`) e manda para a tela do app `/conectar-ia`.
   4. A tela responde em `POST /oauth/consent`, que usa `approveConsent` ou `denyConsent` e depois `completeAuthorization`.
 - **Escopos:** `estudo:ler` (ler o contexto) e `estudo:propor` (propor alterações). Não existe escopo de escrita.
 - **Ferramentas:** uma por arquivo em `apps/api/src/mcp/tools/`, listadas em `tools/index.ts` com o escopo que cada uma exige.

@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@meu-edital/agent-context": "workspace:*",
     "@meu-edital/domain": "workspace:*",
     "@meu-edital/sync": "workspace:*",
     "@meu-edital/ui": "workspace:*",

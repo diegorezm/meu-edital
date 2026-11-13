@@ -70,7 +70,7 @@ async function connect(cookie: string) {
   const authorize = await fetchWorker(`/authorize?${query}`, { headers: { cookie } });
   expect(authorize.status).toBe(302);
   const consentUrl = new URL(authorize.headers.get("location")!, ORIGIN);
-  expect(consentUrl.pathname).toBe("/oraculo/conectar");
+  expect(consentUrl.pathname).toBe("/conectar-ia");
   expect(consentUrl.searchParams.get("cliente")).toBe("Claude");
   expect(consentUrl.searchParams.get("escopos")).toBe("estudo:ler estudo:propor");
 

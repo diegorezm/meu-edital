@@ -1,7 +1,7 @@
 import { Button, textLinkClass } from "@meu-edital/ui";
 import { Link } from "@tanstack/react-router";
 import type { useResendVerification } from "../hooks/useResendVerification";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout } from "@global/components/AuthLayout";
 import { FormShell } from "./FormShell";
 
 export function CheckEmailView({ form }: { form: ReturnType<typeof useResendVerification> }) {

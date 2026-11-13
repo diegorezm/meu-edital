@@ -1,7 +1,7 @@
 import { Button, Field, Notice, textLinkClass } from "@meu-edital/ui";
 import { Link } from "@tanstack/react-router";
 import type { useResetPassword } from "../hooks/useResetPassword";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout } from "@global/components/AuthLayout";
 import { FormShell } from "./FormShell";
 
 export function ResetPasswordView({ form }: { form: ReturnType<typeof useResetPassword> }) {

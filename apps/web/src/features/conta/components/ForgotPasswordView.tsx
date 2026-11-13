@@ -1,7 +1,7 @@
 import { Button, Field, Notice, textLinkClass } from "@meu-edital/ui";
 import { Link } from "@tanstack/react-router";
 import type { useForgotPassword } from "../hooks/useForgotPassword";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout } from "@global/components/AuthLayout";
 import { FormShell } from "./FormShell";
 import { Turnstile } from "./Turnstile";
 

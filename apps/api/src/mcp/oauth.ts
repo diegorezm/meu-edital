@@ -25,7 +25,7 @@ const withHeaders = (response: Response, headers: Headers) => {
 /**
  * Autorização OAuth do Oráculo com o login do próprio app. `/authorize`
  * valida o pedido, exige sessão e manda para a tela de consentimento do app
- * (`/oraculo/conectar`), que responde em `/oauth/consent`.
+ * (`/conectar-ia`), que responde em `/oauth/consent`.
  */
 export const oauthRoutes = new Hono<AppContext>()
   .get("/authorize", async (c) => {
@@ -49,7 +49,7 @@ export const oauthRoutes = new Hono<AppContext>()
       destino: consent.clientDomain ?? consent.redirectHost,
       escopos: authRequest.scope.filter((s) => (SCOPES as readonly string[]).includes(s)).join(" ") || SCOPES.join(" "),
     });
-    return withHeaders(c.redirect(`/oraculo/conectar?${params}`, 302), headers);
+    return withHeaders(c.redirect(`/conectar-ia?${params}`, 302), headers);
   })
   .post(
     "/oauth/consent",

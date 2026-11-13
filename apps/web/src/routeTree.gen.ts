@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as ConectarIaRouteImport } from './routes/conectar-ia'
 import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
@@ -31,6 +32,11 @@ import { Route as AppSimuladosRouteImport } from './routes/_app/simulados'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConectarIaRoute = ConectarIaRouteImport.update({
+  id: '/conectar-ia',
+  path: '/conectar-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CriarContaRoute = CriarContaRouteImport.update({
@@ -126,6 +132,7 @@ const AppSimuladosRoute = AppSimuladosRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/simulados': typeof AppSimuladosRoute
 }
 export interface FileRoutesByTo {
+  '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
     | '/recuperar-senha'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/simulados'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
     | '/recuperar-senha'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
     | '/recuperar-senha'
@@ -252,6 +264,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  ConectarIaRoute: typeof ConectarIaRoute
   CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conectar-ia': {
+      id: '/conectar-ia'
+      path: '/conectar-ia'
+      fullPath: '/conectar-ia'
+      preLoaderRoute: typeof ConectarIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/criar-conta': {
@@ -433,6 +453,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  ConectarIaRoute: ConectarIaRoute,
   CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,

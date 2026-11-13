@@ -1,7 +1,7 @@
 import { Button, Field, textLinkClass } from "@meu-edital/ui";
 import { Link } from "@tanstack/react-router";
 import type { useSignIn } from "../hooks/useSignIn";
-import { AuthLayout } from "./AuthLayout";
+import { AuthLayout } from "@global/components/AuthLayout";
 import { FormShell } from "./FormShell";
 import { GoogleButton } from "./GoogleButton";
 

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Como trabalhar neste repositório. Para o que o app é (conceitos, regras de produto), leia [docs/desenvolvimento.md](docs/desenvolvimento.md). O plano completo da reconstrução está em [docs/prompt-reconstrucao.md](docs/prompt-reconstrucao.md), e as decisões de arquitetura ficam em [docs/decisions/](docs/decisions/README.md).
+Como trabalhar neste repositório. Para o que o app é (conceitos, regras de produto), leia [docs/desenvolvimento.md](docs/desenvolvimento.md). As decisões de arquitetura ficam em [docs/decisions/](docs/decisions/README.md).
 
 ## Visão geral
 
@@ -10,20 +10,20 @@ Monorepo com Bun workspaces e Turborepo. Tudo roda na Cloudflare: um Worker (Hon
 | --- | --- | --- |
 | `apps/web` | `@meu-edital/web` | SPA React 19 + Vite + TanStack Router. |
 | `apps/mobile` | `@meu-edital/mobile` | Casca Capacitor (Android; iOS num Mac). Ver `apps/mobile/README.md`. |
-| `apps/api` | `@meu-edital/api` | Worker Hono: auth (Better Auth), dados, e depois sync, exportação e MCP. |
-| `packages/domain` | `@meu-edital/domain` | Modelos e regras de estudo, puros. Depois, a gamificação. |
+| `apps/api` | `@meu-edital/api` | Worker Hono: auth (Better Auth), dados, sync, exportação, Web Push e MCP (Oráculo). |
+| `packages/domain` | `@meu-edital/domain` | Modelos e regras de estudo, puros, e a gamificação. |
 | `packages/agent-context` | `@meu-edital/agent-context` | `StudyContext`, tarefas e propostas para IA externa (Zod). |
 | `packages/sync` | `@meu-edital/sync` | Protocolo de sync: schemas das linhas, `diffData`, `applyPulled` e o `SyncEngine`. |
 | `packages/db` | `@meu-edital/db` | Schema Drizzle e migrações do D1. |
 | `packages/ui` | `@meu-edital/ui` | Design system: tema Tailwind, componentes e arte (`art/`). |
-| `docs/design-system` | — | Referência visual (tokens, componentes, mockups). Não é código. |
+| `docs/design-system` | — | Referência visual (tokens, componentes e arte). Não é código. |
 
 Pacotes são consumidos como TypeScript, sem build (`main: ./src/index.ts`).
 
 Dependências entre pacotes:
 - `domain` não importa nada.
 - `agent-context` depende só de `domain` e Zod.
-- `db` (e, depois, `sync`) depende de `domain`.
+- `db` e `sync` dependem de `domain`.
 - Os apps dependem dos pacotes.
 
 `domain`, `agent-context` e `sync` não importam React, DOM nem Capacitor.
@@ -86,14 +86,14 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
 - Uma feature não importa o interior de outra.
 - Dados de estudo: `useStore()` (`src/global/store/`). Leia `store.data` e altere só com `store.update((data) => funcaoDeDominio(data, ...))`; o sync cuida do resto. Nunca chame a API de sync direto de uma tela.
 - Chamadas à API passam por `apiFetch`/`apiUrl` (`src/global/http.ts`): na web são relativas com cookie; no app nativo usam `VITE_API_ORIGIN` e o token bearer.
-- Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração, e depois o cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
+- Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração e cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
 - Aliases: `@features/*`, `@global/*`, `@platform/*`. Importações externas primeiro.
 - Nenhum arquivo de tela com mais de ~300 linhas.
 - Cronômetro: `global/timer/` (estado em `platform.preferences`, título da aba e aviso de fim no `TimerTicker`). Comemorações: `celebrationStore.show(...)` depois de registrar estudo.
 
 ## UI
 
-- O design está em `docs/design-system/`: leia `design-system.md` e abra `index.html` e `docs/mockups/dashboard-rpg.html`.
+- O design está em `docs/design-system/`: leia `design-system.md` e abra `index.html`.
 - Use os componentes de `@meu-edital/ui`. Nenhuma cor ou medida solta: só os tokens do tema (`packages/ui/src/theme.css`).
 - Mudar uma cor exige passar no teste de contraste (`packages/ui/tests/contrast.test.ts`).
 - Arte pela chave do manifesto (`<Art name="mascote.rosa.parado" />`), nunca pelo caminho.

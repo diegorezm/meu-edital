@@ -43,7 +43,7 @@
 - **Estrelas da matéria:** 60% cobertura e 40% aproveitamento nas últimas 6 semanas, de 1 a 5.
 - **Comemorações:** `celebrationsBetween(antes, depois)` compara os estados e devolve os eventos novos (nível, volta, meta da semana, conquista), com ids estáveis. `markCelebrationsSeen` evita repetir a comemoração em outro aparelho.
 
-**Em aberto (decidir quando as telas chegarem).**
-- O mockup mostra contratos com bônus (+50, +40, +60) e o chefe com +500. Hoje os contratos mostram o XP estimado do estudo, e o simulado ainda não dá XP (fase 7). Para dar bônus, acrescente as regras em `XP`, com testes.
+**Decidido.**
+- Os contratos não dão bônus: mostram o XP estimado do estudo. O simulado não dá XP; conta para as conquistas. Para dar bônus, acrescente as regras em `XP`, com testes.
 
 **Descartado.** Guardar o XP no banco: dessincroniza ao editar sessões e impede mudar a fórmula. Sequência diária: contradiz "faltar um dia não pune" e incentiva sessões de dois minutos.

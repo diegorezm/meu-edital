@@ -7,7 +7,7 @@ import { ContractsSheet, GuildSheet, ReviewsSheet, SubjectsSheet, WeekSheet } fr
 
 /**
  * Início. Desktop largo: jornada e matérias no centro, contratos, revisões,
- * semana e guilda à direita (como em docs/mockups/dashboard-rpg.html).
+ * semana e guilda à direita.
  * Desktop estreito: a coluna da direita desce em duas colunas. Celular:
  * jornada em fileira e as folhas empilhadas.
  */

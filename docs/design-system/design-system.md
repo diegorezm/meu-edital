@@ -1,10 +1,9 @@
 # Design system · Guilda de pergaminho
 
-Linguagem visual do Meu Edital. Três arquivos:
+Linguagem visual do Meu Edital. Dois arquivos:
 
 - `tokens.css`: cores, tipografia, espaço e forma. É a fonte da verdade.
 - `index.html`: página de referência com todos os componentes desenhados. Abra no navegador.
-- `../mockups/dashboard-rpg.html`: a dashboard de desktop montada com estes componentes.
 
 ## Conceito
 

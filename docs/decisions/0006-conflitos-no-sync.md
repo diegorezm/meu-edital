@@ -5,7 +5,7 @@
 **Escolha.**
 - Vence a última escrita de cada linha, na ordem em que as mutações chegam ao servidor.
 - Cada escrita aceita recebe o próximo `version` do usuário. O relógio dos aparelhos não decide nada.
-- O protocolo da fase 2 terá um teste do caso de dois aparelhos offline.
+- O protocolo tem um teste do caso de dois aparelhos offline.
 - Dois aparelhos podem criar o mesmo retrato semanal da meta (`week_targets`). Nesse caso, o domínio usa o de menor id (`savedWeekTarget`).
 
 **Descartado.**

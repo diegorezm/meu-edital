@@ -4,7 +4,7 @@ import { type Db, type StudyTableName, studyTables } from "@meu-edital/db";
 /**
  * Única porta de acesso aos dados de estudo. Recebe o `userId` da sessão e o
  * aplica em toda consulta; nenhuma rota monta consulta com id vindo do
- * cliente. O sync (fase 2) acrescenta as escritas aqui.
+ * cliente. As escritas do sync também passam por aqui.
  */
 export function userData(db: Db, userId: string) {
   return {

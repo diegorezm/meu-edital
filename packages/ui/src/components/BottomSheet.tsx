@@ -13,12 +13,15 @@ export function BottomSheet({
   onOpenChange,
   title,
   description,
+  dismissible = true,
   children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
+  /** Falso para uma decisão obrigatória: sem botão de fechar, Esc nem clique fora. */
+  dismissible?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -26,6 +29,8 @@ export function BottomSheet({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/40" />
         <Dialog.Content
+          onEscapeKeyDown={dismissible ? undefined : (e) => e.preventDefault()}
+          onPointerDownOutside={dismissible ? undefined : (e) => e.preventDefault()}
           className={clsx(
             "fixed z-50 flex max-h-[85dvh] flex-col border-2 border-ink bg-paper pt-9 shadow-[var(--shadow-inset-rule),var(--shadow-sheet)]",
             "inset-x-0 bottom-0 rounded-t-[10px]",
@@ -44,12 +49,14 @@ export function BottomSheet({
             )}
             {children}
           </div>
-          <Dialog.Close
-            className="absolute top-2 right-2 grid size-11 place-items-center rounded text-ink-muted hover:text-ink"
-            aria-label="Fechar"
-          >
-            <Icon name="close" />
-          </Dialog.Close>
+          {dismissible && (
+            <Dialog.Close
+              className="absolute top-2 right-2 grid size-11 place-items-center rounded text-ink-muted hover:text-ink"
+              aria-label="Fechar"
+            >
+              <Icon name="close" />
+            </Dialog.Close>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

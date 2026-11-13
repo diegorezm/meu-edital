@@ -5,12 +5,13 @@ import { syncData } from "../data/sync";
 import type { AppContext } from "../env";
 import { rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
+import { requireConsent } from "../legal/routes";
 
 /** Lotes maiores que isso são recusados antes de ler o corpo. */
 const MAX_BODY_BYTES = 1_000_000;
 
 export const syncRoutes = new Hono<AppContext>()
-  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
   .post("/push", async (c) => {
     if (Number(c.req.header("content-length") ?? 0) > MAX_BODY_BYTES)
       return c.json({ error: "Lote grande demais. Envie em partes menores." }, 413);

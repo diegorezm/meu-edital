@@ -1,4 +1,5 @@
 import { AppShell } from "@global/components/AppShell";
+import { LegalGate } from "@global/legal/LegalGate";
 import { requireSession } from "@global/guards";
 import { StoreProvider } from "@global/store/StoreProvider";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_app")({
         <AppShell>
           <Outlet />
         </AppShell>
+        <LegalGate />
       </StoreProvider>
     );
   },

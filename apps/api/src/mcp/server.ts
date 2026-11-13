@@ -1,6 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler, getMcpAuthContext } from "agents/mcp/server";
+import { createDb } from "@meu-edital/db";
 import type { AppEnv } from "../env";
+import { acceptancesData } from "../legal/acceptances";
 import { TOOLS } from "./tools";
 import type { McpProps } from "./types";
 
@@ -34,6 +36,11 @@ export const mcpApiHandler = {
     if (!props) return new Response("Não autorizado.", { status: 401 });
     const { success } = await env.API_LIMITER.limit({ key: `mcp:${props.userId}:${props.clientName}` });
     if (!success) return new Response("Muitas chamadas. Espere um minuto.", { status: 429 });
+    const pending = await acceptancesData(createDb(env.DB), props.userId).pending();
+    if (pending.length > 0)
+      return new Response("Abra o Meu Edital e aceite os termos atualizados para continuar.", {
+        status: 403,
+      });
     const handler = createMcpHandler(createServer(env, ctx.auth?.scope ?? []), {
       route: "/mcp",
       authContext: { props },

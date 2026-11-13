@@ -327,3 +327,25 @@ export const studyTables = {
   userSettings,
 } as const;
 export type StudyTableName = keyof typeof studyTables;
+
+/**
+ * Aceites dos documentos legais (termos e privacidade). Só recebe inserções:
+ * é a prova do consentimento exigida pela LGPD (art. 8º, § 2º). As versões
+ * vigentes ficam no código da API (`apps/api/src/legal/documents.ts`).
+ */
+export const legalAcceptances = sqliteTable(
+  "legal_acceptances",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    document: text("document", { enum: ["termos", "privacidade"] }).notNull(),
+    version: text("version").notNull(),
+    acceptedAt: integer("accepted_at").notNull(),
+    /** SHA-256 do IP com o segredo do app: prova sem guardar o IP em claro. */
+    ipHash: text("ip_hash"),
+    userAgent: text("user_agent"),
+  },
+  (t) => [index("legal_acceptances_user_idx").on(t.userId, t.document)],
+);

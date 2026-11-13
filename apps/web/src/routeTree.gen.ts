@@ -13,8 +13,10 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as ConectarIaRouteImport } from './routes/conectar-ia'
 import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as VerifiqueSeuEmailRouteImport } from './routes/verifique-seu-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppComecarRouteImport } from './routes/_app/comecar'
@@ -49,6 +51,11 @@ const EntrarRoute = EntrarRouteImport.update({
   path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
   id: '/recuperar-senha',
   path: '/recuperar-senha',
@@ -57,6 +64,11 @@ const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
 const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifiqueSeuEmailRoute = VerifiqueSeuEmailRouteImport.update({
@@ -135,8 +147,10 @@ export interface FileRoutesByFullPath {
   '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
   '/comecar': typeof AppComecarRoute
   '/conquistas': typeof AppConquistasRoute
@@ -155,8 +169,10 @@ export interface FileRoutesByTo {
   '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
   '/comecar': typeof AppComecarRoute
   '/conquistas': typeof AppConquistasRoute
@@ -178,8 +194,10 @@ export interface FileRoutesById {
   '/conectar-ia': typeof ConectarIaRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
   '/verifique-seu-email': typeof VerifiqueSeuEmailRoute
   '/_app/comecar': typeof AppComecarRoute
   '/_app/conquistas': typeof AppConquistasRoute
@@ -202,8 +220,10 @@ export interface FileRouteTypes {
     | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
     | '/verifique-seu-email'
     | '/comecar'
     | '/conquistas'
@@ -222,8 +242,10 @@ export interface FileRouteTypes {
     | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
     | '/verifique-seu-email'
     | '/comecar'
     | '/conquistas'
@@ -244,8 +266,10 @@ export interface FileRouteTypes {
     | '/conectar-ia'
     | '/criar-conta'
     | '/entrar'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
     | '/verifique-seu-email'
     | '/_app/comecar'
     | '/_app/conquistas'
@@ -267,8 +291,10 @@ export interface RootRouteChildren {
   ConectarIaRoute: typeof ConectarIaRoute
   CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  TermosRoute: typeof TermosRoute
   VerifiqueSeuEmailRoute: typeof VerifiqueSeuEmailRoute
 }
 
@@ -302,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recuperar-senha': {
       id: '/recuperar-senha'
       path: '/recuperar-senha'
@@ -314,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/redefinir-senha'
       fullPath: '/redefinir-senha'
       preLoaderRoute: typeof RedefinirSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verifique-seu-email': {
@@ -456,8 +496,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConectarIaRoute: ConectarIaRoute,
   CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  TermosRoute: TermosRoute,
   VerifiqueSeuEmailRoute: VerifiqueSeuEmailRoute,
 }
 export const routeTree = rootRouteImport

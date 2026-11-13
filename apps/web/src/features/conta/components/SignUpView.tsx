@@ -4,6 +4,7 @@ import type { useSignUp } from "../hooks/useSignUp";
 import { AuthLayout } from "@global/components/AuthLayout";
 import { FormShell } from "./FormShell";
 import { GoogleButton } from "./GoogleButton";
+import { TermsConsent } from "./TermsConsent";
 import { Turnstile } from "./Turnstile";
 
 export function SignUpView({ form }: { form: ReturnType<typeof useSignUp> }) {
@@ -37,12 +38,13 @@ export function SignUpView({ form }: { form: ReturnType<typeof useSignUp> }) {
         {form.turnstileSiteKey && (
           <Turnstile siteKey={form.turnstileSiteKey} onToken={form.setCaptchaToken} />
         )}
-        <Button type="submit" disabled={form.pending}>
+        <TermsConsent checked={form.accepted} onChange={form.setAccepted} />
+        <Button type="submit" disabled={form.pending || !form.accepted}>
           Criar conta
         </Button>
         <GoogleButton
           enabled={form.googleEnabled}
-          pending={form.pending}
+          pending={form.pending || !form.accepted}
           onClick={form.signUpWithGoogle}
         />
         <p className="text-center text-sm">

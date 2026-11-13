@@ -6,12 +6,13 @@ import { ProposalError, proposalsData } from "../data/proposals";
 import type { AppContext } from "../env";
 import { rateLimit } from "./rateLimit";
 import { requireUser } from "./session";
+import { requireConsent } from "../legal/routes";
 
 const StatusSchema = z.strictObject({ status: z.enum(["aplicada", "descartada"]) });
 
 /** Caixa de propostas para o app: listar, enviar resposta colada, aplicar ou descartar. */
 export const proposalRoutes = new Hono<AppContext>()
-  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
   .get("/", async (c) => {
     const data = proposalsData(createDb(c.env.DB), c.get("userId"));
     return c.json({ proposals: await data.pending() });

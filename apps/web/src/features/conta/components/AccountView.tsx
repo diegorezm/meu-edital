@@ -91,7 +91,7 @@ export function AccountView({
         </div>
       </Sheet>
       <p className="text-center text-sm text-ink-muted">
-        O Meu Edital é software livre (AGPL-3.0).{" "}
+        O código do Meu Edital é aberto (FSL-1.1).{" "}
         <a href="https://github.com/diegorezm/meu-edital" className="font-bold text-teal-strong underline">
           Ver o código
         </a>

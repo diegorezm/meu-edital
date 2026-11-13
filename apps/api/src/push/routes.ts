@@ -5,6 +5,7 @@ import { createDb, pushSubscriptions } from "@meu-edital/db";
 import type { AppContext } from "../env";
 import { rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
+import { requireConsent } from "../legal/routes";
 
 const SubscriptionSchema = z.object({
   endpoint: z.url().max(1000),
@@ -13,7 +14,7 @@ const SubscriptionSchema = z.object({
 
 /** Assinaturas de Web Push e o aviso de fim de bloco com a aba fechada. */
 export const pushRoutes = new Hono<AppContext>()
-  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
   .post("/assinatura", async (c) => {
     const parsed = SubscriptionSchema.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: "Assinatura inválida." }, 400);

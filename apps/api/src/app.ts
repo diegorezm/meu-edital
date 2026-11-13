@@ -12,6 +12,8 @@ import { proposalRoutes } from "./http/proposalRoutes";
 import { requireUser } from "./http/session";
 import { waitlistRoutes } from "./http/waitlistRoutes";
 import { connectionRoutes } from "./mcp/oauth";
+import { acceptancesData } from "./legal/acceptances";
+import { legalRoutes } from "./legal/routes";
 import { pushRoutes } from "./push/routes";
 import { syncRoutes } from "./sync/routes";
 
@@ -56,6 +58,7 @@ const routes = app
   .route("/push", pushRoutes)
   .route("/oraculo/conexoes", connectionRoutes)
   .route("/lista-de-espera", waitlistRoutes)
+  .route("/legal", legalRoutes)
   .get("/health", (c) => c.json({ ok: true }))
   /** O que a tela de login precisa saber antes de existir sessão. */
   .get("/config", (c) =>
@@ -75,7 +78,8 @@ const routes = app
       .from(user)
       .where(eq(user.id, userId));
     const [settings] = await userData(db, userId).active("userSettings");
-    return c.json({ user: profile, activeExamId: settings?.activeExamId ?? null });
+    const legalPending = await acceptancesData(db, userId).pending();
+    return c.json({ user: profile, activeExamId: settings?.activeExamId ?? null, legalPending });
   });
 
 routes.notFound((c) => c.json({ error: "Rota não encontrada." }, 404));

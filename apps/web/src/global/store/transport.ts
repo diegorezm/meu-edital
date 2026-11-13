@@ -6,6 +6,7 @@ import {
   type Transport,
 } from "@meu-edital/sync";
 import { apiFetch, apiUrl, sessionToken } from "../http";
+import { notifyConsentRequired } from "../legal/legal";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -19,6 +20,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   // Gateway fora do ar ou limite de requisições: tenta de novo mais tarde.
   if (response.status === 429 || response.status >= 502) throw new OfflineError(response.status);
+  // Falta aceitar os termos: a interface pede o aceite e o sync tenta depois.
+  if (response.status === 409) {
+    notifyConsentRequired();
+    throw new OfflineError(response.status);
+  }
   if (!response.ok) throw new Error(`Sync falhou: ${response.status}`);
   return response.json() as Promise<T>;
 }

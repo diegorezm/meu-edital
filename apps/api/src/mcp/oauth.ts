@@ -5,6 +5,7 @@ import { createAuth } from "../auth/auth";
 import type { AppContext, AppEnv } from "../env";
 import { rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
+import { requireConsent } from "../legal/routes";
 
 /** Escopos que uma IA pode pedir. Ler o contexto e propor; nunca escrever direto. */
 export const SCOPES = ["estudo:ler", "estudo:propor"] as const;
@@ -88,7 +89,7 @@ export const oauthRoutes = new Hono<AppContext>()
 
 /** Conexões de IA do estudante: listar e revogar (nas configurações do Oráculo). */
 export const connectionRoutes = new Hono<AppContext>()
-  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
   .get("/", async (c) => {
     const grants = await helpers(c.env).listUserGrants(c.get("userId"), { limit: 50 });
     return c.json({

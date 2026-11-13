@@ -18,3 +18,4 @@ Uma decisão por arquivo: contexto, escolha e alternativas descartadas. Para mud
 | [0012](0012-oraculo-mcp.md) | Oráculo: servidor MCP remoto com OAuth do próprio app |
 | [0013](0013-web-push.md) | Avisos com a aba fechada por Web Push |
 | [0014](0014-app-mobile.md) | App mobile com Capacitor |
+| [0015](0015-lgpd-aceites-e-consentimento.md) | LGPD: aceite versionado dos termos e consentimento de rastreamento |

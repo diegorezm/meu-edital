@@ -302,3 +302,21 @@ describe("caixa de propostas", () => {
     expect(huge.status).toBe(422);
   });
 });
+
+describe("Oráculo sem aceite dos termos", () => {
+  it("recusa as ferramentas até aceitar a versão vigente", async () => {
+    const student = await studentWithExam();
+    const token = await connect(student.cookie);
+    await env.DB.prepare("delete from legal_acceptances where user_id = ?").bind(student.userId).run();
+    const response = await fetchWorker("/mcp", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+    });
+    expect(response.status).toBe(403);
+  });
+});

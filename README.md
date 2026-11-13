@@ -91,4 +91,4 @@ O app funciona no navegador do computador e do celular, e continua funcionando s
 
 ## Software livre
 
-O Meu Edital é software livre, sob a licença [GNU AGPL versão 3](LICENSE). Quer contribuir ou rodar o projeto na sua máquina? Veja o [guia de desenvolvimento](docs/desenvolvimento.md).
+O código do Meu Edital é aberto para leitura, sob a [Functional Source License 1.1](LICENSE): você pode ler, estudar e rodar o projeto, só não pode oferecer um serviço concorrente. Cada versão passa para a licença Apache 2.0 dois anos depois de publicada. Quer contribuir ou rodar o projeto na sua máquina? Veja o [guia de desenvolvimento](docs/desenvolvimento.md).

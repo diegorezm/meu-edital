@@ -55,8 +55,20 @@ export function lastLinkTo(email: string): string {
 let counter = 0;
 export const uniqueEmail = () => `estudante${Date.now()}${counter++}@exemplo.com`;
 
-/** Cria uma conta, confirma o e-mail e devolve o cookie da sessão. */
-export async function verifiedUser(password = "senha-forte-123") {
+/** Aceita as versões vigentes dos termos e da privacidade. */
+export async function acceptLegal(auth: { cookie?: string; bearer?: string }, ip?: string) {
+  const current = (await (await call("/api/legal")).json()) as {
+    documents: { document: string; version: string }[];
+  };
+  const documents = current.documents.map(({ document, version }) => ({ document, version }));
+  return call("/api/legal/aceite", { ...auth, ip, body: { documents } });
+}
+
+/**
+ * Cria uma conta, confirma o e-mail, aceita os termos e devolve o cookie da
+ * sessão. Com `accept: false`, a conta fica sem aceite.
+ */
+export async function verifiedUser(password = "senha-forte-123", { accept = true } = {}) {
   const email = uniqueEmail();
   const ip = `198.51.100.${counter % 250}`;
   await call("/api/auth/sign-up/email", { body: { name: "Ana", email, password }, ip });
@@ -64,5 +76,6 @@ export async function verifiedUser(password = "senha-forte-123") {
   const cookie = cookiesFrom(verified);
   const me = await call("/api/me", { cookie });
   const { user } = (await me.json()) as { user: { id: string } };
+  if (accept) await acceptLegal({ cookie }, ip);
   return { email, password, cookie, userId: user.id, ip };
 }

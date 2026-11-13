@@ -1,9 +1,8 @@
 import { SecureStorage } from "@aparajita/capacitor-secure-storage";
-import { CapacitorSQLite, SQLiteConnection, type SQLiteDBConnection } from "@capacitor-community/sqlite";
 import { type PluginListenerHandle, registerPlugin } from "@capacitor/core";
 import { Haptics } from "@capacitor/haptics";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { type LocalStore, memoryStore, type Snapshot } from "@meu-edital/sync";
+import { clearNativeSyncStorage, nativeSyncStorage } from "./nativeSync";
 import type { Platform } from "./types";
 
 /** Plugin próprio do Android: serviço em primeiro plano com o tempo correndo. */
@@ -28,63 +27,12 @@ const storage = () => {
   }
 };
 
-// Uma conexão SQLite para o app inteiro, aberta na primeira vez.
-let opening: Promise<SQLiteDBConnection> | undefined;
-function database() {
-  return (opening ??= (async () => {
-    const sqlite = new SQLiteConnection(CapacitorSQLite);
-    const db = await sqlite.createConnection("meu-edital", false, "no-encryption", 1, false);
-    await db.open();
-    await db.execute("create table if not exists snapshots (name text primary key, value text not null)");
-    return db;
-  })());
-}
-
-/**
- * Banco local no SQLite: o sistema pode limpar o armazenamento do WebView, e
- * a fila guarda estudo ainda não enviado. Se o SQLite falhar, cai para memória.
- */
-function sqliteStore(name: string): LocalStore {
-  const fallback = memoryStore();
-  let broken = false;
-  return {
-    async load() {
-      if (broken) return fallback.load();
-      try {
-        const db = await database();
-        const result = await db.query("select value from snapshots where name = ?", [name]);
-        const raw = result.values?.[0]?.value as string | undefined;
-        return raw ? (JSON.parse(raw) as Snapshot) : null;
-      } catch {
-        broken = true;
-        return fallback.load();
-      }
-    },
-    async save(snapshot) {
-      if (broken) return fallback.save(snapshot);
-      try {
-        const db = await database();
-        await db.run(
-          "insert into snapshots (name, value) values (?, ?) on conflict(name) do update set value = excluded.value",
-          [name, JSON.stringify(snapshot)],
-        );
-      } catch {
-        broken = true;
-        await fallback.save(snapshot);
-      }
-    },
-  };
-}
-
 const granted = async () => (await LocalNotifications.checkPermissions()).display === "granted";
 
 export const nativePlatform: Platform = {
   native: true,
-  localStore: sqliteStore,
-  async clearLocalStore(name) {
-    const db = await database();
-    await db.run("delete from snapshots where name = ?", [name]);
-  },
+  syncStorage: nativeSyncStorage,
+  clearSyncStorage: clearNativeSyncStorage,
   preferences: {
     get: (key) => storage()?.getItem(key) ?? null,
     set: (key, value) => storage()?.setItem(key, value),

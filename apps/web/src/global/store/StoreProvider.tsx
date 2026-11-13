@@ -1,81 +1,76 @@
-import { type AppData, emptyData } from "@meu-edital/domain";
-import { SyncEngine, type SyncState } from "@meu-edital/sync";
+import type { AppData } from "@meu-edital/domain";
+import { SyncClient, type SyncState } from "@meu-edital/sync/client";
 import { platform } from "@platform/index";
 import { createContext, type ReactNode, useEffect, useState, useSyncExternalStore } from "react";
 import { httpTransport, listenForChanges } from "./transport";
 
-export const storeName = (userId: string) => `dados-${userId}`;
-
 /** Intervalo de segurança, só quando o aviso do servidor está desligado. */
 const SYNC_INTERVAL_MS = 60_000;
-/** Junta alterações seguidas em um envio só. */
-const PUSH_DELAY_MS = 800;
 
-export const StoreContext = createContext<SyncEngine | null>(null);
+export const StoreContext = createContext<SyncClient | null>(null);
 
 /**
- * Dados do usuário logado. A tela lê e altera o banco local na hora; o
- * motor sincroniza ao abrir, ao voltar a rede ou a aba, com o aviso do
- * servidor, logo depois de cada alteração e a cada minuto.
+ * Dados do usuário logado, no TanStack DB. A tela lê e altera na hora; a
+ * fila offline envia quando pode, e o cliente busca o que mudou ao abrir, ao
+ * voltar a rede ou a aba, com o aviso do servidor e a cada minuto sem aviso.
  */
 export function StoreProvider({ userId, children }: { userId: string; children: ReactNode }) {
-  const [engine, setEngine] = useState<SyncEngine | null>(null);
+  const [client, setClient] = useState<SyncClient | null>(null);
 
   useEffect(() => {
-    const instance = new SyncEngine(platform.localStore(storeName(userId)), httpTransport, emptyData);
-    let push: ReturnType<typeof setTimeout> | undefined;
-    let started = false;
-    const sync = () => {
-      if (started) void instance.sync();
-    };
-    const schedulePush = () => {
-      clearTimeout(push);
-      push = setTimeout(sync, PUSH_DELAY_MS);
-    };
-    let outbox = instance.getState().outbox;
-    const unsubscribe = instance.subscribe((state) => {
-      if (state.outbox !== outbox && state.outbox.length && state.status !== "syncing")
-        schedulePush();
-      outbox = state.outbox;
-    });
-    const onVisible = () => document.visibilityState === "visible" && sync();
-    // O aviso da própria alteração volta pelo socket; se o cursor já chegou lá, não busca de novo.
-    const live = listenForChanges((notice) => {
-      if (notice.version > instance.getState().cursor) sync();
-    });
-    const interval = setInterval(() => {
-      if (!live.connected()) sync();
-    }, SYNC_INTERVAL_MS);
-    window.addEventListener("online", sync);
-    document.addEventListener("visibilitychange", onVisible);
+    let disposed = false;
+    let cleanup = () => undefined as void;
 
-    void instance.start().then(() => {
-      started = true;
-      setEngine(instance);
-      sync();
+    void platform.syncStorage(userId).then(async (local) => {
+      if (disposed) return void local.close();
+      const instance = new SyncClient({ transport: httpTransport, persist: local.persist, storage: local.storage });
+      const sync = () => void instance.sync();
+      const online = () => instance.online();
+      const onVisible = () => document.visibilityState === "visible" && sync();
+      // O aviso da própria alteração volta pelo socket; se o cursor já chegou lá, não busca de novo.
+      const live = listenForChanges((notice) => {
+        if (notice.version > instance.cursor()) sync();
+      });
+      const interval = setInterval(() => {
+        if (!live.connected()) sync();
+      }, SYNC_INTERVAL_MS);
+      window.addEventListener("online", online);
+      document.addEventListener("visibilitychange", onVisible);
+      cleanup = () => {
+        live.close();
+        clearInterval(interval);
+        window.removeEventListener("online", online);
+        document.removeEventListener("visibilitychange", onVisible);
+        instance.dispose();
+        void local.close();
+      };
+      await instance.start();
+      if (disposed) return cleanup();
+      setClient(instance);
     });
 
     return () => {
-      unsubscribe();
-      live.close();
-      clearInterval(interval);
-      clearTimeout(push);
-      window.removeEventListener("online", sync);
-      document.removeEventListener("visibilitychange", onVisible);
-      void instance.flush();
+      disposed = true;
+      cleanup();
+      setClient(null);
     };
   }, [userId]);
 
-  if (!engine) return null;
-  return <StoreContext.Provider value={engine}>{children}</StoreContext.Provider>;
+  if (!client) return null;
+  return <StoreContext.Provider value={client}>{children}</StoreContext.Provider>;
 }
 
 export type Store = SyncState & {
+  data: AppData;
   update: (change: (data: AppData) => AppData) => AppData;
   syncNow: () => Promise<void>;
   dismissRejected: () => void;
 };
 
-export function useEngineState(engine: SyncEngine): SyncState {
-  return useSyncExternalStore(engine.subscribe, engine.getState);
+export function useClientState(client: SyncClient): SyncState {
+  return useSyncExternalStore(client.subscribe, client.getState);
+}
+
+export function useClientData(client: SyncClient): AppData {
+  return useSyncExternalStore(client.subscribeData, client.data);
 }

@@ -7,18 +7,19 @@ import { useLayout } from "../hooks/useLayout";
 import { usePlayer } from "../hooks/usePlayer";
 import { DesktopBeam, MobileBeam } from "./Beam";
 import { SideNav, TabBar } from "./Navigation";
-import { useStore } from "../store/useStore";
+import { useActiveExamId } from "../store/queries";
+import { useStoreActions } from "../store/useStore";
 import { TimerTicker } from "../timer/TimerTicker";
 import { ReviewReminders } from "./ReviewReminders";
 import { PlayerCard } from "./PlayerCard";
 
 /** Salva o retrato da meta da semana do concurso ativo assim que ela começa. */
 function useWeekSnapshot() {
-  const store = useStore();
-  const examId = store.data.activeExamId;
+  const { update } = useStoreActions();
+  const examId = useActiveExamId();
   useEffect(() => {
-    if (examId) store.update((data) => ensureWeekTarget(data, examId));
-  }, [examId, store]);
+    if (examId) update((data) => ensureWeekTarget(data, examId));
+  }, [examId, update]);
 }
 
 /** Peças sem desenho próprio que acompanham todo o app logado. */

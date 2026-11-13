@@ -55,3 +55,16 @@ export type PullResponse = {
 
 /** Aviso enviado pelo WebSocket quando outro aparelho grava algo. */
 export type SyncNotice = { type: "version"; version: number };
+
+/** Rede. Deve lançar `OfflineError` quando não há conexão. */
+export type Transport = {
+  push(request: PushRequest): Promise<PushResponse>;
+  pull(since: number): Promise<PullResponse>;
+};
+
+export class OfflineError extends Error {
+  constructor(cause?: unknown) {
+    super("Sem conexão.", { cause });
+    this.name = "OfflineError";
+  }
+}

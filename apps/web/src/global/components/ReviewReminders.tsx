@@ -1,7 +1,7 @@
 import { addDays, isReviewDone, today } from "@meu-edital/domain";
 import { platform } from "@platform/index";
 import { useEffect, useMemo } from "react";
-import { useStore } from "../store/useStore";
+import { useActiveExamId, useExamReviews } from "../store/queries";
 
 const DAYS = 14;
 
@@ -10,18 +10,18 @@ const DAYS = 14;
  * nativo; na web quem lembra é o servidor). Não desenha nada.
  */
 export function ReviewReminders() {
-  const { data } = useStore();
-  const examId = data.activeExamId;
+  const examId = useActiveExamId();
+  const reviews = useExamReviews(examId);
   const days = useMemo(() => {
     if (!examId) return [];
     const start = today();
-    const pending = data.reviews.filter((r) => r.examId === examId && !isReviewDone(r));
+    const pending = reviews.filter((r) => !isReviewDone(r));
     return Array.from({ length: DAYS }, (_, i) => {
       const date = addDays(start, i);
       // Vencidas até aquele dia, contando as que já estavam atrasadas.
       return { date, count: pending.filter((r) => r.dueDate <= date).length };
     }).filter((d) => d.count > 0);
-  }, [data.reviews, examId]);
+  }, [reviews, examId]);
   const key = JSON.stringify(days);
 
   useEffect(() => {

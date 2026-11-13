@@ -8,16 +8,8 @@ import {
   removeExam,
   startExam,
 } from "@meu-edital/domain";
-import {
-  applyPulled,
-  diffData,
-  enqueue,
-  memoryStore,
-  orderBatch,
-  rowSchemas,
-  SyncEngine,
-  TABLES,
-} from "../src";
+import { diffData, orderBatch, rowSchemas, TABLES } from "../src";
+import { memoryStorage, SyncClient } from "../src/clientEntry";
 import { fakeServer } from "./fakeServer";
 
 const newExam = (data: AppData) =>
@@ -27,12 +19,51 @@ const newExam = (data: AppData) =>
     subjects: [{ name: "Português", topics: ["Crase"] }, { name: "Informática" }],
   });
 
-async function device(server: ReturnType<typeof fakeServer>, online = true) {
-  const transport = server.transport({ online });
-  const store = memoryStore();
-  const engine = new SyncEngine(store, transport, emptyData);
-  await engine.start();
-  return { engine, transport, store };
+const leader = {
+  requestLeadership: async () => true,
+  releaseLeadership: () => undefined,
+  isLeader: () => true,
+  onLeadershipChange: () => () => undefined,
+};
+
+function onlineDetector(transport: { state: { online: boolean } }) {
+  const listeners = new Set<() => void>();
+  return {
+    subscribe: (cb: () => void) => {
+      listeners.add(cb);
+      return () => {
+        listeners.delete(cb);
+      };
+    },
+    notifyOnline: () => listeners.forEach((l) => l()),
+    isOnline: () => transport.state.online,
+    dispose: () => listeners.clear(),
+  };
+}
+
+const tick = () => new Promise((r) => (globalThis as unknown as { setTimeout: (f: unknown, ms: number) => void }).setTimeout(r, 30));
+
+async function device(
+  server: ReturnType<typeof fakeServer>,
+  online = true,
+  options: { pageSize?: number; storage?: ReturnType<typeof memoryStorage> } = {},
+) {
+  const transport = server.transport({ online, pageSize: options.pageSize });
+  const storage = options.storage ?? memoryStorage();
+  const client = new SyncClient({
+    transport,
+    storage,
+    leaderElection: leader,
+    onlineDetector: onlineDetector(transport),
+  });
+  await client.start();
+  const goOnline = async () => {
+    transport.state.online = true;
+    client.online();
+    await client.flush();
+    await client.sync();
+  };
+  return { client, transport, storage, goOnline };
 }
 
 describe("diffData", () => {
@@ -58,16 +89,6 @@ describe("diffData", () => {
     expect(diffData(data, { ...data, exams: data.exams.map((e) => ({ ...e })) })).toEqual([]);
   });
 
-  it("a fila guarda só a mutação mais recente de cada linha", () => {
-    const data = createSeed();
-    const exam = data.exams[0];
-    const first = diffData(data, { ...data, exams: [{ ...exam, name: "A" }] });
-    const second = diffData(data, { ...data, exams: [{ ...exam, name: "B" }] });
-    const outbox = enqueue(first, second);
-    expect(outbox).toHaveLength(1);
-    expect(outbox[0].op === "upsert" && (outbox[0].row as { name: string }).name).toBe("B");
-  });
-
   it("orderBatch reordena um lote misturado com segurança", () => {
     const created = newExam(emptyData());
     const shuffled = [...diffData(emptyData(), created)].reverse();
@@ -76,53 +97,59 @@ describe("diffData", () => {
   });
 });
 
-describe("motor de sync", () => {
+describe("cliente de sync", () => {
   it("faz ida e volta: o que um aparelho grava aparece no outro", async () => {
     const server = fakeServer();
     const a = await device(server);
     const b = await device(server);
-    a.engine.update(newExam);
-    await a.engine.sync();
-    await b.engine.sync();
-    expect(b.engine.getState().data.exams).toHaveLength(1);
-    expect(b.engine.getState().data.activeExamId).toBe(a.engine.getState().data.activeExamId);
-    expect(b.engine.getState().data.topics.map((t) => t.name).sort()).toEqual(
-      a.engine.getState().data.topics.map((t) => t.name).sort(),
+    a.client.update(newExam);
+    await a.client.flush();
+    await b.client.sync();
+    expect(b.client.data().exams).toHaveLength(1);
+    expect(b.client.data().activeExamId).toBe(a.client.data().activeExamId);
+    expect(b.client.data().topics.map((t) => t.name).sort()).toEqual(
+      a.client.data().topics.map((t) => t.name).sort(),
     );
+  });
+
+  it("mostra a alteração na hora, antes da rede", async () => {
+    const server = fakeServer();
+    const a = await device(server, false);
+    a.client.update(newExam);
+    expect(a.client.data().exams).toHaveLength(1);
   });
 
   it("funciona offline e envia a fila quando a rede volta", async () => {
     const server = fakeServer();
     const a = await device(server, false);
-    a.engine.update(newExam);
-    await a.engine.sync();
-    expect(a.engine.getState().status).toBe("offline");
-    expect(a.engine.getState().outbox.length).toBeGreaterThan(0);
+    a.client.update(newExam);
+    await tick();
+    expect(a.client.data().exams).toHaveLength(1);
+    expect(a.client.getState().pending).toBeGreaterThan(0);
     expect(server.rows.size).toBe(0);
-
-    a.transport.state.online = true;
-    await a.engine.sync();
-    expect(a.engine.getState().status).toBe("idle");
-    expect(a.engine.getState().outbox).toEqual([]);
+    await a.goOnline();
+    expect(a.client.getState().pending).toBe(0);
     expect(server.rows.size).toBeGreaterThan(0);
+    expect(a.client.data().exams).toHaveLength(1);
   });
 
-  it("guarda dados e fila no banco local e retoma depois de fechar o app", async () => {
+  it("guarda a fila e envia depois de reabrir o app", async () => {
     const server = fakeServer();
-    const transport = server.transport({ online: false });
-    const store = memoryStore();
-    const first = new SyncEngine(store, transport, emptyData);
-    await first.start();
-    first.update(newExam);
-    await first.flush();
+    const storage = memoryStorage();
+    const first = await device(server, false, { storage });
+    first.client.update(newExam);
+    await tick();
+    first.client.dispose();
 
-    const reopened = new SyncEngine(store, transport, emptyData);
-    await reopened.start();
-    expect(reopened.getState().data.exams).toHaveLength(1);
-    expect(reopened.getState().outbox.length).toBe(first.getState().outbox.length);
+    const reopened = await device(server, true, { storage });
+    await tick();
+    await reopened.client.flush();
+    await reopened.client.sync();
+    expect(server.rows.size).toBeGreaterThan(0);
+    expect(reopened.client.data().exams).toHaveLength(1);
   });
 
-  it("reenviar o mesmo lote não aplica duas vezes", async () => {
+  it("reenviar o mesmo lote não aplica duas vezes", () => {
     const server = fakeServer();
     const created = newExam(emptyData());
     const mutations = diffData(emptyData(), created);
@@ -137,10 +164,10 @@ describe("motor de sync", () => {
     const server = fakeServer();
     const a = await device(server);
     const b = await device(server);
-    a.engine.update(newExam);
-    const examId = a.engine.getState().data.activeExamId!;
-    const topic = a.engine.getState().data.topics[0];
-    a.engine.update((data) =>
+    a.client.update(newExam);
+    const examId = a.client.data().activeExamId!;
+    const topic = a.client.data().topics[0];
+    a.client.update((data) =>
       recordSession(data, {
         examId,
         subjectId: topic.subjectId,
@@ -149,53 +176,47 @@ describe("motor de sync", () => {
         minutes: 30,
       }),
     );
-    await a.engine.sync();
-    await b.engine.sync();
-    expect(b.engine.getState().data.sessions).toHaveLength(1);
-    expect(b.engine.getState().data.reviews).toHaveLength(3);
+    await a.client.flush();
+    await b.client.sync();
+    expect(b.client.data().sessions).toHaveLength(1);
+    expect(b.client.data().reviews).toHaveLength(3);
 
-    const sessionId = a.engine.getState().data.sessions[0].id;
-    a.engine.update((data) => deleteSession(data, sessionId));
-    await a.engine.sync();
-    await b.engine.sync();
-    expect(b.engine.getState().data.sessions).toEqual([]);
-    expect(b.engine.getState().data.reviews).toEqual([]);
+    const sessionId = a.client.data().sessions[0].id;
+    a.client.update((data) => deleteSession(data, sessionId));
+    await a.client.flush();
+    await b.client.sync();
+    expect(b.client.data().sessions).toEqual([]);
+    expect(b.client.data().reviews).toEqual([]);
   });
 
   it("dois aparelhos offline: vence a última escrita que chega ao servidor", async () => {
     const server = fakeServer();
     const a = await device(server);
     const b = await device(server);
-    a.engine.update(newExam);
-    await a.engine.sync();
-    await b.engine.sync();
-    const examId = a.engine.getState().data.activeExamId!;
+    a.client.update(newExam);
+    await a.client.flush();
+    await b.client.sync();
+    const examId = a.client.data().activeExamId!;
     const rename = (name: string) => (data: AppData) => ({
       ...data,
       exams: data.exams.map((e) => (e.id === examId ? { ...e, name } : e)),
     });
-
     a.transport.state.online = false;
     b.transport.state.online = false;
-    a.engine.update(rename("Nome do A"));
-    b.engine.update(rename("Nome do B"));
-    // A local pendente vale no próprio aparelho enquanto não é enviada.
-    expect(a.engine.getState().data.exams[0].name).toBe("Nome do A");
-
-    b.transport.state.online = true;
-    await b.engine.sync();
-    a.transport.state.online = true;
-    await a.engine.sync();
-    await b.engine.sync();
-
-    expect(a.engine.getState().data.exams[0].name).toBe("Nome do A");
-    expect(b.engine.getState().data.exams[0].name).toBe("Nome do A");
+    b.client.update(rename("Nome do B"));
+    a.client.update(rename("Nome do A"));
+    expect(a.client.data().exams[0].name).toBe("Nome do A");
+    await b.goOnline();
+    await a.goOnline();
+    await b.client.sync();
+    expect(a.client.data().exams[0].name).toBe("Nome do A");
+    expect(b.client.data().exams[0].name).toBe("Nome do A");
   });
 
-  it("mutação recusada sai da fila e fica visível com o motivo", async () => {
+  it("mutação recusada fica visível com o motivo e o servidor manda", async () => {
     const server = fakeServer();
     const a = await device(server);
-    a.engine.update((data) => ({
+    a.client.update((data) => ({
       ...data,
       exams: [
         {
@@ -209,38 +230,41 @@ describe("motor de sync", () => {
         },
       ],
     }));
-    await a.engine.sync();
-    const state = a.engine.getState();
-    expect(state.outbox).toEqual([]);
+    await a.client.flush();
+    const state = a.client.getState();
+    expect(state.pending).toBe(0);
     expect(state.rejected).toHaveLength(1);
     expect(state.rejected[0].reason).toBe("Linha inválida.");
     expect(state.rejected[0].mutation.rowId).toBe("x");
-    a.engine.dismissRejected();
-    expect(a.engine.getState().rejected).toEqual([]);
+    expect(a.client.data().exams).toEqual([]);
+    a.client.dismissRejected();
+    expect(a.client.getState().rejected).toEqual([]);
   });
 
   it("puxa em páginas até o fim", async () => {
     const server = fakeServer();
     const a = await device(server);
-    a.engine.update(newExam);
-    await a.engine.sync();
-    const b = { engine: new SyncEngine(memoryStore(), server.transport({ online: true, pageSize: 2 }), emptyData) };
-    await b.engine.start();
-    await b.engine.sync();
-    expect(b.engine.getState().data.topics).toHaveLength(a.engine.getState().data.topics.length);
-    expect(b.engine.getState().cursor).toBe(server.version);
+    a.client.update(newExam);
+    await a.client.flush();
+    const b = await device(server, true, { pageSize: 2 });
+    expect(b.client.data().topics).toHaveLength(a.client.data().topics.length);
+    expect(b.client.cursor()).toBe(server.version);
   });
 
-  it("applyPulled não sobrescreve linhas com mutação pendente", () => {
-    const data = createSeed();
-    const exam = data.exams[0];
-    const local = { ...data, exams: [{ ...exam, name: "Local" }] };
-    const outbox = diffData(data, local);
-    const merged = applyPulled(
-      local,
-      [{ table: "exams", row: { ...exam, name: "Remoto" }, deleted: false, version: 9 }],
-      outbox,
-    );
-    expect(merged.exams[0].name).toBe("Local");
+  it("alteração pendente não é sobrescrita por um pull", async () => {
+    const server = fakeServer();
+    const a = await device(server);
+    const b = await device(server);
+    a.client.update(newExam);
+    await a.client.flush();
+    await b.client.sync();
+    const examId = a.client.data().activeExamId!;
+    b.transport.state.online = false;
+    b.client.update((data) => ({ ...data, exams: data.exams.map((e) => ({ ...e, name: "Local" })) }));
+    a.client.update((data) => ({ ...data, exams: data.exams.map((e) => ({ ...e, name: "Remoto" })) }));
+    await a.client.flush();
+    b.transport.state.online = true;
+    await b.client.sync();
+    expect(b.client.data().exams.find((e) => e.id === examId)!.name).toBe("Local");
   });
 });

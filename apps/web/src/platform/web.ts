@@ -1,4 +1,4 @@
-import { clearIndexedDbStore, indexedDbStore } from "./indexedDb";
+import { browserSyncStorage, clearBrowserSyncStorage } from "./browserSync";
 import type { Platform } from "./types";
 import { webPush } from "./webPush";
 
@@ -19,8 +19,8 @@ const blockEndApi = (init: RequestInit) =>
 
 export const webPlatform: Platform = {
   native: false,
-  localStore: indexedDbStore,
-  clearLocalStore: clearIndexedDbStore,
+  syncStorage: browserSyncStorage,
+  clearSyncStorage: clearBrowserSyncStorage,
   preferences: {
     get: (key) => storage()?.getItem(key) ?? null,
     set: (key, value) => storage()?.setItem(key, value),

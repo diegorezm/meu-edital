@@ -1,4 +1,14 @@
-import type { LocalStore } from "@meu-edital/sync";
+import type { CollectionOptions } from "@meu-edital/sync/client";
+import type { StorageAdapter } from "@tanstack/offline-transactions";
+
+/** Onde o sync guarda os dados e a fila de um usuário no aparelho. */
+export type SyncStorage = {
+  /** Envolve cada coleção com a persistência local; ausente, os dados ficam só em memória. */
+  persist?: (options: CollectionOptions) => CollectionOptions;
+  /** Fila de alterações ainda não enviadas. */
+  storage?: StorageAdapter;
+  close(): Promise<void>;
+};
 
 /**
  * Recursos que mudam entre a web e o app nativo (Capacitor). Telas usam só
@@ -8,13 +18,13 @@ export type Platform = {
   /** Roda dentro do app nativo. */
   native: boolean;
   /**
-   * Banco local de um usuário: dados, fila de mutações e cursor do sync.
-   * IndexedDB na web; SQLite no app, porque o sistema pode limpar o
-   * armazenamento do WebView e a fila guarda estudo ainda não enviado.
+   * Banco local de um usuário: linhas sincronizadas e fila de alterações.
+   * SQLite nas duas plataformas (OPFS na web; nativo no app, porque o
+   * sistema pode limpar o armazenamento do WebView).
    */
-  localStore(name: string): LocalStore;
+  syncStorage(userId: string): Promise<SyncStorage>;
   /** Apaga o banco local (ao excluir a conta). */
-  clearLocalStore(name: string): Promise<void>;
+  clearSyncStorage(userId: string): Promise<void>;
   /**
    * Preferências pequenas e síncronas do aparelho (estado do cronômetro).
    * localStorage nas duas plataformas.

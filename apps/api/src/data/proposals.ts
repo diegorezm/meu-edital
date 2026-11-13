@@ -8,19 +8,19 @@ import {
   proposalSize,
 } from "@meu-edital/agent-context";
 import { type Db, proposals } from "@meu-edital/db";
-import { type AppData, emptyData, uid } from "@meu-edital/domain";
-import { applyPulled } from "@meu-edital/sync";
+import { type AppData, uid } from "@meu-edital/domain";
+import { dataFromRows } from "@meu-edital/sync";
 import { syncData } from "./sync";
 
 /** Dados de estudo do usuário montados a partir do banco (para o MCP e para validar propostas). */
 export async function loadAppData(db: Db, userId: string): Promise<AppData> {
   const sync = syncData(db, userId);
   let since = 0;
-  let data = emptyData();
+  const changes = [];
   for (;;) {
     const page = await sync.pull(since, 2000);
-    data = applyPulled(data, page.changes.filter((c) => !c.deleted));
-    if (!page.hasMore) return data;
+    changes.push(...page.changes);
+    if (!page.hasMore) return dataFromRows(changes);
     since = page.version;
   }
 }

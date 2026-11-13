@@ -85,12 +85,3 @@ export function orderBatch(mutations: Mutation[]): Mutation[] {
   return [...upserts, ...deletes];
 }
 
-/**
- * Junta mutações novas à fila. Uma linha com mutação pendente fica só com a
- * mais recente, para não reenviar estados intermediários.
- */
-export function enqueue(outbox: Mutation[], mutations: Mutation[]): Mutation[] {
-  const key = (m: Mutation) => `${m.table}:${m.rowId}`;
-  const replaced = new Set(mutations.map(key));
-  return [...outbox.filter((m) => !replaced.has(key(m))), ...mutations];
-}

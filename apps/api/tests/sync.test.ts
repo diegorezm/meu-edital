@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { type AppData, emptyData, startExam, uid } from "@meu-edital/domain";
 import {
-  applyPulled,
+  dataFromRows,
   diffData,
   type Mutation,
   type PullResponse,
@@ -38,7 +38,7 @@ describe("sync: push e pull", () => {
     expect(body.version).toBe(body.accepted.length);
 
     const pulled = await pullAll(cookie);
-    const rebuilt = applyPulled(emptyData(), pulled.changes);
+    const rebuilt = dataFromRows(pulled.changes);
     expect(rebuilt.activeExamId).toBe(data.activeExamId);
     expect(rebuilt.exams).toEqual(data.exams);
     expect(new Set(rebuilt.topics.map((t) => t.id))).toEqual(new Set(data.topics.map((t) => t.id)));
@@ -72,7 +72,7 @@ describe("sync: push e pull", () => {
     const changes = (await pullAll(cookie, v1.version - 1)).changes;
     const deleted = changes.find((c) => c.row.id === topic.id);
     expect(deleted?.deleted).toBe(true);
-    const rebuilt = applyPulled(emptyData(), (await pullAll(cookie)).changes);
+    const rebuilt = dataFromRows((await pullAll(cookie)).changes);
     expect(rebuilt.topics.map((t) => t.id)).not.toContain(topic.id);
     expect(rebuilt.exams[0].board).toBeUndefined();
     expect(v2.version).toBeGreaterThan(v1.version);
@@ -87,7 +87,7 @@ describe("sync: push e pull", () => {
     const fromB = diffData(data, rename("B"));
     await push(cookie, fromB);
     await push(cookie, fromA);
-    const rebuilt = applyPulled(emptyData(), (await pullAll(cookie)).changes);
+    const rebuilt = dataFromRows((await pullAll(cookie)).changes);
     expect(rebuilt.exams[0].name).toBe("A");
   });
 
@@ -144,7 +144,7 @@ describe("sync: isolamento entre usuários", () => {
     const remove: Mutation = { id: uid(), table: "exams", op: "delete", rowId: examId };
     await push(bia.cookie, [remove]);
 
-    const anaData = applyPulled(emptyData(), (await pullAll(ana.cookie)).changes);
+    const anaData = dataFromRows((await pullAll(ana.cookie)).changes);
     expect(anaData.exams[0].name).toBe("TRT");
     expect((await pullAll(bia.cookie)).changes.some((c) => c.row.id === examId)).toBe(false);
   });

@@ -107,5 +107,4 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
 
 - Trabalhe em branches. Commits só quando pedirem.
 - Mensagens de commit em português, no presente e em terceira pessoa: `Adiciona exclusão de sessão no domínio`.
-- `_old/` guarda o projeto antigo só para consulta: nunca importe nem referencie de lá, e nunca faça commit dela.
 - Nunca faça commit de `.dev.vars`, `.env*`, `dist/`, `.turbo/` ou `.wrangler/`.

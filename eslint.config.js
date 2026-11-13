@@ -9,7 +9,6 @@ export default tseslint.config(
       "**/.wrangler/**",
       "**/worker-configuration.d.ts",
       "**/routeTree.gen.ts",
-      "_old/**",
       "docs/**",
     ],
   },

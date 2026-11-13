@@ -7,6 +7,7 @@ import { SignUpView } from "./components/SignUpView";
 import { WaitlistView } from "./components/WaitlistView";
 import { useAccount } from "./hooks/useAccount";
 import { useNotifications } from "./hooks/useNotifications";
+import { usePrivacy } from "./hooks/usePrivacy";
 import { useForgotPassword } from "./hooks/useForgotPassword";
 import { useResendVerification } from "./hooks/useResendVerification";
 import { useResetPassword } from "./hooks/useResetPassword";
@@ -57,6 +58,6 @@ export function ResetPasswordPage({ token, error }: { token?: string; error?: st
 }
 
 export function AccountPage() {
-  return <AccountView form={useAccount()} notifications={useNotifications()} />;
+  return <AccountView form={useAccount()} notifications={useNotifications()} privacy={usePrivacy()} />;
 }
 

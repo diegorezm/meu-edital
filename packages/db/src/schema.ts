@@ -349,3 +349,23 @@ export const legalAcceptances = sqliteTable(
   },
   (t) => [index("legal_acceptances_user_idx").on(t.userId, t.document)],
 );
+
+/**
+ * Escolhas de rastreamento (cookies e ferramentas de terceiros), só com
+ * inserções: a última linha de cada categoria vale. Prova do consentimento.
+ */
+export const trackingConsents = sqliteTable(
+  "tracking_consents",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    category: text("category", { enum: ["erros", "analise"] }).notNull(),
+    granted: integer("granted", { mode: "boolean" }).notNull(),
+    /** Versão da política de privacidade em vigor na escolha. */
+    policyVersion: text("policy_version").notNull(),
+    decidedAt: integer("decided_at").notNull(),
+  },
+  (t) => [index("tracking_consents_user_idx").on(t.userId, t.category)],
+);

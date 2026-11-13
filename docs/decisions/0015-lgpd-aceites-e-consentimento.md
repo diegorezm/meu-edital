@@ -14,7 +14,7 @@ O app trata dados pessoais (conta, histórico de estudo) e vai ganhar ferramenta
 
 Quem já tinha conta antes desta decisão aceita no próximo acesso. O cadastro com Google passa pelo mesmo fluxo, porque o aceite é sempre uma chamada à parte, depois de existir sessão.
 
-**Rastreamento por categoria.** Ainda não implementado.
+**Rastreamento por categoria.** A escolha fica no aparelho (`src/platform/tracking/`) e, com sessão, na tabela `tracking_consents` (só inserções, com a versão da política), por `GET/POST /api/legal/rastreamento`. O banner volta quando a política muda. Para ligar uma ferramenta, acrescente um `TrackingProvider` em `PROVIDERS`.
 - *Erros* (Sentry): base legal de legítimo interesse (art. 7º, IX), sem PII (`sendDefaultPii: false`, sem replay, sem IP). Fica ligado, com aviso na política e opção de desligar (oposição, art. 18 § 2º).
 - *Análise* (PostHog, GA): só com opt-in. Os SDKs só carregam depois do consentimento, atrás de `src/platform/tracking/`.
 - Banner com "Aceitar", "Recusar" e "Personalizar" com o mesmo peso visual.

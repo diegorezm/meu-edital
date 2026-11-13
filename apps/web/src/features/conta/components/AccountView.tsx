@@ -1,16 +1,19 @@
-import { Button, buttonClass, Field, Notice, Sheet } from "@meu-edital/ui";
-import { apiUrl } from "@global/http";
+import { Button, Field, Notice, Sheet } from "@meu-edital/ui";
 import type { useAccount } from "../hooks/useAccount";
 import type { useNotifications } from "../hooks/useNotifications";
+import type { usePrivacy } from "../hooks/usePrivacy";
 import { FormShell } from "./FormShell";
+import { PrivacySheet } from "./PrivacySheet";
 
 /** Conta: dados, estado do sync, sair, exportar e excluir (LGPD e lojas). */
 export function AccountView({
   form,
   notifications,
+  privacy,
 }: {
   form: ReturnType<typeof useAccount>;
   notifications: ReturnType<typeof useNotifications>;
+  privacy: ReturnType<typeof usePrivacy>;
 }) {
   if (!form.user) return null;
   return (
@@ -79,17 +82,7 @@ export function AccountView({
           )}
         </Sheet>
       )}
-      <Sheet title="Seus dados" tone="gold" ribbonSize="sm" className="pt-[26px]">
-        <p className="mb-3 text-sm">Leve seu estudo para onde quiser: tudo em JSON ou as sessões numa planilha.</p>
-        <div className="flex flex-wrap gap-2">
-          <a href={apiUrl("/api/export?formato=json")} download className={buttonClass("quiet")}>
-            Baixar tudo (JSON)
-          </a>
-          <a href={apiUrl("/api/export?formato=csv")} download className={buttonClass("quiet")}>
-            Baixar sessões (CSV)
-          </a>
-        </div>
-      </Sheet>
+      <PrivacySheet privacy={privacy} />
       <p className="text-center text-sm text-ink-muted">
         O código do Meu Edital é aberto (FSL-1.1).{" "}
         <a href="https://github.com/diegorezm/meu-edital" className="font-bold text-teal-strong underline">

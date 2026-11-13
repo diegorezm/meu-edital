@@ -57,6 +57,13 @@
       "when": 1794593119778,
       "tag": "0007_aceites_legais",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794594667431,
+      "tag": "0008_consentimento_rastreamento",
+      "breakpoints": true
     }
   ]
 }

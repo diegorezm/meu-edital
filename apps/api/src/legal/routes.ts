@@ -6,7 +6,10 @@ import type { AppContext } from "../env";
 import { clientIp, rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
 import { acceptancesData } from "./acceptances";
+import { trackingData } from "./tracking";
 import { currentVersion, LEGAL_DOCUMENT_NAMES, type LegalDocument } from "./documents";
+
+const TrackingSchema = z.strictObject({ erros: z.boolean(), analise: z.boolean() });
 
 const AcceptSchema = z.strictObject({
   documents: z
@@ -54,5 +57,15 @@ export const legalRoutes = new Hono<AppContext>()
       secret: c.env.BETTER_AUTH_SECRET,
     });
     if (!ok) return c.json({ error: "Essa versão não é a atual. Recarregue a página." }, 409);
+    return c.json({ ok: true });
+  })
+  .use("/rastreamento", requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .get("/rastreamento", async (c) =>
+    c.json({ saved: await trackingData(createDb(c.env.DB), c.get("userId")).latest() }),
+  )
+  .post("/rastreamento", async (c) => {
+    const parsed = TrackingSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.json({ error: "Escolha inválida." }, 400);
+    await trackingData(createDb(c.env.DB), c.get("userId")).save(parsed.data);
     return c.json({ ok: true });
   });

@@ -61,3 +61,28 @@ describe("pendingDocuments", () => {
     expect(pendingDocuments({ termos: "2026-11-13" }).map((p) => p.document)).toEqual(["privacidade"]);
   });
 });
+
+describe("escolhas de rastreamento", () => {
+  it("guarda a última escolha de cada pessoa, sem vazar entre contas", async () => {
+    const ana = await verifiedUser();
+    const bia = await verifiedUser();
+    expect(await (await call("/api/legal/rastreamento", { cookie: ana.cookie })).json()).toEqual({ saved: null });
+
+    await call("/api/legal/rastreamento", { cookie: ana.cookie, body: { erros: true, analise: true } });
+    await call("/api/legal/rastreamento", { cookie: ana.cookie, body: { erros: false, analise: false } });
+    const saved = (await (await call("/api/legal/rastreamento", { cookie: ana.cookie })).json()) as {
+      saved: { choices: unknown };
+    };
+    expect(saved.saved.choices).toEqual({ erros: false, analise: false });
+
+    const other = await (await call("/api/legal/rastreamento", { cookie: bia.cookie })).json();
+    expect(other).toEqual({ saved: null });
+    expect((await call("/api/legal/rastreamento", { body: { erros: true, analise: true } })).status).toBe(401);
+  });
+
+  it("recusa escolha mal formada", async () => {
+    const { cookie } = await verifiedUser();
+    const response = await call("/api/legal/rastreamento", { cookie, body: { analise: "sim" } });
+    expect(response.status).toBe(400);
+  });
+});

@@ -1,4 +1,4 @@
-import { POPULAR_EXAMS, type StarterSubject, startExam } from "@meu-edital/domain";
+import { EXAM_CATALOG, type StarterSubject, startExam } from "@meu-edital/domain";
 import { useStore } from "@global/store/useStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -6,13 +6,14 @@ import { useState } from "react";
 export type Step = 1 | 2 | 3;
 export const HOUR_OPTIONS = [10, 15, 20, 30];
 
-type DraftSubject = { key: string; name: string; topics: string[] };
+type DraftSubject = { key: string; name: string; topics: string[]; questions?: number };
 
 let counter = 0;
 const draft = (subject: StarterSubject): DraftSubject => ({
   key: `m${(counter += 1)}`,
   name: subject.name,
   topics: subject.topics ?? [],
+  questions: subject.questions,
 });
 
 /** Primeiro concurso em três passos: qual prova, quanto tempo, quais matérias. */
@@ -22,6 +23,7 @@ export function useOnboarding() {
   const [step, setStep] = useState<Step>(1);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
+  const [board, setBoard] = useState<string | undefined>();
   const [examDate, setExamDate] = useState("");
   const [hours, setHours] = useState(20);
   const [subjects, setSubjects] = useState<DraftSubject[]>([]);
@@ -29,10 +31,11 @@ export function useOnboarding() {
   const [error, setError] = useState("");
 
   const pickPopular = (popularName: string) => {
-    const popular = POPULAR_EXAMS.find((exam) => exam.name === popularName);
+    const popular = EXAM_CATALOG.find((exam) => exam.name === popularName);
     if (!popular) return;
     setName(popular.name);
     setRole(popular.role);
+    setBoard(popular.board);
     setSubjects(popular.subjects.map(draft));
   };
 
@@ -61,9 +64,10 @@ export function useOnboarding() {
       startExam(data, {
         name,
         role,
+        board,
         examDate: examDate || undefined,
         hoursPerWeek: hours,
-        subjects: subjects.map((s) => ({ name: s.name, topics: s.topics })),
+        subjects: subjects.map((s) => ({ name: s.name, topics: s.topics, questions: s.questions })),
       }),
     );
     await navigate({ to: "/" });
@@ -75,7 +79,8 @@ export function useOnboarding() {
     next,
     finish,
     error,
-    popular: POPULAR_EXAMS.map((e) => e.name),
+    // Catálogo de editais prontos: todos os concursos, como atalhos.
+    popular: EXAM_CATALOG.map((e) => e.name),
     pickPopular,
     name,
     setName,

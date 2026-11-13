@@ -147,3 +147,20 @@ describe("cronômetro", () => {
     expect(elapsedMinutes(startTimer(setup, 0), 5_000)).toBe(1);
   });
 });
+
+describe("catálogo de editais", () => {
+  it("cada concurso tem matérias com questões e assuntos, e começa com pesos", async () => {
+    const { EXAM_CATALOG } = await import("../src");
+    expect(EXAM_CATALOG.length).toBeGreaterThanOrEqual(12);
+    expect(new Set(EXAM_CATALOG.map((e) => e.id)).size).toBe(EXAM_CATALOG.length);
+    for (const exam of EXAM_CATALOG)
+      for (const subject of exam.subjects) {
+        expect(subject.questions).toBeGreaterThan(0);
+        expect(subject.topics?.length).toBeGreaterThan(0);
+      }
+    const inss = EXAM_CATALOG.find((e) => e.id === "inss-tecnico")!;
+    const data = startExam(emptyData(), { ...inss, hoursPerWeek: 20 });
+    expect(data.exams[0].board).toBe("Cebraspe");
+    expect(subjectWeight(data.subjects.find((s) => s.name === "Direito Previdenciário")!)).toBe(30);
+  });
+});

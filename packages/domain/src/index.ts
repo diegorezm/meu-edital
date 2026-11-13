@@ -11,6 +11,7 @@ export * from "./weekTargets";
 export * from "./seed";
 export * from "./catalog";
 export * from "./onboarding";
+export * from "./examCatalog";
 export * from "./syllabus";
 export * from "./timer";
 export * from "./mockExams";

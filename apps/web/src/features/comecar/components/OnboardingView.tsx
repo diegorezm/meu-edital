@@ -56,7 +56,8 @@ function StepExam({ flow }: { flow: ReturnType<typeof useOnboarding> }) {
   return (
     <>
       <Field label="Qual concurso?" value={flow.name} onChange={(e) => flow.setName(e.target.value)} autoFocus />
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Concursos populares">
+      <p className="-mb-2 text-xs text-ink-muted">Editais prontos (confira os números com o seu edital depois):</p>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Editais prontos">
         {flow.popular.map((name) => (
           <Chip key={name} pressed={flow.name === name} onClick={() => flow.pickPopular(name)}>
             {name}
@@ -118,6 +119,7 @@ function StepSubjects({ flow }: { flow: ReturnType<typeof useOnboarding> }) {
                 {subject.name}{" "}
                 <span className="text-xs text-ink-muted">
                   {subject.topics.length ? `${subject.topics.length} assuntos` : "assuntos depois"}
+                  {subject.questions ? ` · ${subject.questions} questões` : ""}
                 </span>
               </span>
             </span>

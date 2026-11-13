@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react";
 import { apiOrigin, saveSessionToken, sessionToken } from "./http";
+import { queryClient } from "./query";
 
 /**
  * Cliente de auth. Na web, a sessão vive em cookie HttpOnly da mesma origem.
@@ -21,6 +22,7 @@ export const authClient = createAuthClient({
 export async function signOut() {
   await authClient.signOut();
   await saveSessionToken(null);
+  queryClient.clear();
 }
 
 export const useSession = authClient.useSession;

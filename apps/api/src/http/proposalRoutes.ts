@@ -7,6 +7,7 @@ import type { AppContext } from "../env";
 import { rateLimit } from "./rateLimit";
 import { requireUser } from "./session";
 import { requireConsent } from "../legal/routes";
+import { jsonBody } from "./validate";
 
 const StatusSchema = z.strictObject({ status: z.enum(["aplicada", "descartada"]) });
 
@@ -17,11 +18,10 @@ export const proposalRoutes = new Hono<AppContext>()
     const data = proposalsData(createDb(c.env.DB), c.get("userId"));
     return c.json({ proposals: await data.pending() });
   })
-  .post("/", async (c) => {
-    const parsed = ProposalInputSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "A resposta não está no formato esperado." }, 400);
+  .post("/", jsonBody(ProposalInputSchema, "A resposta não está no formato esperado."), async (c) => {
+    const parsed = c.req.valid("json");
     try {
-      const proposal = await proposalsData(createDb(c.env.DB), c.get("userId")).create(parsed.data, {
+      const proposal = await proposalsData(createDb(c.env.DB), c.get("userId")).create(parsed, {
         source: "colar",
         author: "Resposta colada",
       });
@@ -31,12 +31,11 @@ export const proposalRoutes = new Hono<AppContext>()
       throw error;
     }
   })
-  .post("/:id/status", async (c) => {
-    const parsed = StatusSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "Status inválido." }, 400);
+  .post("/:id/status", jsonBody(StatusSchema, "Status inválido."), async (c) => {
+    const parsed = c.req.valid("json");
     const ok = await proposalsData(createDb(c.env.DB), c.get("userId")).setStatus(
       c.req.param("id"),
-      parsed.data.status,
+      parsed.status,
     );
     return ok ? c.json({ ok: true }) : c.json({ error: "Proposta não encontrada." }, 404);
   });

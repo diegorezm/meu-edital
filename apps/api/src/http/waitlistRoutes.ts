@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createDb, waitlist } from "@meu-edital/db";
 import type { AppContext } from "../env";
 import { clientIp, rateLimit } from "./rateLimit";
+import { jsonBody } from "./validate";
 
 const EntrySchema = z.object({
   email: z.email().max(254),
@@ -28,15 +29,14 @@ async function captchaOk(secret: string, token: string | undefined, ip: string) 
  */
 export const waitlistRoutes = new Hono<AppContext>()
   .use(rateLimit("AUTH_LIMITER", (c) => `${clientIp(c)}:lista-de-espera`))
-  .post("/", async (c) => {
-    const parsed = EntrySchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "Confira o e-mail." }, 400);
+  .post("/", jsonBody(EntrySchema, "Confira o e-mail."), async (c) => {
+    const parsed = c.req.valid("json");
     const token = c.req.header("x-captcha-response");
     if (!(await captchaOk(c.env.TURNSTILE_SECRET_KEY, token, clientIp(c))))
       return c.json({ error: "Confirme que você não é um robô." }, 400);
     await createDb(c.env.DB)
       .insert(waitlist)
-      .values({ email: parsed.data.email.trim().toLowerCase(), source: parsed.data.source, createdAt: Date.now() })
+      .values({ email: parsed.email.trim().toLowerCase(), source: parsed.source, createdAt: Date.now() })
       .onConflictDoNothing();
     return c.json({ ok: true });
   });

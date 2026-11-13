@@ -85,7 +85,8 @@ Antes de escrever código que toque em Workers, D1, Durable Objects ou Wrangler,
   - `index.tsx` é a entrada pública.
 - Uma feature não importa o interior de outra.
 - Dados de estudo: `useStore()` (`src/global/store/`). Leia `store.data` e altere só com `store.update((data) => funcaoDeDominio(data, ...))`; o sync cuida do resto. Nunca chame a API de sync direto de uma tela.
-- Chamadas à API passam por `apiFetch`/`apiUrl` (`src/global/http.ts`): na web são relativas com cookie; no app nativo usam `VITE_API_ORIGIN` e o token bearer.
+- Chamadas à API passam por `apiFetch`/`apiUrl` (`src/global/http.ts`): na web são relativas com cookie; no app nativo usam `VITE_API_ORIGIN` e o token bearer. Nas telas, leia a API com o TanStack Query (`useQuery`, cliente em `src/global/query.ts`), nunca com `useEffect`.
+- Na API, valide o corpo com `jsonBody(schema, mensagem)` (`apps/api/src/http/validate.ts`).
 - Código compartilhado fica em `src/global/`. Recursos de plataforma (armazenamento seguro, notificações, vibração e cronômetro) ficam atrás de `src/platform/`. Telas nunca verificam a plataforma.
 - Aliases: `@features/*`, `@global/*`, `@platform/*`. Importações externas primeiro.
 - Nenhum arquivo de tela com mais de ~300 linhas.

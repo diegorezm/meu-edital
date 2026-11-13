@@ -2,7 +2,9 @@
  * Chamadas à API do mesmo Worker. Mesma origem: o cookie de sessão vai junto.
  * Os dados de estudo nunca passam por aqui: eles vão pelo sync (`useStore`).
  */
+import { queryOptions } from "@tanstack/react-query";
 import { apiFetch } from "./http";
+import { queryClient } from "./query";
 
 export async function getJson<T>(path: string): Promise<T> {
   const response = await apiFetch(`/api${path}`);
@@ -38,6 +40,12 @@ export type PublicConfig = {
   vapidPublicKey: string | null;
 };
 
-let config: Promise<PublicConfig> | undefined;
-/** Configuração pública (Turnstile, Google), buscada uma vez por carregamento. */
-export const publicConfig = () => (config ??= getJson<PublicConfig>("/config"));
+/** Configuração pública (Turnstile, Google, Web Push), buscada uma vez por carregamento. */
+export const publicConfigQuery = queryOptions({
+  queryKey: ["config"],
+  queryFn: () => getJson<PublicConfig>("/config"),
+  staleTime: Number.POSITIVE_INFINITY,
+});
+
+/** A mesma configuração fora de componentes, pelo cache do Query. */
+export const publicConfig = () => queryClient.ensureQueryData(publicConfigQuery);

@@ -8,6 +8,7 @@ import { requireUser } from "../http/session";
 import { acceptancesData } from "./acceptances";
 import { trackingData } from "./tracking";
 import { currentVersion, LEGAL_DOCUMENT_NAMES, type LegalDocument } from "./documents";
+import { jsonBody } from "../http/validate";
 
 const TrackingSchema = z.strictObject({ erros: z.boolean(), analise: z.boolean() });
 
@@ -48,10 +49,9 @@ export const legalRoutes = new Hono<AppContext>()
     const data = acceptancesData(createDb(c.env.DB), c.get("userId"));
     return c.json({ pending: await data.pending(), history: await data.history() });
   })
-  .post("/aceite", async (c) => {
-    const parsed = AcceptSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "Aceite inválido." }, 400);
-    const ok = await acceptancesData(createDb(c.env.DB), c.get("userId")).accept(parsed.data.documents, {
+  .post("/aceite", jsonBody(AcceptSchema, "Aceite inválido."), async (c) => {
+    const parsed = c.req.valid("json");
+    const ok = await acceptancesData(createDb(c.env.DB), c.get("userId")).accept(parsed.documents, {
       ip: clientIp(c),
       userAgent: c.req.header("user-agent"),
       secret: c.env.BETTER_AUTH_SECRET,
@@ -63,9 +63,8 @@ export const legalRoutes = new Hono<AppContext>()
   .get("/rastreamento", async (c) =>
     c.json({ saved: await trackingData(createDb(c.env.DB), c.get("userId")).latest() }),
   )
-  .post("/rastreamento", async (c) => {
-    const parsed = TrackingSchema.safeParse(await c.req.json().catch(() => null));
-    if (!parsed.success) return c.json({ error: "Escolha inválida." }, 400);
-    await trackingData(createDb(c.env.DB), c.get("userId")).save(parsed.data);
+  .post("/rastreamento", jsonBody(TrackingSchema, "Escolha inválida."), async (c) => {
+    const parsed = c.req.valid("json");
+    await trackingData(createDb(c.env.DB), c.get("userId")).save(parsed);
     return c.json({ ok: true });
   });

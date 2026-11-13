@@ -6,6 +6,7 @@ import type { AppContext, AppEnv } from "../env";
 import { rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
 import { requireConsent } from "../legal/routes";
+import { jsonBody } from "../http/validate";
 
 /** Escopos que uma IA pode pedir. Ler o contexto e propor; nunca escrever direto. */
 export const SCOPES = ["estudo:ler", "estudo:propor"] as const;
@@ -55,20 +56,21 @@ export const oauthRoutes = new Hono<AppContext>()
   .post(
     "/oauth/consent",
     rateLimit("AUTH_LIMITER", (c) => `consent:${c.req.header("cf-connecting-ip") ?? "local"}`),
+    jsonBody(
+      z.object({ handle: z.string().min(1).max(500), decision: z.enum(["permitir", "recusar"]) }),
+      "Pedido inválido.",
+    ),
     async (c) => {
-      const body = z
-        .object({ handle: z.string().min(1).max(500), decision: z.enum(["permitir", "recusar"]) })
-        .safeParse(await c.req.json().catch(() => null));
-      if (!body.success) return c.json({ error: "Pedido inválido." }, 400);
+      const body = c.req.valid("json");
       const user = await sessionUser(c.env, c.req.raw, (p) => c.executionCtx.waitUntil(p));
       if (!user) return c.json({ error: "Entre na sua conta para continuar." }, 401);
       const oauth = helpers(c.env);
       try {
-        if (body.data.decision === "recusar") {
-          const denied = await oauth.denyConsent(c.req.raw, body.data.handle);
+        if (body.decision === "recusar") {
+          const denied = await oauth.denyConsent(c.req.raw, body.handle);
           return withHeaders(c.json({ redirectTo: denied.redirectTo }), denied.headers);
         }
-        const approved = await oauth.approveConsent(c.req.raw, body.data.handle);
+        const approved = await oauth.approveConsent(c.req.raw, body.handle);
         const client = await oauth.describeConsent(approved.request);
         const scope = approved.request.scope.filter((s) => (SCOPES as readonly string[]).includes(s));
         const { redirectTo } = await oauth.completeAuthorization({

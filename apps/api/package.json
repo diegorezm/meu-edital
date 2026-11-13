@@ -17,6 +17,7 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.22",
     "@cloudflare/workers-oauth-provider": "1.2.4",
+    "@hono/zod-validator": "^0.9.1",
     "@meu-edital/agent-context": "workspace:*",
     "@meu-edital/db": "workspace:*",
     "@meu-edital/domain": "workspace:*",

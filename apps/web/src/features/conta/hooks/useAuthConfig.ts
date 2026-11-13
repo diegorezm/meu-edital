@@ -1,5 +1,5 @@
-import { type PublicConfig, publicConfig } from "@global/api";
-import { useEffect, useState } from "react";
+import { type PublicConfig, publicConfigQuery } from "@global/api";
+import { useQuery } from "@tanstack/react-query";
 
 const fallback: PublicConfig = {
   turnstileSiteKey: null,
@@ -10,17 +10,7 @@ const fallback: PublicConfig = {
 };
 
 /** A configuração pública e se ela já chegou (para não piscar a tela errada). */
-
 export function useAuthConfig(): PublicConfig & { loaded: boolean } {
-  const [config, setConfig] = useState({ ...fallback, loaded: false });
-  useEffect(() => {
-    let active = true;
-    publicConfig()
-      .then((value) => active && setConfig({ ...value, loaded: true }))
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
-  return config;
+  const { data } = useQuery(publicConfigQuery);
+  return { ...(data ?? fallback), loaded: Boolean(data) };
 }

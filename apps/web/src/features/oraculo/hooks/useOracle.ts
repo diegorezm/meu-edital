@@ -11,21 +11,39 @@ import {
 } from "@meu-edital/agent-context";
 import { getJson, sendJson } from "@global/api";
 import { useStore } from "@global/store/useStore";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
 export type TaskId = "semana" | "edital";
 type Connection = { id: string; name: string; scope: string[]; createdAt: number | null };
 
 const DAY = 86_400_000;
+const PROPOSALS = ["oraculo", "propostas"] as const;
+const CONNECTIONS = ["oraculo", "conexoes"] as const;
 
 /** Caixa de propostas, conexões de IA e o caminho de copiar e colar. */
 export function useOracle() {
   const store = useStore();
   const { data } = store;
   const examId = data.activeExamId;
-  const [proposals, setProposals] = useState<Proposal[] | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
+  const inbox = useQuery({
+    queryKey: PROPOSALS,
+    queryFn: () => getJson<{ proposals: Proposal[] }>("/proposals").then((r) => r.proposals),
+  });
+  const connectionsQuery = useQuery({
+    queryKey: CONNECTIONS,
+    queryFn: () => getJson<{ connections: Connection[] }>("/oraculo/conexoes").then((r) => r.connections),
+  });
+  const proposals = inbox.isError ? [] : (inbox.data ?? null);
+  const connections = connectionsQuery.data ?? [];
+  const setProposals = (change: (list: Proposal[]) => Proposal[]) =>
+    queryClient.setQueryData<Proposal[]>(PROPOSALS, (list) => change(list ?? []));
+  const setConnections = (change: (list: Connection[]) => Connection[]) =>
+    queryClient.setQueryData<Connection[]>(CONNECTIONS, (list) => change(list ?? []));
+  const [actionError, setError] = useState("");
+  const error =
+    actionError || (inbox.isError ? "Sem conexão agora. A caixa aparece quando a rede voltar." : "");
   const [notice, setNotice] = useState("");
   const [task, setTask] = useState<TaskId>("semana");
   const [pasting, setPasting] = useState(false);
@@ -33,27 +51,6 @@ export function useOracle() {
   const [busy, setBusy] = useState<string | null>(null);
   // Referência para "expira em N dias", fixada ao abrir a tela.
   const [now] = useState(() => Date.now());
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      getJson<{ proposals: Proposal[] }>("/proposals"),
-      getJson<{ connections: Connection[] }>("/oraculo/conexoes"),
-    ])
-      .then(([inbox, conns]) => {
-        if (!active) return;
-        setProposals(inbox.proposals);
-        setConnections(conns.connections);
-      })
-      .catch(() => {
-        if (!active) return;
-        setProposals([]);
-        setError("Sem conexão agora. A caixa aparece quando a rede voltar.");
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const cards = useMemo(
     () =>
@@ -89,7 +86,7 @@ export function useOracle() {
     try {
       if (status === "aplicada") store.update((d) => applyProposal(d, proposal.examId, proposal.payload));
       await sendJson(`/proposals/${proposal.id}/status`, "POST", { status });
-      setProposals((list) => (list ?? []).filter((p) => p.id !== proposal.id));
+      setProposals((list) => list.filter((p) => p.id !== proposal.id));
       setNotice(
         status === "descartada"
           ? "Proposta descartada."
@@ -135,7 +132,7 @@ export function useOracle() {
         reason = "Edital importado pela resposta colada.";
       }
       const { proposal } = await sendJson<{ proposal: Proposal }>("/proposals", "POST", { reason, payload });
-      setProposals((list) => [proposal, ...(list ?? [])]);
+      setProposals((list) => [proposal, ...list]);
       setPasted("");
       setPasting(false);
       setNotice("A resposta entrou na caixa. Confira antes de aplicar.");

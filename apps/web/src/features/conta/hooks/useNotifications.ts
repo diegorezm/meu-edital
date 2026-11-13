@@ -1,27 +1,22 @@
-import { publicConfig, sendJson } from "@global/api";
+import { publicConfig, publicConfigQuery, sendJson } from "@global/api";
 import { platform } from "@platform/index";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 /** Liga e desliga os avisos com o app fechado (fim de bloco e revisões vencidas). */
 export function useNotifications() {
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [available, setAvailable] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: config } = useQuery(publicConfigQuery);
+  const subscription = useQuery({
+    queryKey: ["push", "assinatura"],
+    queryFn: async () => Boolean(await platform.push.current()),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const available = platform.native || (Boolean(config?.vapidPublicKey) && platform.push.supported());
+  const enabled = subscription.isError ? false : (subscription.data ?? null);
+  const setEnabled = (on: boolean) => queryClient.setQueryData(["push", "assinatura"], on);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([publicConfig(), platform.push.current()])
-      .then(([config, endpoint]) => {
-        if (!active) return;
-        setAvailable(platform.native || (Boolean(config.vapidPublicKey) && platform.push.supported()));
-        setEnabled(Boolean(endpoint));
-      })
-      .catch(() => active && setEnabled(false));
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const turnOn = async () => {
     setPending(true);

@@ -24,8 +24,10 @@
     "@meu-edital/domain": "workspace:*",
     "@meu-edital/sync": "workspace:*",
     "@meu-edital/ui": "workspace:*",
+    "@tanstack/react-query": "^5.107.1",
     "@tanstack/react-router": "^1.170.46",
     "better-auth": "^1.7.22",
+    "idb-keyval": "^6.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

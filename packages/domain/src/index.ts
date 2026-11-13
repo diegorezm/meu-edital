@@ -13,4 +13,7 @@ export * from "./catalog";
 export * from "./onboarding";
 export * from "./syllabus";
 export * from "./timer";
+export * from "./mockExams";
+export * from "./performance";
+export * from "./export";
 export * from "./game";

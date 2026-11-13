@@ -1,10 +1,27 @@
-import { addDays, today } from "./dates";
+import { addDays, daysUntil, today } from "./dates";
 import { isReviewDone } from "./reviews";
 import { studiedTopicIds, subjectsInOrder } from "./topics";
 import type { AppData, Subject } from "./types";
 
 /** Janela de aproveitamento: um começo ruim não pesa para sempre. */
 export const ACCURACY_WINDOW_DAYS = 42;
+
+/**
+ * Reta final: nos últimos dias antes da prova, revisões e questões ganham
+ * mais espaço. Fora dela, valem os números normais.
+ */
+export const FINAL_STRETCH = {
+  days: 30,
+  normal: { reviewMinutes: 20, reviewShare: 0.25, maxAccuracyBoost: 0.2 },
+  final: { reviewMinutes: 30, reviewShare: 0.4, maxAccuracyBoost: 0.35 },
+} as const;
+
+/** Está na reta final (prova marcada daqui a no máximo 30 dias)? */
+export function inFinalStretch(examDate: string | undefined, date: string): boolean {
+  if (!examDate) return false;
+  const days = daysUntil(examDate, date);
+  return days >= 0 && days <= FINAL_STRETCH.days;
+}
 
 export type SubjectAllocation = {
   subjectId: string;
@@ -56,9 +73,10 @@ export function weeklyAllocation(
     (sum, subject) => sum + (reviewCount.get(subject.id) || 0),
     0,
   );
+  const rules = inFinalStretch(exam.examDate, date) ? FINAL_STRETCH.final : FINAL_STRETCH.normal;
   const reviewBudget = Math.min(
-    totalReviews * 20,
-    Math.round(totalMinutes * 0.25),
+    totalReviews * rules.reviewMinutes,
+    Math.round(totalMinutes * rules.reviewShare),
   );
   const baseBudget = totalMinutes - reviewBudget;
 
@@ -81,7 +99,7 @@ export function weeklyAllocation(
       0,
     );
     const accuracyBoost = asked
-      ? Math.min(0.2, Math.max(0, (0.7 - correct / asked) * 0.5))
+      ? Math.min(rules.maxAccuracyBoost, Math.max(0, (0.7 - correct / asked) * 0.5))
       : 0;
     const topics = data.topics.filter(
       (topic) => topic.subjectId === subject.id,

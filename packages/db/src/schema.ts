@@ -186,6 +186,8 @@ export const reviews = sqliteTable(
     dueDate: text("due_date").notNull(),
     stage: integer("stage").notNull(),
     completedBySessionId: text("completed_by_session_id"),
+    shiftedBySessionId: text("shifted_by_session_id"),
+    shiftDays: integer("shift_days"),
   },
   (t) => [index("reviews_user_version_idx").on(t.userId, t.version)],
 );
@@ -202,6 +204,21 @@ export const weekTargets = sqliteTable(
       .notNull(),
   },
   (t) => [index("week_targets_user_version_idx").on(t.userId, t.version)],
+);
+
+export const mockExams = sqliteTable(
+  "mock_exams",
+  {
+    ...owned(),
+    examId: text("exam_id").notNull(),
+    date: text("date").notNull(),
+    title: text("title").notNull(),
+    lap: integer("lap").notNull(),
+    subjects: text("subjects", { mode: "json" })
+      .$type<{ subjectId: string; questions: number; correct: number }[]>()
+      .notNull(),
+  },
+  (t) => [index("mock_exams_user_version_idx").on(t.userId, t.version)],
 );
 
 /** Preferências do usuário. Uma linha por usuário; o id é o próprio `userId`. */
@@ -281,6 +298,7 @@ export const studyTables = {
   studySessions,
   reviews,
   weekTargets,
+  mockExams,
   userSettings,
 } as const;
 export type StudyTableName = keyof typeof studyTables;

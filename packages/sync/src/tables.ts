@@ -14,6 +14,7 @@ export const TABLES = [
   "studySessions",
   "reviews",
   "weekTargets",
+  "mockExams",
 ] as const;
 export type TableName = (typeof TABLES)[number];
 
@@ -91,6 +92,8 @@ export const rowSchemas = {
     dueDate: date,
     stage: z.number().int().min(1).max(20),
     completedBySessionId: optional(id),
+    shiftedBySessionId: optional(id),
+    shiftDays: optional(z.number().int().min(-365).max(365)),
   }),
   weekTargets: z.strictObject({
     id,
@@ -98,6 +101,17 @@ export const rowSchemas = {
     weekStart: date,
     totalMinutes: z.number().int().min(0).max(112 * 60),
     subjects: z.array(z.strictObject({ subjectId: id, minutes: z.number().int().min(0) })).max(200),
+  }),
+  mockExams: z.strictObject({
+    id,
+    examId: id,
+    date,
+    title: text(200),
+    lap: z.number().int().min(0).max(10_000),
+    subjects: z
+      .array(z.strictObject({ subjectId: id, questions: count, correct: count }))
+      .min(1)
+      .max(100),
   }),
 } satisfies Record<TableName, z.ZodType>;
 
@@ -112,6 +126,7 @@ export const collectionOf = {
   studySessions: "sessions",
   reviews: "reviews",
   weekTargets: "weekTargets",
+  mockExams: "mockExams",
 } as const satisfies Record<Exclude<TableName, "userSettings">, keyof AppData>;
 
 export const settingsRow = (data: AppData): Row<"userSettings"> => ({

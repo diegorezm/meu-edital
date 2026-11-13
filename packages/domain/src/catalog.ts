@@ -13,6 +13,7 @@ export function removeExam(data: AppData, id: string): AppData {
     reviews: data.reviews.filter((item) => item.examId !== id),
     cycle: data.cycle.filter((item) => item.examId !== id),
     weekTargets: data.weekTargets.filter((item) => item.examId !== id),
+    mockExams: data.mockExams.filter((item) => item.examId !== id),
     activeExamId:
       data.activeExamId === id
         ? data.exams.find((item) => item.id !== id)?.id || null

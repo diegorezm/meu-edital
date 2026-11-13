@@ -6,6 +6,7 @@ import { createAuth } from "./auth/auth";
 import { userData } from "./data/access";
 import { type AppContext, emailEnabled, googleEnabled } from "./env";
 import { clientIp, rateLimit } from "./http/rateLimit";
+import { exportRoutes } from "./http/exportRoutes";
 import { proposalRoutes } from "./http/proposalRoutes";
 import { requireUser } from "./http/session";
 import { connectionRoutes } from "./mcp/oauth";
@@ -33,6 +34,7 @@ app.use("/me", requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")));
 const routes = app
   .route("/sync", syncRoutes)
   .route("/proposals", proposalRoutes)
+  .route("/export", exportRoutes)
   .route("/oraculo/conexoes", connectionRoutes)
   .get("/health", (c) => c.json({ ok: true }))
   /** O que a tela de login precisa saber antes de existir sessão. */

@@ -1,4 +1,5 @@
 import { today } from "../dates";
+import { mockExamScore } from "../mockExams";
 import { examProgress } from "../tracking";
 import type { AppData } from "../types";
 import { weeklyStreak } from "./progress";
@@ -87,6 +88,20 @@ export const ACHIEVEMENTS: Rule[] = [
     description: "Bater a meta semanal quatro semanas seguidas.",
     target: 4,
     measure: bestStreak,
+  },
+  {
+    id: "chefe-derrotado",
+    title: "Chefe derrotado",
+    description: "Registrar o primeiro simulado.",
+    target: 1,
+    measure: (data) => data.mockExams.length,
+  },
+  {
+    id: "simulado-80",
+    title: "Gabarito de respeito",
+    description: "Fazer 80% de acertos em um simulado.",
+    target: 80,
+    measure: (data) => Math.round(Math.max(0, ...data.mockExams.map((m) => mockExamScore(m))) * 100),
   },
   {
     id: "cem-horas",

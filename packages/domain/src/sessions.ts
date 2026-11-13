@@ -49,16 +49,50 @@ export function recordSession(
       ...reviews,
     ],
   };
-  if (!session.cycleItemId) return next;
-  const advanced = advanceCycle(next, session.examId, session.cycleItemId);
-  return advanced === next
-    ? next
+  const adapted = adaptNextReviews(next, entry);
+  if (!session.cycleItemId) return adapted;
+  const advanced = advanceCycle(adapted, session.examId, session.cycleItemId);
+  return advanced === adapted
+    ? adapted
     : {
         ...advanced,
         exams: advanced.exams.map((exam) =>
           exam.id === session.examId ? { ...exam, lastCycleSessionId: entry.id } : exam,
         ),
       };
+}
+
+/** Abaixo disso, a próxima revisão vem antes; acima de GOOD, depois. */
+export const ADAPTIVE_REVIEW = { weak: 0.6, good: 0.85, sooner: 0.5, later: 1.5 } as const;
+
+/**
+ * Revisão adaptativa: uma sessão de revisão com questões ajusta a próxima
+ * revisão pendente do assunto (e as seguintes, mantendo o espaçamento). Com
+ * aproveitamento baixo, a próxima vem na metade do prazo; alto, em 1,5 vez.
+ */
+function adaptNextReviews(data: AppData, session: StudySession): AppData {
+  if (session.type !== "Revisão" || !session.questions) return data;
+  const accuracy = (session.correct ?? 0) / session.questions;
+  const factor =
+    accuracy < ADAPTIVE_REVIEW.weak ? ADAPTIVE_REVIEW.sooner : accuracy >= ADAPTIVE_REVIEW.good ? ADAPTIVE_REVIEW.later : 1;
+  if (factor === 1) return data;
+  const upcoming = data.reviews
+    .filter((r) => r.topicId === session.topicId && !isReviewDone(r) && r.dueDate > session.date)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const first = upcoming[0];
+  if (!first) return data;
+  const gap = daysUntil(first.dueDate, session.date);
+  const shift = Math.max(1, Math.round(gap * factor)) - gap;
+  if (!shift) return data;
+  const ids = new Set(upcoming.map((r) => r.id));
+  return {
+    ...data,
+    reviews: data.reviews.map((r) =>
+      ids.has(r.id)
+        ? { ...r, dueDate: addDays(r.dueDate, shift), shiftedBySessionId: session.id, shiftDays: shift }
+        : r,
+    ),
+  };
 }
 
 /**
@@ -102,11 +136,18 @@ export function deleteSession(data: AppData, id: string): AppData {
     sessions: data.sessions.filter((s) => s.id !== id),
     reviews: data.reviews
       .filter((review) => review.sessionId !== id)
-      .map((review) =>
-        review.completedBySessionId === id
-          ? { ...review, completedBySessionId: undefined }
-          : review,
-      ),
+      .map((review) => {
+        let next = review;
+        if (next.completedBySessionId === id) next = { ...next, completedBySessionId: undefined };
+        if (next.shiftedBySessionId === id)
+          next = {
+            ...next,
+            dueDate: addDays(next.dueDate, -(next.shiftDays ?? 0)),
+            shiftedBySessionId: undefined,
+            shiftDays: undefined,
+          };
+        return next;
+      }),
   };
   const exam = next.exams.find((e) => e.id === session.examId);
   if (!exam || exam.lastCycleSessionId !== id || !session.cycleItemId) return next;

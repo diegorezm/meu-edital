@@ -71,6 +71,12 @@ export type Review = {
   stage: number;
   /** Sessão de revisão que concluiu esta revisão. Excluí-la reabre a revisão. */
   completedBySessionId?: string;
+  /**
+   * Revisão adaptativa: a sessão de revisão que adiantou ou adiou esta data,
+   * e em quantos dias. Excluir a sessão desfaz o ajuste.
+   */
+  shiftedBySessionId?: string;
+  shiftDays?: number;
 };
 
 /** Bloco do ciclo: uma matéria e o tempo dedicado a ela. O assunto é escolhido na sessão. */
@@ -95,6 +101,17 @@ export type WeekTarget = {
   subjects: { subjectId: string; minutes: number }[];
 };
 
+/** Simulado: prova completa registrada, com questões e acertos por matéria. É o chefe da volta. */
+export type MockExam = {
+  id: string;
+  examId: string;
+  date: string;
+  title: string;
+  /** Volta da jornada em que foi feito (para o chefe da volta). */
+  lap: number;
+  subjects: { subjectId: string; questions: number; correct: number }[];
+};
+
 export type AppData = {
   version: 3;
   exams: Exam[];
@@ -104,6 +121,7 @@ export type AppData = {
   reviews: Review[];
   cycle: CycleItem[];
   weekTargets: WeekTarget[];
+  mockExams: MockExam[];
   activeExamId: string | null;
   reviewOffsets: number[];
   /** Skin escolhida para o mascote (cosmético). */
@@ -121,6 +139,7 @@ export const emptyData = (): AppData => ({
   reviews: [],
   cycle: [],
   weekTargets: [],
+  mockExams: [],
   activeExamId: null,
   reviewOffsets: [1, 7, 30],
   skin: "rosa",

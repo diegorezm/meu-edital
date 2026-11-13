@@ -170,6 +170,7 @@ describe("app nativo", () => {
     );
     expect(native.headers.get("access-control-allow-origin")).toBe("https://localhost");
     expect(native.headers.get("access-control-expose-headers")).toContain("set-auth-token");
+    expect(native.headers.get("access-control-allow-credentials")).toBe("true");
     const stranger = await app.fetch(
       new Request(`${env.APP_URL}/api/config`, { headers: { origin: "https://site-estranho.com" } }),
       env,

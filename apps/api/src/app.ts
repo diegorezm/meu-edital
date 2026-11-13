@@ -28,6 +28,9 @@ app.use("*", (c, next) =>
     origin: (origin) => (NATIVE_ORIGINS.includes(origin) || origin === c.env.SITE_URL ? origin : null),
     allowHeaders: ["authorization", "content-type", "x-captcha-response"],
     exposeHeaders: ["set-auth-token"],
+    // O cliente do Better Auth manda `credentials: include`; sem isso o
+    // navegador da WebView bloqueia a resposta.
+    credentials: true,
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
     maxAge: 600,
   })(c, next),

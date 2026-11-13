@@ -12,11 +12,13 @@
   "assets": {
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/mcp", "/authorize", "/oauth/*", "/.well-known/*"]
   },
   // Um Durable Object por usuário para os avisos de sync em tempo real.
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["UserHub"] }],
   "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
+  // Concessões e tokens do OAuth do Oráculo (MCP).
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "local-oauth-kv" }],
   "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
   "vars": {
     // Local: o Vite (5173) faz proxy de /api para o Worker; o Worker também
@@ -40,6 +42,7 @@
   ],
   "env": {
     "preview": {
+      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PREVIEW_OAUTH_KV_ID" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
       "vars": {
@@ -62,6 +65,7 @@
       ]
     },
     "production": {
+      "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "PRODUCTION_OAUTH_KV_ID" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY"] },
       "vars": {

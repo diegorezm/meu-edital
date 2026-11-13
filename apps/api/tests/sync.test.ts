@@ -9,7 +9,7 @@ import {
   type PushResponse,
   type SyncNotice,
 } from "@meu-edital/sync";
-import app from "../src/index";
+import { app } from "../src/index";
 import { call, verifiedUser } from "./helpers";
 
 const exam = (data: AppData = emptyData()) =>

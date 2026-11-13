@@ -248,6 +248,30 @@ export const syncMutations = sqliteTable(
   ],
 );
 
+/**
+ * Caixa de propostas do Oráculo. Não sincroniza pelo protocolo de linhas: o
+ * servidor cria (pelo MCP ou por resposta colada) e o app aplica pelo
+ * domínio. Pendentes expiram em 7 dias.
+ */
+export const proposals = sqliteTable(
+  "proposals",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    examId: text("exam_id").notNull(),
+    source: text("source").$type<"mcp" | "colar">().notNull(),
+    author: text("author").notNull(),
+    reason: text("reason").notNull(),
+    payload: text("payload", { mode: "json" }).notNull(),
+    status: text("status").$type<"pendente" | "aplicada" | "descartada">().notNull().default("pendente"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (t) => [index("proposals_user_status_idx").on(t.userId, t.status)],
+);
+
 /** Tabelas de estudo, na ordem pais antes dos filhos. */
 export const studyTables = {
   exams,

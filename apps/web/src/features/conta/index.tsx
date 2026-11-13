@@ -16,8 +16,13 @@ const notices: Record<string, string> = {
   "conta-excluida": "Conta excluída. Seus dados foram apagados.",
 };
 
-export function SignInPage({ aviso }: { aviso?: string }) {
-  return <SignInView form={useSignIn()} notice={aviso ? notices[aviso] : undefined} />;
+export function SignInPage({ aviso, volta }: { aviso?: string; volta?: string }) {
+  return (
+    <SignInView
+      form={useSignIn(volta)}
+      notice={volta ? "Entre para conectar sua IA ao Oráculo." : aviso ? notices[aviso] : undefined}
+    />
+  );
 }
 
 export function SignUpPage() {

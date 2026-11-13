@@ -1,7 +1,7 @@
 import { createExecutionContext, waitOnExecutionContext } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { outbox } from "../src/auth/mailer";
-import app from "../src/index";
+import { app } from "../src/index";
 
 export const ORIGIN = env.APP_URL;
 

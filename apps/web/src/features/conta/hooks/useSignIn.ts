@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useAuthConfig } from "./useAuthConfig";
 import { useSubmit } from "./useSubmit";
 
-export function useSignIn() {
+/** Só aceita voltar para a autorização do Oráculo (nunca para fora do app). */
+const safeReturn = (volta?: string) => (volta?.startsWith("/authorize?") ? volta : undefined);
+
+export function useSignIn(volta?: string) {
   const navigate = useNavigate();
   const { googleEnabled } = useAuthConfig();
   const [email, setEmail] = useState("");
@@ -15,7 +18,10 @@ export function useSignIn() {
     form.run(async () => {
       const { error } = await authClient.signIn.email({ email: email.trim(), password });
       if (error) return form.setError(authErrorMessage(error));
-      await navigate({ to: "/" });
+      const back = safeReturn(volta);
+      // /authorize é do Worker, não do app: precisa de navegação completa.
+      if (back) window.location.assign(back);
+      else await navigate({ to: "/" });
     });
 
   const signInWithGoogle = () =>

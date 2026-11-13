@@ -22,6 +22,13 @@
       "when": 1794502222851,
       "tag": "0002_cosmeticos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794522891385,
+      "tag": "0003_propostas",
+      "breakpoints": true
     }
   ]
 }

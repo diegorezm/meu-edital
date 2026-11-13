@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Como trabalhar neste repositório. Para o que o app é (conceitos, regras de produto), leia [README.md](README.md). O plano completo da reconstrução está em [docs/prompt-reconstrucao.md](docs/prompt-reconstrucao.md), e as decisões de arquitetura ficam em [docs/decisions/](docs/decisions/README.md).
+Como trabalhar neste repositório. Para o que o app é (conceitos, regras de produto), leia [docs/desenvolvimento.md](docs/desenvolvimento.md). O plano completo da reconstrução está em [docs/prompt-reconstrucao.md](docs/prompt-reconstrucao.md), e as decisões de arquitetura ficam em [docs/decisions/](docs/decisions/README.md).
 
 ## Visão geral
 

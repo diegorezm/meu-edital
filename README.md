@@ -1,54 +1,92 @@
+<div align="center">
+
+<img src="apps/site/public/axolote.svg" alt="" width="120" />
+
 # Meu Edital
 
-App de **estudo cíclico para concursos públicos**, com cara de RPG de gestão aconchegante. Ele transforma o edital em matérias e assuntos, monta um ciclo de estudos pelos pesos de cada matéria e acompanha o que foi estudado na semana.
+**Seu edital tem 12 matérias. Hoje você estuda qual?**
 
-O app responde a duas perguntas:
+Um app gratuito de estudos para concursos públicos que monta uma jornada pelos pesos do edital e mostra sempre o próximo bloco. Faltou um dia? A jornada espera por você.
 
-- **O que eu estudo agora?** O próximo bloco da jornada, com um assunto sugerido.
-- **Como foi minha semana?** O tempo estudado contra a meta, por matéria e por dia.
+[**Começar minha jornada**](https://meu-edital.diegommrez12.workers.dev/?conta=criar) · [Conhecer o app](https://meu-edital-site.diegommrez12.workers.dev)
 
-> Agentes de código: este arquivo explica **o que** o app é. Para **como** trabalhar no código, leia [AGENTS.md](AGENTS.md).
+</div>
 
-## Estado
+<p align="center">
+  <img src="docs/screenshots/inicio.png" alt="Tela inicial: a jornada de estudos com o próximo bloco em destaque, os contratos do dia e a semana" width="820" />
+</p>
 
-Reconstrução em andamento, em fases: [docs/prompt-reconstrucao.md](docs/prompt-reconstrucao.md).
+## Por que um ciclo, e não um cronograma
 
-A fase 1 (fundação) está pronta:
-- monorepo;
-- domínio e contexto de IA portados com testes;
-- schema do D1;
-- Worker com auth completo;
-- telas de conta;
-- workflows de CI escritos.
+O cronograma dia a dia quebra na primeira falta: perdeu a terça e a semana inteira desanda. No Meu Edital você estuda em **ciclo**. As matérias viram uma fila de blocos com o tempo de cada uma calculado pelo peso no edital. Você estuda o próximo bloco quando puder, e uma volta completa soma a sua meta da semana.
 
-## Como o estudo funciona
+- **Sempre sabe o que estudar agora.** O app mostra o próximo bloco e sugere o assunto.
+- **A matéria que mais pesa recebe mais tempo**, sem conta de cabeça.
+- **Revisões no tempo certo.** Depois de estudar um assunto, ele volta para revisão em 1, 7 e 30 dias.
+- **A semana em um olhar.** O tempo estudado contra a meta, por matéria e por dia.
 
-| Conceito | No app | O que é |
-| --- | --- | --- |
-| Concurso | Campanha | Nome, cargo, banca, data da prova e meta de horas por semana. Vários concursos, um ativo. |
-| Matéria | Atributo | Disciplina do edital. Peso = `questões × pontos por questão`, um peso informado ou 1. |
-| Assunto | — | Item do conteúdo programático, com subassuntos. Fica estudado quando tem uma sessão. |
-| Ciclo | Jornada | Fila de blocos (matéria + minutos). Uma volta soma a meta semanal. Faltou um dia, a jornada espera. |
-| Sessão | — | Registro de estudo: tipo (Teoria, Questões ou Revisão), minutos, questões, acertos e anotação. Pode ser corrigida ou excluída. |
-| Revisão | — | Agendada no primeiro estudo de cada assunto (1, 7 e 30 dias). |
-| Semana | — | De segunda a domingo, comparada com a meta salva no início da semana. |
+## Do edital ao primeiro bloco em três passos
 
-## Tecnologia
+<p align="center">
+  <img src="docs/screenshots/comecar.png" alt="Escolha do concurso, com editais prontos do INSS, Banco do Brasil, Caixa, Polícia Federal e outros" width="820" />
+</p>
 
-Cloudflare Workers, D1, Durable Objects e R2. API em Hono, banco com Drizzle e auth com Better Auth. App em React 19, Vite, TanStack Router e Tailwind CSS v4. Monorepo com Bun e Turborepo, e testes com Vitest. Detalhes em [docs/decisions/](docs/decisions/README.md).
+1. **Escolha o concurso.** Há editais prontos dos concursos mais procurados, ou monte o seu em um minuto.
+2. **Diga quantas horas por semana você tem.**
+3. **Parta para o primeiro bloco.** Aperte play no cronômetro ou registre o estudo depois.
 
-## Executar
+## Estudar vira jogo
 
-Requer Bun 1.4+ e Node 22+.
+Só estudo de verdade dá recompensa: abrir o app e clicar em botão não rende nada.
 
-```bash
-bun install
-cp apps/api/.dev.vars.example apps/api/.dev.vars   # e preencha BETTER_AUTH_SECRET
-bun run dev     # http://localhost:5173 (aplica as migrações locais ao subir)
-```
+<p align="center">
+  <img src="docs/screenshots/comemoracao.png" alt="Comemoração ao registrar um estudo: XP ganho, conquista nova e contratos cumpridos" width="820" />
+</p>
 
-Sem domínio de e-mail configurado, os links de confirmação e de recuperação de senha aparecem no log do Worker.
+- **XP e patente.** Cada minuto e cada acerto contam, de Estagiário a Ministro.
+- **Contratos do dia.** Três missões tiradas do que você mais precisa, cumpridas estudando.
+- **Ofensiva semanal.** Conta semanas na meta, não dias. Faltar um dia não pune.
+- **Chefe da volta.** Fechou a jornada? Um simulado mede a sua força.
+- **Conquistas e visuais** para o mascote, liberados com o nível.
 
-## Licença
+<p align="center">
+  <img src="docs/screenshots/conquistas.png" alt="Conquistas e gabinete com as cores do mascote" width="820" />
+</p>
 
-Distribuído sob a [GNU GPL versão 3](LICENSE) (`GPL-3.0-only`).
+## Acompanhe a semana
+
+<p align="center">
+  <img src="docs/screenshots/semana.png" alt="Semana: horas por dia, progresso por matéria e lista das sessões" width="820" />
+</p>
+
+Veja quanto estudou em cada dia e em cada matéria, corrija ou apague uma sessão, e confira o desempenho e o aproveitamento nas questões.
+
+## O Oráculo: a sua IA como conselheira
+
+Conecte a IA que você já usa (Claude, ChatGPT ou outra) ao seu estudo. Ela lê como foi a sua semana e propõe ajustes de peso, meta e jornada. **Nada muda sem você aprovar**: cada proposta aparece com o antes e o depois.
+
+<p align="center">
+  <img src="docs/screenshots/oraculo.png" alt="Oráculo: caixa de propostas da IA e instruções para conectar" width="820" />
+</p>
+
+## No celular também
+
+<p align="center">
+  <img src="docs/screenshots/celular-inicio.png" alt="Tela inicial no celular" width="260" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/celular-estudar.png" alt="Cronômetro de estudo no celular" width="260" />
+</p>
+
+O app funciona no navegador do computador e do celular, e continua funcionando sem internet: o estudo fica salvo no aparelho e sincroniza quando a conexão volta. Um app para Android está a caminho.
+
+## Perguntas rápidas
+
+**É grátis?** Sim. Sem cartão e sem período de teste.
+
+**Ainda não saiu o edital. Dá para usar?** Dá. Comece pelo edital anterior e ajuste quando o novo sair.
+
+**E os meus dados?** São seus. Dá para baixar tudo e excluir a conta a qualquer hora. Leia a [política de privacidade](https://meu-edital-site.diegommrez12.workers.dev/privacidade/).
+
+## Software livre
+
+O Meu Edital é software livre, sob a licença [GNU AGPL versão 3](LICENSE). Quer contribuir ou rodar o projeto na sua máquina? Veja o [guia de desenvolvimento](docs/desenvolvimento.md).

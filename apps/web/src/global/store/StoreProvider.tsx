@@ -1,6 +1,7 @@
 import type { AppData } from "@meu-edital/domain";
 import { SyncClient, type SyncState } from "@meu-edital/sync/client";
 import { platform } from "@platform/index";
+import { AppSkeleton } from "../components/AppSkeleton";
 import { createContext, type ReactNode, useEffect, useState, useSyncExternalStore } from "react";
 import { httpTransport, listenForChanges } from "./transport";
 
@@ -56,7 +57,7 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
     };
   }, [userId]);
 
-  if (!client) return null;
+  if (!client) return <AppSkeleton />;
   return <StoreContext.Provider value={client}>{children}</StoreContext.Provider>;
 }
 

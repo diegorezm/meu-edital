@@ -12,6 +12,7 @@ import { useStoreActions } from "../store/useStore";
 import { TimerTicker } from "../timer/TimerTicker";
 import { ReviewReminders } from "./ReviewReminders";
 import { PlayerCard } from "./PlayerCard";
+import { wall } from "./wall";
 
 /** Salva o retrato da meta da semana do concurso ativo assim que ela começa. */
 function useWeekSnapshot() {
@@ -33,9 +34,6 @@ function Companions() {
   );
 }
 
-/** Parede rosa com as tábuas verticais, atrás das folhas. */
-const wall =
-  "min-h-dvh bg-wall bg-[repeating-linear-gradient(90deg,transparent_0_126px,rgb(91_59_51/.09)_126px_128px)]";
 
 /**
  * Moldura do app logado. No desktop: viga com recursos e, à esquerda, a

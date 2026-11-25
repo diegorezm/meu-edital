@@ -34,7 +34,7 @@ Alguns desses fornecedores guardam dados fora do Brasil. A transferência se apo
 
 ## 5. Cookies e tecnologias parecidas
 - **Necessários**: o cookie de sessão, que mantém você conectado. Não dá para desligar.
-- **Análise**: só funcionam com o seu consentimento, que você pode mudar a qualquer momento em Configurações.
+- **Análise**: só funcionam com o seu consentimento, que você pode mudar a qualquer momento em Conta.
 
 ## 6. Por quanto tempo guardamos
 - Conta e dados de estudo: enquanto a conta existir. Ao excluir a conta, os dados são apagados.
@@ -42,7 +42,7 @@ Alguns desses fornecedores guardam dados fora do Brasil. A transferência se apo
 - Registros de aceite: enquanto forem necessários para comprovar o consentimento.
 
 ## 7. Seus direitos (art. 18)
-Você pode confirmar quais dados temos, acessá-los, corrigi-los, levá-los para outro serviço, pedir a exclusão, revogar consentimentos e se opor a tratamentos baseados em legítimo interesse. A exportação e a exclusão ficam em Configurações; para o resto, escreva para [e-mail do encarregado]. Você também pode reclamar à ANPD.
+Você pode confirmar quais dados temos, acessá-los, corrigi-los, levá-los para outro serviço, pedir a exclusão, revogar consentimentos e se opor a tratamentos baseados em legítimo interesse. A exportação e a exclusão ficam em Conta; para o resto, escreva para [e-mail do encarregado]. Você também pode reclamar à ANPD.
 
 ## 8. Segurança
 Usamos conexão cifrada, senhas com hash, isolamento dos dados por conta e limite de tentativas. Se houver um incidente com risco relevante, avisaremos você e a ANPD.

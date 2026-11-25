@@ -5,12 +5,39 @@ import Waitlist from "../components/Waitlist.astro";
 import { ctaUrl, waitlist } from "../content/links";
 
 const roman = ["I", "II", "III"];
+const siteOrigin = Astro.site?.href ?? "https://meu-edital-site.diegommrez12.workers.dev/";
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Meu Edital",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web, Android",
+    inLanguage: "pt-BR",
+    url: siteOrigin,
+    description:
+      "Jornada cíclica de estudos para concursos baseada nos pesos do edital, com revisões automáticas, meta semanal e integração com IA via MCP.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  },
+];
 ---
 
 <Base
   title="Meu Edital: jornada de estudos para concurso"
   description="Monte uma jornada de estudos pelos pesos do edital, saiba o próximo bloco e acompanhe revisões e a meta da semana. Grátis, no celular e no navegador."
 >
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </Fragment>
   <main class="wrap">
     <div class="sheet hero">
       <div>

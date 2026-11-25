@@ -19,11 +19,8 @@
   - A resposta colada (copiar e colar) entra na mesma caixa por `POST /api/proposals`.
   - O app aplica uma proposta pelas funções de domínio (`applyProposal`) e pelo sync normal, e marca o resultado em `POST /api/proposals/:id/status`.
 - **Conexões:** `GET /api/oraculo/conexoes` lista e `DELETE /api/oraculo/conexoes/:id` revoga. Revogar derruba o token na hora.
-- **Limites:** rate limiting por usuário e conexão em `/mcp`, e por IP no consentimento.
-
-**Pendências.**
-- Criar os namespaces KV de `preview` e `production` no primeiro deploy (hoje com ids provisórios no `wrangler.jsonc`).
-- A tela de consentimento e a caixa de propostas no app esperam a aprovação do desenho.
+- **Limites:** rate limiting por usuário em `/mcp`, por IP em `/oauth/register`, `/oauth/token`, `/authorize` e `/oauth/consent`, e teto de 50 propostas pendentes por conta.
+- **Telas no app:** consentimento em `/conectar-ia` e caixa de propostas/conexões em `/oraculo`, ambos em produção com namespaces KV dedicados para `preview` e `production`.
 
 **Descartado.**
 - `McpAgent`: obsoleto.

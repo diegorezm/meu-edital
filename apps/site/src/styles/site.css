@@ -1,6 +1,9 @@
-@import "@fontsource/alegreya-sans/500.css";
-@import "@fontsource/alegreya-sans/800.css";
-@import "@fontsource/amatic-sc/700.css";
+@import "@fontsource/alegreya-sans/latin-500.css";
+@import "@fontsource/alegreya-sans/latin-ext-500.css";
+@import "@fontsource/alegreya-sans/latin-800.css";
+@import "@fontsource/alegreya-sans/latin-ext-800.css";
+@import "@fontsource/amatic-sc/latin-700.css";
+@import "@fontsource/amatic-sc/latin-ext-700.css";
 @import "./tokens.css";
 
 * { box-sizing: border-box; margin: 0; }

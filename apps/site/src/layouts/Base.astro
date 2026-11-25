@@ -31,6 +31,7 @@ const ogImage = Astro.site ? new URL("/icone-512.png", Astro.site).href : undefi
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/png" href="/icone-192.png" />
+    <slot name="head" />
   </head>
   <body>
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>

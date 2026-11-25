@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://meu-edital-site.diegommrez12.workers.dev/sitemap.xml

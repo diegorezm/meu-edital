@@ -7,6 +7,8 @@ interface Props {
   description: string;
 }
 const { title, description } = Astro.props;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL("/icone-512.png", Astro.site).href : undefined;
 ---
 
 <!doctype html>
@@ -17,21 +19,34 @@ const { title, description } = Astro.props;
     <meta name="theme-color" content="#7a5548" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Meu Edital" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="pt_BR" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/png" href="/icone-192.png" />
   </head>
   <body>
+    <a class="skip" href="#conteudo">Pular para o conteúdo</a>
     <header class="beam">
       <span class="ol"><a class="logo t" href="/">Meu Edital</a></span>
       <span class="spacer"></span>
-      <a class="btn quiet" href={appUrl("entrar")}>Entrar</a>
-      <a class="btn hide-phone" href={ctaUrl}>{waitlist ? "Lista de espera" : "Criar conta"}</a>
+      <nav aria-label="Principal" class="nav">
+        <a class="btn quiet" href={appUrl("entrar")}>Entrar</a>
+        <a class="btn hide-phone" href={ctaUrl}>{waitlist ? "Lista de espera" : "Criar conta"}</a>
+      </nav>
     </header>
-    <slot />
+    <div id="conteudo">
+      <slot />
+    </div>
     <footer>
-      Meu Edital · código aberto (FSL-1.1) · <a href="/privacidade/">Privacidade</a> · <a href="https://github.com/diegorezm/meu-edital">Código</a>
+      Meu Edital · código aberto (FSL-1.1) · <a href="/termos/">Termos</a> · <a href="/privacidade/">Privacidade</a> · <a href="https://github.com/diegorezm/meu-edital">Código</a>
     </footer>
   </body>
 </html>

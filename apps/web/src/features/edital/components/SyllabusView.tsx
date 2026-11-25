@@ -50,9 +50,21 @@ export function SyllabusView({ syllabus }: { syllabus: Syllabus }) {
               </span>
               <span className="text-xs text-ink-muted">peso {subject.weight}</span>
             </button>
-            {!mobile && (
-              <IconButton icon="caret" className="rotate-180" label={`Subir ${subject.name}`} disabled={subject.index === 0} onClick={() => syllabus.moveSubject(subject.id, -1)} />
-            )}
+            <span className="flex items-center">
+              <IconButton
+                icon="caret"
+                className="rotate-180"
+                label={`Subir ${subject.name}`}
+                disabled={subject.index === 0}
+                onClick={() => syllabus.moveSubject(subject.id, -1)}
+              />
+              <IconButton
+                icon="caret"
+                label={`Descer ${subject.name}`}
+                disabled={subject.index === view.subjects.length - 1}
+                onClick={() => syllabus.moveSubject(subject.id, 1)}
+              />
+            </span>
           </div>
         );
       })}

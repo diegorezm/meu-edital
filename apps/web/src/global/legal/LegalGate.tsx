@@ -1,6 +1,6 @@
-import { BottomSheet, Button, buttonClass, Notice, textLinkClass } from "@meu-edital/ui";
+import { BottomSheet, Button, Notice, textLinkClass } from "@meu-edital/ui";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { apiUrl } from "../http";
+import { downloadExport } from "../exportDownload";
 import { useStoreActions } from "../store/useStore";
 import { LEGAL_PATHS, LEGAL_TITLES } from "./legal";
 import { useLegalGate } from "./useLegalGate";
@@ -55,9 +55,9 @@ export function LegalGate() {
           Aceitar e continuar
         </Button>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <a href={apiUrl("/api/export?formato=json")} download className={buttonClass("quiet")}>
+          <Button variant="quiet" onClick={() => void downloadExport("json").catch(() => undefined)}>
             Exportar meus dados
-          </a>
+          </Button>
           <Link to="/conta" className={textLinkClass}>
             Excluir conta
           </Link>

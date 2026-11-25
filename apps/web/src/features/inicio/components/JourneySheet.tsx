@@ -1,4 +1,5 @@
 import { BlockCard, BottomSheet, Button, Sheet } from "@meu-edital/ui";
+import { useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
 import type { HomeView, JourneyCard } from "../hooks/useHome";
@@ -18,6 +19,7 @@ export function JourneySheet({
   onStart: (cycleItemId: string) => void;
   onSkip: (cycleItemId: string) => void;
 }) {
+  const navigate = useNavigate();
   const [skipping, setSkipping] = useState<JourneyCard | null>(null);
   const strip = useRef<HTMLDivElement>(null);
   const current = useRef<HTMLDivElement>(null);
@@ -35,7 +37,13 @@ export function JourneySheet({
       topic={item.topic}
       minutes={item.state === "boss" ? undefined : item.minutes}
       xp={item.state === "boss" ? undefined : item.xp}
-      onSelect={item.state === "next" ? () => setSkipping(item) : undefined}
+      onSelect={
+        item.state === "next"
+          ? () => setSkipping(item)
+          : item.state === "boss"
+            ? () => void navigate({ to: "/simulados" })
+            : undefined
+      }
       action={
         item.state === "now" && item.cycleItemId ? (
           <Button onClick={() => onStart(item.cycleItemId!)}>Partir</Button>

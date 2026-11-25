@@ -1,5 +1,6 @@
-import { BottomSheet, Button, Crest, IconButton, ListRow, Mascot, Sheet, Tag, XpBar } from "@meu-edital/ui";
+import { BottomSheet, Button, buttonClass, Crest, IconButton, ListRow, Mascot, Sheet, Tag, XpBar } from "@meu-edital/ui";
 import { useLayout } from "@global/hooks/useLayout";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import type { WeekScreen } from "../hooks/useWeek";
 import { SessionForm } from "./SessionForm";
@@ -12,9 +13,12 @@ export function WeekView({ week }: { week: WeekScreen }) {
   if (!view)
     return (
       <Sheet title="Semana" className="mx-auto max-w-xl">
-        <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-32" />
           <p>Monte seu concurso para acompanhar a semana.</p>
+          <Link to="/comecar" className={buttonClass()}>
+            Começar
+          </Link>
         </div>
       </Sheet>
     );

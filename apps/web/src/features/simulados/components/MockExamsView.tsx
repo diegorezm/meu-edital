@@ -1,4 +1,5 @@
-import { Art, BottomSheet, Button, Field, IconButton, ListRow, Mascot, Notice, Sheet } from "@meu-edital/ui";
+import { Art, BottomSheet, Button, buttonClass, Field, IconButton, ListRow, Mascot, Notice, Sheet } from "@meu-edital/ui";
+import { Link } from "@tanstack/react-router";
 import type { MockExams } from "../hooks/useMockExams";
 import { ScoreChart } from "./ScoreChart";
 
@@ -13,9 +14,12 @@ export function MockExamsView({ mocks }: { mocks: MockExams }) {
   if (!view)
     return (
       <Sheet title="Simulados" className="mx-auto max-w-xl">
-        <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-32" />
           <p>Monte seu concurso para registrar simulados.</p>
+          <Link to="/comecar" className={buttonClass()}>
+            Começar
+          </Link>
         </div>
       </Sheet>
     );
@@ -105,7 +109,7 @@ export function MockExamsView({ mocks }: { mocks: MockExams }) {
                   type="number"
                   min={0}
                   inputMode="numeric"
-                  className="min-h-10 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
+                  className="min-h-11 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
                   value={mocks.rows[s.id]?.questions ?? ""}
                   onChange={(e) => mocks.setRow(s.id, "questions", e.target.value)}
                 />
@@ -114,14 +118,16 @@ export function MockExamsView({ mocks }: { mocks: MockExams }) {
                   type="number"
                   min={0}
                   inputMode="numeric"
-                  className="min-h-10 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
+                  className="min-h-11 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
                   value={mocks.rows[s.id]?.correct ?? ""}
                   onChange={(e) => mocks.setRow(s.id, "correct", e.target.value)}
                 />
               </div>
             ))}
           </div>
-          <Button onClick={mocks.register}>Registrar</Button>
+          <Button disabled={mocks.submitting} onClick={mocks.register}>
+            Registrar
+          </Button>
         </div>
       </BottomSheet>
       <BottomSheet

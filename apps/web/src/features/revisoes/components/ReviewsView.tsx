@@ -1,4 +1,5 @@
-import { BottomSheet, Button, Chip, Crest, Field, ListRow, Mascot, Notice, Sheet, Tag } from "@meu-edital/ui";
+import { BottomSheet, Button, buttonClass, Chip, Crest, Field, ListRow, Mascot, Notice, Sheet, Tag } from "@meu-edital/ui";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import type { Reviews } from "../hooks/useReviews";
 
@@ -54,6 +55,11 @@ export function ReviewsView({ reviews }: { reviews: Reviews }) {
                 ? "As revisões aparecem depois do primeiro estudo de cada assunto."
                 : "Monte seu concurso para começar."}
           </p>
+          {!reviews.hasExam && (
+            <Link to="/comecar" className={buttonClass()}>
+              Começar
+            </Link>
+          )}
         </div>
       )}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t-[1.5px] border-dashed border-rule pt-3">

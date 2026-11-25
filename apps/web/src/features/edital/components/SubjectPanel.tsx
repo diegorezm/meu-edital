@@ -14,8 +14,13 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
     weight: subject.directWeight ? String(subject.directWeight) : "",
   });
   const [newTopic, setNewTopic] = useState("");
+  const [filter, setFilter] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [childOf, setChildOf] = useState<string | null>(null);
+  const query = filter.trim().toLocaleLowerCase("pt-BR");
+  const visibleTopics = query
+    ? view.topics.filter((t) => t.name.toLocaleLowerCase("pt-BR").includes(query))
+    : view.topics;
 
   const saveWeights = () => {
     const q = Number(weights.questions);
@@ -38,8 +43,17 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
         <Field label="Ou peso" type="number" min={0} value={weights.weight} onChange={(e) => setWeights({ ...weights, weight: e.target.value })} onBlur={saveWeights} />
       </div>
       <p className="text-xs text-ink-muted">Peso efetivo: {subject.weight}. Ele decide quanto tempo a matéria ganha na jornada.</p>
+      {view.topics.length > 5 && (
+        <Field
+          label="Filtrar assuntos"
+          type="search"
+          placeholder="Buscar por nome..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      )}
       <div>
-        {view.topics.map((topic) => {
+        {visibleTopics.map((topic) => {
           const siblings = view.topics.filter((t) => t.parentId === topic.parentId);
           const pos = siblings.findIndex((t) => t.id === topic.id);
           return (
@@ -49,6 +63,7 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
                 <span className="flex items-center">
                   {topic.studied && <Stamp>Estudado</Stamp>}
                   <IconButton icon="caret" className="rotate-180" label="Subir" disabled={pos === 0} onClick={() => syllabus.moveTopic(topic.id, -1)} />
+                  <IconButton icon="caret" label="Descer" disabled={pos === siblings.length - 1} onClick={() => syllabus.moveTopic(topic.id, 1)} />
                   <IconButton icon="pencil" label={`Renomear ${topic.name}`} onClick={() => setEditing({ id: topic.id, name: topic.name })} />
                   {topic.depth === 0 && (
                     <IconButton icon="plus" label={`Subassunto em ${topic.name}`} onClick={() => setChildOf(topic.id)} />

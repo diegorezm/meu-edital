@@ -37,6 +37,7 @@ export function useStoreActions() {
     () => ({
       update: (change: Parameters<SyncClient["update"]>[0]) => client.update(change),
       syncNow: () => client.sync(),
+      dismissRejected: () => client.dismissRejected(),
     }),
     [client],
   );

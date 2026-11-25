@@ -14,7 +14,13 @@ let token: string | null = null;
 
 /** Carrega o token salvo. Chame antes de montar o app. */
 export async function loadSessionToken() {
-  if (platform.native) token = await platform.secureStorage.get(TOKEN_KEY);
+  if (!platform.native) return;
+  try {
+    token = await platform.secureStorage.get(TOKEN_KEY);
+  } catch (error) {
+    console.error("Falha ao ler token seguro", error);
+    token = null;
+  }
 }
 
 export const sessionToken = () => token;

@@ -9,7 +9,7 @@ import { Icon, type IconName } from "./Icon";
  */
 export const navItemClass = (active: boolean) =>
   clsx(
-    "flex min-h-9 items-center gap-2.5 rounded-[5px] border-2 px-2.5 py-1 text-[15px] font-bold no-underline",
+    "flex min-h-11 items-center gap-2.5 rounded-[5px] border-2 px-2.5 py-1 text-[15px] font-bold no-underline",
     active
       ? "border-ink bg-maroon text-paper-raised shadow-press"
       : "border-transparent text-ink hover:border-rule hover:bg-paper-raised",

@@ -89,8 +89,9 @@
     min-height: 100dvh;
   }
   :focus-visible {
-    outline: 3px solid var(--color-teal-strong);
+    outline: 3px solid var(--color-ink);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-paper-raised);
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

@@ -128,10 +128,16 @@ describe("rate limiting", () => {
         ip,
       });
     const statuses: number[] = [];
-    for (let i = 0; i < 25; i += 1) statuses.push((await attempt()).status);
+    // A janela do rate limiter local vira no minuto cheio; até 42 tentativas
+    // garantem atingir o limite de 20 mesmo cruzando a virada do minuto.
+    for (let i = 0; i < 42; i += 1) {
+      const { status } = await attempt();
+      statuses.push(status);
+      if (status === 429) break;
+    }
     expect(statuses.slice(0, 20).every((status) => status === 401)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
-  });
+  }, 15_000);
 });
 
 describe("sem envio de e-mail (EMAIL_MODE=log)", () => {

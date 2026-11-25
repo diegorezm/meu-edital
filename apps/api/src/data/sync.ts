@@ -1,4 +1,4 @@
-import { and, asc, eq, getTableColumns, gt, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, getTableColumns, gt, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { type Db, type StudyTableName, studyTables, syncCounters, syncMutations } from "@meu-edital/db";
 import {
@@ -18,6 +18,17 @@ const PULL_LIMIT = 500;
 const MUTATION_RETENTION_MS = 30 * 86_400_000;
 /** O Cloudflare D1 limita a 100 parâmetros por consulta; mantemos folga para `userId`. */
 const MAX_SQL_IN = 80;
+/** Limites generosos de registros ativos por conta para proteger o D1 compartilhado. */
+const TABLE_QUOTAS: Partial<Record<TableName, number>> = {
+  exams: 50,
+  subjects: 500,
+  topics: 5_000,
+  cycleItems: 500,
+  studySessions: 25_000,
+  reviews: 25_000,
+  mockExams: 1_000,
+  weekTargets: 1_000,
+};
 
 function chunks<T>(items: T[], size = MAX_SQL_IN): T[][] {
   const result: T[][] = [];
@@ -92,6 +103,56 @@ export function syncData(db: Db, userId: string) {
     return taken;
   }
 
+  /** Contagem de linhas ativas e ids já ativos do usuário nas tabelas com upsert. */
+  async function loadQuotas(mutations: Incoming[]) {
+    const upsertIds = new Map<TableName, Set<string>>();
+    for (const m of mutations) {
+      if (m.op !== "upsert" || TABLE_QUOTAS[m.table] === undefined) continue;
+      const set = upsertIds.get(m.table) ?? new Set<string>();
+      set.add(m.rowId);
+      upsertIds.set(m.table, set);
+    }
+    const activeCount = new Map<TableName, number>();
+    const activeIds = new Map<TableName, Set<string>>();
+    if (!upsertIds.size) return { activeCount, activeIds };
+    const entries: { kind: "count" | "ids"; name: TableName; query: BatchItem<"sqlite"> }[] = [];
+    for (const [name, ids] of upsertIds) {
+      const table = studyTables[name];
+      activeIds.set(name, new Set());
+      entries.push({
+        kind: "count",
+        name,
+        query: db
+          .select({ total: count() })
+          .from(table)
+          .where(and(eq(table.userId, userId), isNull(table.deletedAt))),
+      });
+      for (const slice of chunks([...ids])) {
+        entries.push({
+          kind: "ids",
+          name,
+          query: db
+            .select({ id: table.id })
+            .from(table)
+            .where(and(eq(table.userId, userId), isNull(table.deletedAt), inArray(table.id, slice))),
+        });
+      }
+    }
+    const results = (await db.batch(
+      entries.map((e) => e.query) as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]],
+    )) as unknown as Record<string, unknown>[][];
+    for (let i = 0; i < entries.length; i += 1) {
+      const entry = entries[i];
+      if (entry.kind === "count") {
+        activeCount.set(entry.name, Number(results[i]?.[0]?.total ?? 0));
+      } else {
+        const set = activeIds.get(entry.name)!;
+        for (const row of results[i] ?? []) set.add(String(row.id));
+      }
+    }
+    return { activeCount, activeIds };
+  }
+
   function upsertStatement(name: TableName, row: Record<string, unknown>, now: number) {
     const table = studyTables[name];
     const values: Record<string, unknown> = {};
@@ -128,7 +189,9 @@ export function syncData(db: Db, userId: string) {
   async function pushAttempt(mutations: Incoming[], allowRetry: boolean): Promise<PushResponse> {
     const now = Date.now();
     const applied = await alreadyApplied(mutations.map((m) => m.id));
-    const taken = await foreignIds(mutations.filter((m) => !applied.has(m.id)));
+    const fresh = mutations.filter((m) => !applied.has(m.id));
+    const taken = await foreignIds(fresh);
+    const { activeCount, activeIds } = await loadQuotas(fresh);
     const accepted: string[] = [];
     const rejected: Rejection[] = [];
     const statements: BatchItem<"sqlite">[] = [];
@@ -159,11 +222,28 @@ export function syncData(db: Db, userId: string) {
           rejected.push({ id: m.id, reason: "O id da linha não confere com a mutação." });
           continue;
         }
+        const quota = TABLE_QUOTAS[m.table];
+        if (quota !== undefined) {
+          const existing = activeIds.get(m.table);
+          const current = activeCount.get(m.table) ?? 0;
+          if (!existing?.has(m.rowId)) {
+            if (current >= quota) {
+              rejected.push({ id: m.id, reason: "Limite de registros atingido nesta conta." });
+              continue;
+            }
+            activeCount.set(m.table, current + 1);
+            existing?.add(m.rowId);
+          }
+        }
         write = upsertStatement(m.table, parsed.data as Record<string, unknown>, now);
       } else {
         if (m.table === "userSettings") {
           rejected.push({ id: m.id, reason: "As preferências da conta não podem ser apagadas." });
           continue;
+        }
+        const existing = activeIds.get(m.table);
+        if (existing?.delete(m.rowId)) {
+          activeCount.set(m.table, Math.max(0, (activeCount.get(m.table) ?? 1) - 1));
         }
         write = deleteStatement(m.table, m.rowId, now);
       }

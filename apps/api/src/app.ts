@@ -55,11 +55,26 @@ app.use("*", (c, next) => {
 });
 
 // Só as ações (POST) contam para o limite; ler a sessão não.
-app.use("/auth/*", async (c, next) =>
-  c.req.method === "POST"
-    ? rateLimit("AUTH_LIMITER", (ctx) => `${clientIp(ctx)}:${ctx.req.path}`)(c, next)
-    : next(),
-);
+// No login por e-mail também limitamos por conta para frear tentativas distribuídas.
+app.use("/auth/*", async (c, next) => {
+  if (c.req.method !== "POST") return next();
+  const byIp = await c.env.AUTH_LIMITER.limit({ key: `${clientIp(c)}:${c.req.path}` });
+  if (!byIp.success)
+    return c.json({ error: "Muitas tentativas. Espere um minuto e tente de novo." }, 429);
+  if (c.req.path === "/api/auth/sign-in/email") {
+    const body = (await c.req.raw
+      .clone()
+      .json()
+      .catch(() => null)) as { email?: unknown } | null;
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (email) {
+      const byEmail = await c.env.AUTH_LIMITER.limit({ key: `login:${email}` });
+      if (!byEmail.success)
+        return c.json({ error: "Muitas tentativas. Espere um minuto e tente de novo." }, 429);
+    }
+  }
+  return next();
+});
 app.on(["GET", "POST"], "/auth/*", (c) =>
   createAuth(c.env, (promise) => c.executionCtx.waitUntil(promise)).handler(c.req.raw),
 );
@@ -108,7 +123,16 @@ const routes = app
 
 routes.notFound((c) => c.json({ error: "Rota não encontrada." }, 404));
 routes.onError((error, c) => {
-  console.error(error);
+  console.error(
+    JSON.stringify({
+      level: "error",
+      requestId: c.req.header("cf-ray") ?? null,
+      method: c.req.method,
+      path: c.req.path,
+      userId: c.get("userId") ?? null,
+      message: error instanceof Error ? error.message : String(error),
+    }),
+  );
   return c.json({ error: "Algo deu errado do nosso lado. Tente de novo." }, 500);
 });
 

@@ -83,8 +83,10 @@ export function listenForChanges(
       }
     }
     if (closed) return;
+    let opened = false;
     socket = new WebSocket(url);
     socket.onopen = () => {
+      opened = true;
       const reconnecting = hasConnectedOnce && attempts > 0;
       hasConnectedOnce = true;
       attempts = 0;
@@ -98,7 +100,29 @@ export function listenForChanges(
         // Mensagem que não é aviso (ex.: "pong").
       }
     };
-    socket.onclose = () => {
+    socket.onclose = (event) => {
+      if (closed) return;
+      if (event.code === 1008 || event.code === 4401) {
+        closed = true;
+        void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+        return;
+      }
+      // Navegadores escondem o HTTP 401 no handshake do WebSocket (código 1006).
+      // Se falhar antes de abrir, verifica a sessão para não ficar reconectando em loop.
+      if (!opened && attempts >= 1) {
+        void apiFetch("/api/auth/get-session")
+          .then(async (res) => {
+            const body = res.ok ? ((await res.json().catch(() => null)) as { user?: unknown } | null) : null;
+            if (res.status === 401 || (res.ok && !body?.user)) {
+              closed = true;
+              void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+              return;
+            }
+            scheduleReconnect();
+          })
+          .catch(() => scheduleReconnect());
+        return;
+      }
       scheduleReconnect();
     };
   };

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, count, desc, eq, gt, isNull } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import {
   MAX_PROPOSAL_BYTES,
@@ -77,6 +77,12 @@ export function proposalsData(db: Db, userId: string) {
     ): Promise<Proposal> {
       if (proposalSize(input) > MAX_PROPOSAL_BYTES)
         throw new ProposalError("A proposta é grande demais. Divida em partes menores.");
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(proposals)
+        .where(and(eq(proposals.userId, userId), eq(proposals.status, "pendente"), gt(proposals.expiresAt, now)));
+      if (total >= 50)
+        throw new ProposalError("A caixa de propostas está cheia (limite de 50). Aplique ou descarte algumas antes.");
       const data = await loadAppData(db, userId);
       const examId = meta.examId ?? data.activeExamId ?? "";
       // Um concurso novo não depende do ativo; o resto precisa de um concurso.

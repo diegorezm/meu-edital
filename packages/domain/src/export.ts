@@ -46,6 +46,11 @@ export function exportJson(data: AppData) {
       simulados: data.mockExams.filter((m) => m.examId === exam.id),
       metasSemanais: data.weekTargets.filter((w) => w.examId === exam.id),
     })),
-    preferencias: { intervalosDeRevisao: data.reviewOffsets, skin: data.skin },
+    preferencias: {
+      concursoAtivo: data.activeExamId,
+      intervalosDeRevisao: data.reviewOffsets,
+      skin: data.skin,
+      comemoracoesVistas: data.seenCelebrations,
+    },
   };
 }

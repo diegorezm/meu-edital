@@ -266,6 +266,15 @@ export class SyncClient {
       ),
     );
     if (this.disposed) return;
+    // Se já há dados hidratados localmente (cursor > 0), libera a interface na hora
+    // e sincroniza com o servidor em segundo plano (sem bloquear abertura offline/lenta).
+    if (this.cursor() > 0) {
+      for (const params of this.channels.values()) params.markReady();
+      this.setState({ ready: true });
+      this.readyResolve();
+      void this.sync();
+      return;
+    }
     await this.sync();
     if (this.disposed) return;
     for (const params of this.channels.values()) params.markReady();

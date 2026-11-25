@@ -24,7 +24,7 @@ export function Resource({
   return (
     <span
       className={clsx(
-        "flex items-center gap-1.5 rounded-[5px] border-2 border-ink bg-paper whitespace-nowrap text-ink",
+        "flex items-center gap-1.5 rounded-control border-2 border-ink bg-paper whitespace-nowrap text-ink",
         compact ? "px-1.5 pb-px text-[11px]" : "px-2.5 pb-0.5 pl-2 text-sm",
         className,
       )}

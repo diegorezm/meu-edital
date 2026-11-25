@@ -33,7 +33,7 @@ export function PlayerCard({ view }: { view: PlayerView }) {
         <button
           type="button"
           onClick={() => setPicking(true)}
-          className="mt-2.5 flex min-h-11 w-full items-center gap-2 rounded-[5px] border-2 border-ink bg-paper-raised px-2 py-1 text-left text-sm leading-tight"
+          className="mt-2.5 flex min-h-11 w-full items-center gap-2 rounded-control border-2 border-ink bg-paper-raised px-2 py-1 text-left text-sm leading-tight"
         >
           <Icon name="scroll" />
           <span className="min-w-0">
@@ -77,8 +77,8 @@ function ExamPicker({
                 }}
                 className={
                   active
-                    ? "flex min-h-11 w-full items-center gap-2 rounded-[5px] border-2 border-ink bg-maroon px-3 py-1.5 text-left font-bold text-paper-raised"
-                    : "flex min-h-11 w-full items-center gap-2 rounded-[5px] border-2 border-ink bg-paper-raised px-3 py-1.5 text-left font-bold"
+                    ? "flex min-h-11 w-full items-center gap-2 rounded-control border-2 border-ink bg-maroon px-3 py-1.5 text-left font-bold text-paper-raised"
+                    : "flex min-h-11 w-full items-center gap-2 rounded-control border-2 border-ink bg-paper-raised px-3 py-1.5 text-left font-bold"
                 }
               >
                 {exam.name}

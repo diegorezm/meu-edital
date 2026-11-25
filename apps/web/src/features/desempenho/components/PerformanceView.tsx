@@ -24,7 +24,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   const { mobile } = useLayout();
   if (!perf.subjects)
     return (
-      <Sheet title="Desempenho" className="mx-auto max-w-xl">
+      <Sheet title="Desempenho" headingLevel="h1" className="mx-auto max-w-xl">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-32" />
           <p>Monte seu concurso para ver o desempenho.</p>
@@ -38,7 +38,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   if (mobile) {
     const current = perf.subjects.find((s) => s.id === perf.open);
     return (
-      <Sheet title="Desempenho">
+      <Sheet title="Desempenho" headingLevel="h1">
         {perf.subjects.map((s) => (
           <ListRow key={s.id} aside={<Icon name="back" className="rotate-180" />}>
             <button type="button" onClick={() => perf.toggle(s.id)} className="flex min-h-11 w-full items-center gap-2 text-left">
@@ -103,7 +103,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   );
 
   return (
-    <Sheet title="Desempenho">
+    <Sheet title="Desempenho" headingLevel="h1">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-ink text-left text-xs text-ink-muted">

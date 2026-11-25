@@ -7,15 +7,18 @@ export function Sheet({
   title,
   tone,
   ribbonSize = "md",
+  headingLevel = "h2",
   className,
   children,
 }: {
   title?: string;
   tone?: "teal" | "gold" | "maroon";
   ribbonSize?: "sm" | "md" | "lg";
+  headingLevel?: "h1" | "h2";
   className?: string;
   children: ReactNode;
 }) {
+  const Heading = headingLevel;
   return (
     <section
       className={clsx(
@@ -26,11 +29,11 @@ export function Sheet({
       )}
     >
       {title && (
-        <h2 className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+        <Heading className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
           <Ribbon tone={tone} size={ribbonSize}>
             {title}
           </Ribbon>
-        </h2>
+        </Heading>
       )}
       {children}
     </section>

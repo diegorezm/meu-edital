@@ -12,7 +12,7 @@ export function WeekView({ week }: { week: WeekScreen }) {
   const { view } = week;
   if (!view)
     return (
-      <Sheet title="Semana" className="mx-auto max-w-xl">
+      <Sheet title="Semana" headingLevel="h1" className="mx-auto max-w-xl">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-32" />
           <p>Monte seu concurso para acompanhar a semana.</p>
@@ -24,7 +24,7 @@ export function WeekView({ week }: { week: WeekScreen }) {
     );
 
   const summary = (
-    <Sheet title={view.label}>
+    <Sheet title={view.label} headingLevel="h1">
       <div className="mb-2 flex items-center justify-between gap-2">
         <IconButton icon="back" label="Semana anterior" onClick={week.previous} />
         <span className="text-center">

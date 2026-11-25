@@ -1,14 +1,11 @@
 import { Button, Notice, Sheet } from "@meu-edital/ui";
-import { AccountView } from "./components/AccountView";
+import { lazy, Suspense } from "react";
 import { CheckEmailView } from "./components/CheckEmailView";
 import { ForgotPasswordView } from "./components/ForgotPasswordView";
 import { ResetPasswordView } from "./components/ResetPasswordView";
 import { SignInView } from "./components/SignInView";
 import { SignUpView } from "./components/SignUpView";
 import { WaitlistView } from "./components/WaitlistView";
-import { useAccount } from "./hooks/useAccount";
-import { useNotifications } from "./hooks/useNotifications";
-import { usePrivacy } from "./hooks/usePrivacy";
 import { useForgotPassword } from "./hooks/useForgotPassword";
 import { useResendVerification } from "./hooks/useResendVerification";
 import { useResetPassword } from "./hooks/useResetPassword";
@@ -16,6 +13,8 @@ import { useSignIn } from "./hooks/useSignIn";
 import { useAuthConfig } from "./hooks/useAuthConfig";
 import { useSignUp } from "./hooks/useSignUp";
 import { useWaitlist } from "./hooks/useWaitlist";
+
+const AccountSection = lazy(() => import("./account"));
 
 const notices: Record<string, string> = {
   "senha-trocada": "Senha trocada. Entre com a senha nova.",
@@ -71,6 +70,10 @@ export function ResetPasswordPage({ token, error }: { token?: string; error?: st
 }
 
 export function AccountPage() {
-  return <AccountView form={useAccount()} notifications={useNotifications()} privacy={usePrivacy()} />;
+  return (
+    <Suspense fallback={null}>
+      <AccountSection />
+    </Suspense>
+  );
 }
 

@@ -9,7 +9,7 @@ export function TimerSheet({ study }: { study: Study }) {
       ? "Revisão"
       : "Estudo livre";
   return (
-    <Sheet title={title}>
+    <Sheet title={title} headingLevel="h1">
       <div className="flex flex-col items-center gap-4 text-center">
         {study.subject && (
           <div className="flex items-center gap-3 text-left">

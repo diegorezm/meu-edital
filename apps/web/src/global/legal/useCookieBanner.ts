@@ -1,4 +1,5 @@
 import { DEFAULT_CHOICES, tracking, type TrackingChoices } from "@platform/tracking";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useSession } from "../auth";
 import {
@@ -13,16 +14,27 @@ export function useCookieBanner() {
   const saved = useSyncExternalStore(tracking.subscribe, tracking.saved);
   const session = useSession();
   const signedIn = Boolean(session.data?.user);
-  const [version, setVersion] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<TrackingChoices>(DEFAULT_CHOICES);
 
-  useEffect(() => {
-    currentPrivacyVersion().then(setVersion, () => undefined);
-  }, []);
-  useEffect(() => {
-    if (signedIn) syncTrackingChoices().catch(() => undefined);
-  }, [signedIn]);
+  const { data: version = null } = useQuery({
+    queryKey: ["legal", "privacidade-versao"],
+    queryFn: currentPrivacyVersion,
+    staleTime: 10 * 60_000,
+    retry: false,
+  });
+
+  useQuery({
+    queryKey: ["legal", "tracking-sync", signedIn],
+    queryFn: async () => {
+      await syncTrackingChoices();
+      return true;
+    },
+    enabled: signedIn,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+
   useEffect(
     () =>
       onOpenTrackingPreferences(() => {

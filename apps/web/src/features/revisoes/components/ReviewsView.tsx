@@ -5,7 +5,7 @@ import type { Reviews } from "../hooks/useReviews";
 
 export function ReviewsView({ reviews }: { reviews: Reviews }) {
   return (
-    <Sheet title="Revisões" className="mx-auto max-w-3xl">
+    <Sheet title="Revisões" headingLevel="h1" className="mx-auto max-w-3xl">
       <div className="mb-3 flex gap-1.5" role="group" aria-label="Quais revisões">
         <Chip pressed={reviews.tab === "due"} onClick={() => reviews.setTab("due")}>
           Vencidas · {reviews.dueCount}

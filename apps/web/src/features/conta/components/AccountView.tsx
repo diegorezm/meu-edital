@@ -18,7 +18,7 @@ export function AccountView({
   if (!form.user) return null;
   return (
     <div className="mx-auto flex max-w-md flex-col gap-[26px]">
-      <Sheet title="Sua conta">
+      <Sheet title="Sua conta" headingLevel="h1">
         <FormShell onSubmit={form.deleteAccount} error={form.error}>
           <p>
             <strong>{form.user.name}</strong>

@@ -17,7 +17,7 @@ export function XpBar({ value, label, className }: { value: number; label: strin
       aria-label={label}
       className={clsx(
         "relative h-3.5 overflow-hidden rounded-sm border-2 border-ink bg-paper-sunken",
-        "after:absolute after:inset-0 after:bg-[repeating-linear-gradient(90deg,transparent_0_10%,rgb(91_59_51/.35)_10%_calc(10%+1px))]",
+        "after:absolute after:inset-0 after:bg-[repeating-linear-gradient(90deg,transparent_0_10%,color-mix(in_srgb,var(--color-ink)_35%,transparent)_10%_calc(10%+1px))]",
         className,
       )}
     >

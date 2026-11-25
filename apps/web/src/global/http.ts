@@ -34,6 +34,9 @@ export async function saveSessionToken(value: string | null) {
 
 /** fetch para a API com a sessão certa para a plataforma. */
 export function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (platform.native && !apiOrigin) {
+    return Promise.reject(new Error("Endereço da API (VITE_API_ORIGIN) não configurado neste build."));
+  }
   const headers = new Headers(init.headers);
   if (token && !headers.has("authorization")) headers.set("authorization", `Bearer ${token}`);
   return fetch(apiUrl(path), {

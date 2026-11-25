@@ -18,7 +18,7 @@ export function SyllabusView({ syllabus }: { syllabus: Syllabus }) {
   const [open, setOpen] = useState(false);
   if (!view)
     return (
-      <Sheet title="Edital" className="mx-auto max-w-xl">
+      <Sheet title="Edital" headingLevel="h1" className="mx-auto max-w-xl">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-36" />
           <p>Nenhum concurso ainda.</p>
@@ -34,7 +34,7 @@ export function SyllabusView({ syllabus }: { syllabus: Syllabus }) {
       {view.subjects.map((subject) => {
         const active = view.current?.id === subject.id && !mobile;
         return (
-          <div key={subject.id} className={clsx("mb-1 flex items-center rounded-[5px] border-2", active ? "border-ink bg-paper-raised" : "border-transparent")}>
+          <div key={subject.id} className={clsx("mb-1 flex items-center rounded-control border-2", active ? "border-ink bg-paper-raised" : "border-transparent")}>
             <button
               type="button"
               onClick={() => {
@@ -108,7 +108,7 @@ export function SyllabusView({ syllabus }: { syllabus: Syllabus }) {
 
   return (
     <div className="flex flex-col gap-[26px]">
-      <Sheet title={view.exam.name}>
+      <Sheet title={view.exam.name} headingLevel="h1">
         <ExamForm key={view.exam.id} exam={view.exam} syllabus={syllabus} />
       </Sheet>
       {mobile ? (

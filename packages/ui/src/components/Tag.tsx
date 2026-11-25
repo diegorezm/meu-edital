@@ -7,7 +7,7 @@ export function Tag({ icon, children, className }: { icon?: IconName; children: 
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1 rounded-[4px] border-[1.5px] border-ink bg-paper px-1.5 text-xs font-extrabold whitespace-nowrap",
+        "inline-flex items-center gap-1 rounded-chip border-[1.5px] border-ink bg-paper px-1.5 text-xs font-extrabold whitespace-nowrap",
         className,
       )}
     >

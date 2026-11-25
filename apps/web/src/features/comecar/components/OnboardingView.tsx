@@ -30,7 +30,7 @@ export function OnboardingView({ flow }: { flow: ReturnType<typeof useOnboarding
         <Mascot pose={flow.step === 3 ? "comemorando" : "parado"} className="w-44" />
         <Sheet className="mt-3 text-sm">{lines[flow.step]}</Sheet>
       </div>
-      <Sheet title={`Passo ${flow.step} de 3`}>
+      <Sheet title={`Passo ${flow.step} de 3`} headingLevel="h1">
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
           {flow.error && <Notice tone="error">{flow.error}</Notice>}
           {flow.step === 1 && <StepExam flow={flow} />}

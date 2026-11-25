@@ -41,8 +41,8 @@ function Companions() {
  * ficha do jogador e a navegação em lista. No celular: viga com três
  * recursos e o retrato, barra inferior com cinco placas e "Mais".
  */
-export function AppShell({ children }: { children: ReactNode }) {
-  const view = usePlayer();
+export function AppShell({ userName, children }: { userName?: string | null; children: ReactNode }) {
+  const view = usePlayer(userName);
   const { mobile } = useLayout();
   const [profile, setProfile] = useState(false);
   useWeekSnapshot();
@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const skipLink = (
     <a
       href="#conteudo"
-      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-[5px] focus:border-2 focus:border-ink focus:bg-paper-raised focus:px-3 focus:py-2 focus:font-bold focus:text-ink"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-control focus:border-2 focus:border-ink focus:bg-paper-raised focus:px-3 focus:py-2 focus:font-bold focus:text-ink"
     >
       Pular para o conteúdo
     </a>

@@ -54,7 +54,7 @@ export function JourneySheet({
   );
 
   return (
-    <Sheet title={`Jornada · volta ${view.lap}`} ribbonSize="lg" className="px-[18px] pt-[30px] pb-[18px]">
+    <Sheet title={`Jornada · volta ${view.lap}`} ribbonSize="lg" headingLevel="h1" className="px-[18px] pt-[30px] pb-[18px]">
       <p className="mb-5 text-center text-sm text-ink-muted">
         Bloco {view.position} de {view.blocks} · faltou um dia? a jornada espera por você.
       </p>

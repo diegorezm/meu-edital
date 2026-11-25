@@ -19,7 +19,7 @@ export function SelectField({
       </label>
       <select
         id={id}
-        className="min-h-11 w-full rounded-[5px] border-2 border-ink bg-paper-raised px-2 py-1.5 text-ink"
+        className="min-h-11 w-full rounded-control border-2 border-ink bg-paper-raised px-2 py-1.5 text-ink"
         {...select}
       >
         {options.map((option) => (

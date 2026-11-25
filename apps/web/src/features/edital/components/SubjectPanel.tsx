@@ -84,7 +84,7 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
                   <input
                     aria-label="Novo nome"
                     autoFocus
-                    className="min-h-11 flex-1 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
+                    className="min-h-11 flex-1 rounded-control border-2 border-ink bg-paper-raised px-2"
                     value={editing.name}
                     onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                     onKeyDown={(e) => {

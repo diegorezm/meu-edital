@@ -17,7 +17,7 @@ export function HomeView({ home }: { home: ReturnType<typeof useHome> }) {
 
   if (!view)
     return (
-      <Sheet title="Bem-vindo à guilda" ribbonSize="lg" className="mx-auto max-w-xl pt-10">
+      <Sheet title="Bem-vindo à guilda" ribbonSize="lg" headingLevel="h1" className="mx-auto max-w-xl pt-10">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" idle className="w-40" />
           <p>Sua jornada começa com um edital. Leva um minuto.</p>

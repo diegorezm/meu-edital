@@ -131,10 +131,17 @@ export function sessionsAffected(
   ).length;
 }
 
-/** Assunto e todos os descendentes. */
+/** Assunto e todos os descendentes (protegido contra ciclos em `parentId`). */
 export function topicTreeIds(data: AppData, topicId: string): string[] {
+  const seen = new Set<string>([topicId]);
   const ids = [topicId];
-  for (let i = 0; i < ids.length; i += 1)
-    for (const t of data.topics) if (t.parentId === ids[i]) ids.push(t.id);
+  for (let i = 0; i < ids.length; i += 1) {
+    for (const t of data.topics) {
+      if (t.parentId === ids[i] && !seen.has(t.id)) {
+        seen.add(t.id);
+        ids.push(t.id);
+      }
+    }
+  }
   return ids;
 }

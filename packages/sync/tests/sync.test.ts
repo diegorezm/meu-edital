@@ -8,7 +8,7 @@ import {
   removeExam,
   startExam,
 } from "@meu-edital/domain";
-import { diffData, orderBatch, rowSchemas, TABLES } from "../src";
+import { dataFromRows, diffData, OfflineError, orderBatch, rowSchemas, TABLES } from "../src";
 import { memoryStorage, SyncClient } from "../src/clientEntry";
 import { fakeServer } from "./fakeServer";
 
@@ -266,5 +266,54 @@ describe("cliente de sync", () => {
     b.transport.state.online = true;
     await b.client.sync();
     expect(b.client.data().exams.find((e) => e.id === examId)!.name).toBe("Local");
+  });
+
+  it("mantém dados visíveis na UI se o pull falhar por rede logo após um push bem-sucedido", async () => {
+    const server = fakeServer();
+    const base = server.transport({ online: true });
+    let armed = true;
+    let failNextPull = false;
+    const client = new SyncClient({
+      transport: {
+        push: async (body) => {
+          const res = await base.push(body);
+          if (armed) {
+            armed = false;
+            failNextPull = true;
+          }
+          return res;
+        },
+        pull: async (since) => {
+          if (failNextPull) throw new OfflineError("queda após push");
+          return base.pull(since);
+        },
+      },
+      storage: memoryStorage(),
+      leaderElection: leader,
+      onlineDetector: onlineDetector(base),
+    });
+    await client.start();
+    client.update(newExam);
+    await tick();
+    // Push gravou no servidor, mas pull falhou: transação continua otimista e visível.
+    expect(server.rows.size).toBeGreaterThan(0);
+    expect(client.data().exams).toHaveLength(1);
+    expect(client.getState().status).toBe("offline");
+
+    failNextPull = false;
+    client.online();
+    await client.flush();
+    expect(client.getState().status).toBe("idle");
+    expect(client.data().exams).toHaveLength(1);
+  });
+
+  it("dataFromRows respeita a versão mais nova mesmo fora de ordem", () => {
+    const created = newExam(emptyData());
+    const exam = created.exams[0];
+    const rebuilt = dataFromRows([
+      { table: "exams", row: { ...exam, name: "Mais novo" }, deleted: false, version: 5 },
+      { table: "exams", row: { ...exam, name: "Antigo" }, deleted: false, version: 2 },
+    ]);
+    expect(rebuilt.exams[0].name).toBe("Mais novo");
   });
 });

@@ -163,4 +163,39 @@ describe("catálogo de editais", () => {
     expect(data.exams[0].board).toBe("Cebraspe");
     expect(subjectWeight(data.subjects.find((s) => s.name === "Direito Previdenciário")!)).toBe(30);
   });
+
+  it("topicTreeIds termina mesmo se houver ciclo em parentId e CSV neutraliza fórmulas", async () => {
+    const { recordSession, sessionsCsv, topicTreeIds } = await import("../src");
+    const base = startExam(emptyData(), {
+      name: "=HYPERLINK(\"http://evil\")",
+      hoursPerWeek: 10,
+      subjects: [{ name: "+SUM(A1:A2)", topics: ["Crase"] }],
+    });
+    const subjectId = base.subjects[0].id;
+    const cyclic = {
+      ...base,
+      topics: [
+        { id: "a", subjectId, parentId: "b", name: "A", position: 0 },
+        { id: "b", subjectId, parentId: "a", name: "B", position: 1 },
+      ],
+    };
+    expect(topicTreeIds(cyclic, "a").sort()).toEqual(["a", "b"]);
+
+    const withSession = recordSession(
+      base,
+      {
+        examId: base.activeExamId!,
+        subjectId,
+        topicId: base.topics[0].id,
+        type: "Teoria",
+        minutes: 30,
+        note: "=CMD()",
+      },
+      "2026-11-12",
+    );
+    const csv = sessionsCsv(withSession);
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).toContain("'+SUM(A1:A2)");
+    expect(csv).toContain("'=CMD()");
+  });
 });

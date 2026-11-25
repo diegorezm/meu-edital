@@ -11,6 +11,12 @@ type BlockEnd = { userId: string; endsAt: number; subject: string };
  * dados vêm sempre pelo pull, então perder a conexão não perde nada.
  */
 export class UserHub extends DurableObject<Env> {
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    // Responde ping/pong sem acordar o Durable Object da hibernação.
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("upgrade")?.toLowerCase() !== "websocket")
       return new Response("Esperava um WebSocket.", { status: 426 });
@@ -42,6 +48,19 @@ export class UserHub extends DurableObject<Env> {
   async cancelBlockEnd(): Promise<void> {
     await this.ctx.storage.delete("blockEnd");
     await this.ctx.storage.deleteAlarm();
+  }
+
+  /** Encerra todas as conexões e apaga o estado ao excluir a conta. */
+  async destroy(): Promise<void> {
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        socket.close(1000, "Conta excluída");
+      } catch {
+        // Já fechado.
+      }
+    }
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
   }
 
   async alarm(): Promise<void> {

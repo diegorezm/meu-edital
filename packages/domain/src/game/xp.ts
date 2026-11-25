@@ -75,7 +75,7 @@ export function playerXp(data: AppData, date = today()): XpBreakdown {
   const minutes = [...counted.values()].reduce((sum, m) => sum + m, 0) * XP.perMinute;
   const correct =
     data.sessions.reduce(
-      (sum, s) => sum + Math.max(0, Math.min(s.correct ?? 0, s.questions ?? s.correct ?? 0)),
+      (sum, s) => sum + Math.max(0, Math.min(s.correct ?? 0, s.questions ?? 0)),
       0,
     ) * XP.perCorrect;
   const reviews = reviewsOnTime(data) * XP.reviewOnTime;

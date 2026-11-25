@@ -1,8 +1,12 @@
 import { subjectsInOrder, topicPath } from "./topics";
 import type { AppData } from "./types";
 
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
 const cell = (value: unknown) => {
-  const text = value === undefined || value === null ? "" : String(value);
+  const raw = value === undefined || value === null ? "" : String(value);
+  // Evita que planilhas (Excel/Calc) executem fórmulas vindas de texto livre ou IA.
+  const text = typeof value === "string" && FORMULA_PREFIX.test(raw) ? `'${raw}` : raw;
   return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 

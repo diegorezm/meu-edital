@@ -239,4 +239,26 @@ describe("conquistas e comemorações", () => {
     const events = celebrationsBetween(data, study(data, examId, DAY), DAY);
     expect(events.map((e) => e.id)).toContain("achievement:primeiro-passo");
   });
+
+  it("não premia XP por acertos sem questões informadas", () => {
+    const { data, examId } = setup();
+    const subject = data.subjects[0];
+    const topic = data.topics.find((t) => t.subjectId === subject.id)!;
+    const tampered = {
+      ...data,
+      sessions: [
+        {
+          id: "s1",
+          examId,
+          subjectId: subject.id,
+          topicId: topic.id,
+          type: "Questões" as const,
+          minutes: 10,
+          date: DAY,
+          correct: 500,
+        },
+      ],
+    };
+    expect(playerXp(tampered, DAY).correct).toBe(0);
+  });
 });

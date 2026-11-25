@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { type AppData, SKINS } from "@meu-edital/domain";
+import { type AppData, isDateKey, SKINS } from "@meu-edital/domain";
 
 /**
  * Tabelas sincronizadas, na ordem pais antes dos filhos. Inserções seguem
@@ -23,7 +23,13 @@ export const SETTINGS_ID = "me";
 
 const id = z.string().min(1).max(64);
 const text = (max = 1024) => z.string().max(max);
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD");
+const date = z
+  .string()
+  .refine((v) => {
+    if (!isDateKey(v)) return false;
+    const year = Number(v.slice(0, 4));
+    return year >= 1970 && year <= 2100;
+  }, "data inválida (use AAAA-MM-DD)");
 const count = z.number().int().min(0).max(100_000);
 const optional = <T extends z.ZodType>(schema: T) => schema.optional();
 
@@ -57,13 +63,15 @@ export const rowSchemas = {
     questions: optional(z.number().int().positive().max(100_000)),
     pointsPerQuestion: optional(z.number().positive().max(100_000)),
   }),
-  topics: z.strictObject({
-    id,
-    subjectId: id,
-    parentId: optional(id),
-    name: text(),
-    position: z.number().int(),
-  }),
+  topics: z
+    .strictObject({
+      id,
+      subjectId: id,
+      parentId: optional(id),
+      name: text(),
+      position: z.number().int(),
+    })
+    .refine((t) => t.parentId !== t.id, "assunto não pode ser pai de si mesmo"),
   cycleItems: z.strictObject({
     id,
     examId: id,
@@ -71,19 +79,24 @@ export const rowSchemas = {
     minutes: z.number().int().min(1).max(24 * 60),
     order: z.number().int(),
   }),
-  studySessions: z.strictObject({
-    id,
-    examId: id,
-    subjectId: id,
-    topicId: id,
-    cycleItemId: optional(id),
-    type: z.enum(["Teoria", "Questões", "Revisão"]),
-    minutes: z.number().int().min(1).max(24 * 60),
-    date,
-    questions: optional(count),
-    correct: optional(count),
-    note: optional(text(5000)),
-  }),
+  studySessions: z
+    .strictObject({
+      id,
+      examId: id,
+      subjectId: id,
+      topicId: id,
+      cycleItemId: optional(id),
+      type: z.enum(["Teoria", "Questões", "Revisão"]),
+      minutes: z.number().int().min(1).max(24 * 60),
+      date,
+      questions: optional(count),
+      correct: optional(count),
+      note: optional(text(5000)),
+    })
+    .refine(
+      (s) => s.correct === undefined || (s.questions !== undefined && s.correct <= s.questions),
+      "acertos não podem passar das questões",
+    ),
   reviews: z.strictObject({
     id,
     examId: id,
@@ -100,7 +113,7 @@ export const rowSchemas = {
     examId: id,
     weekStart: date,
     totalMinutes: z.number().int().min(0).max(112 * 60),
-    subjects: z.array(z.strictObject({ subjectId: id, minutes: z.number().int().min(0) })).max(200),
+    subjects: z.array(z.strictObject({ subjectId: id, minutes: z.number().int().min(0).max(112 * 60) })).max(200),
   }),
   mockExams: z.strictObject({
     id,
@@ -109,7 +122,15 @@ export const rowSchemas = {
     title: text(200),
     lap: z.number().int().min(0).max(10_000),
     subjects: z
-      .array(z.strictObject({ subjectId: id, questions: count, correct: count }))
+      .array(
+        z
+          .strictObject({
+            subjectId: id,
+            questions: z.number().int().min(1).max(100_000),
+            correct: count,
+          })
+          .refine((s) => s.correct <= s.questions, "acertos não podem passar das questões"),
+      )
       .min(1)
       .max(100),
   }),

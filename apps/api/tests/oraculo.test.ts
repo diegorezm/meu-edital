@@ -9,11 +9,13 @@ import { call, verifiedUser } from "./helpers";
 const ORIGIN = env.APP_URL;
 const REDIRECT = "http://localhost:9999/callback";
 
-async function fetchWorker(path: string, init: RequestInit = {}) {
+let oauthClientCounter = 0;
+async function fetchWorker(path: string, init: RequestInit = {}, ip?: string) {
   const ctx = createExecutionContext();
   // Uma requisição de verdade sempre traz Host; a montada à mão, não.
   const headers = new Headers(init.headers);
   headers.set("host", new URL(ORIGIN).host);
+  if (ip) headers.set("cf-connecting-ip", ip);
   const request = new Request(`${ORIGIN}${path}`, { redirect: "manual", ...init, headers });
   const response = await worker.fetch(request, env, ctx);
   await waitOnExecutionContext(ctx);
@@ -42,11 +44,16 @@ async function studentWithExam() {
 
 /** Faz o fluxo OAuth inteiro como um cliente MCP faria e devolve o token. */
 async function connect(cookie: string) {
-  const registered = await fetchWorker("/oauth/register", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ redirect_uris: [REDIRECT], client_name: "Claude", token_endpoint_auth_method: "none" }),
-  });
+  const ip = `203.0.113.${++oauthClientCounter}`;
+  const registered = await fetchWorker(
+    "/oauth/register",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ redirect_uris: [REDIRECT], client_name: "Claude", token_endpoint_auth_method: "none" }),
+    },
+    ip,
+  );
   expect(registered.status).toBe(201);
   const { client_id } = (await registered.json()) as { client_id: string };
 
@@ -63,39 +70,47 @@ async function connect(cookie: string) {
     resource: `${ORIGIN}/mcp`,
   });
 
-  const anonymous = await fetchWorker(`/authorize?${query}`);
+  const anonymous = await fetchWorker(`/authorize?${query}`, {}, ip);
   expect(anonymous.status).toBe(302);
   expect(anonymous.headers.get("location")).toMatch(/^\/entrar\?volta=/);
 
-  const authorize = await fetchWorker(`/authorize?${query}`, { headers: { cookie } });
+  const authorize = await fetchWorker(`/authorize?${query}`, { headers: { cookie } }, ip);
   expect(authorize.status).toBe(302);
   const consentUrl = new URL(authorize.headers.get("location")!, ORIGIN);
   expect(consentUrl.pathname).toBe("/conectar-ia");
   expect(consentUrl.searchParams.get("cliente")).toBe("Claude");
   expect(consentUrl.searchParams.get("escopos")).toBe("estudo:ler estudo:propor");
 
-  const consent = await fetchWorker("/oauth/consent", {
-    method: "POST",
-    headers: { "content-type": "application/json", cookie: `${cookie}; ${cookieHeader(authorize)}`, origin: ORIGIN },
-    body: JSON.stringify({ handle: consentUrl.searchParams.get("handle"), decision: "permitir" }),
-  });
+  const consent = await fetchWorker(
+    "/oauth/consent",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: `${cookie}; ${cookieHeader(authorize)}`, origin: ORIGIN },
+      body: JSON.stringify({ handle: consentUrl.searchParams.get("handle"), decision: "permitir" }),
+    },
+    ip,
+  );
   expect(consent.status).toBe(200);
   const { redirectTo } = (await consent.json()) as { redirectTo: string };
   const back = new URL(redirectTo);
   expect(back.searchParams.get("state")).toBe("estado-123");
 
-  const token = await fetchWorker("/oauth/token", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "authorization_code",
-      code: back.searchParams.get("code")!,
-      redirect_uri: REDIRECT,
-      client_id,
-      code_verifier: verifier,
-      resource: `${ORIGIN}/mcp`,
-    }),
-  });
+  const token = await fetchWorker(
+    "/oauth/token",
+    {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: back.searchParams.get("code")!,
+        redirect_uri: REDIRECT,
+        client_id,
+        code_verifier: verifier,
+        resource: `${ORIGIN}/mcp`,
+      }),
+    },
+    ip,
+  );
   expect(token.status).toBe(200);
   return ((await token.json()) as { access_token: string }).access_token;
 }

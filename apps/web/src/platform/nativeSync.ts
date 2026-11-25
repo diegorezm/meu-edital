@@ -4,7 +4,7 @@ import {
   createCapacitorSQLitePersistence,
   persistedCollectionOptions,
 } from "@tanstack/capacitor-db-sqlite-persistence";
-import type { StorageAdapter } from "@tanstack/offline-transactions";
+import { IndexedDBAdapter, type StorageAdapter } from "@tanstack/offline-transactions";
 import type { SyncStorage } from "./types";
 
 const dataName = (userId: string) => `dados-${userId}`;
@@ -70,8 +70,11 @@ export async function nativeSyncStorage(userId: string): Promise<SyncStorage> {
       },
     };
   } catch {
-    // SQLite falhou: dados em memória, fila no armazenamento padrão do WebView.
-    return { close: async () => undefined };
+    // SQLite falhou: mantém a fila isolada por usuário no IndexedDB do WebView.
+    return {
+      storage: new IndexedDBAdapter(queueName(userId), "transacoes"),
+      close: async () => undefined,
+    };
   }
 }
 
@@ -80,4 +83,5 @@ export async function clearNativeSyncStorage(userId: string) {
   await connection().closeAllConnections().catch(() => undefined);
   for (const name of [dataName(userId), queueName(userId)])
     await CapacitorSQLite.deleteDatabase({ database: name }).catch(() => undefined);
+  if (typeof indexedDB !== "undefined") indexedDB.deleteDatabase(queueName(userId));
 }

@@ -1,6 +1,7 @@
 import { createAuthClient } from "better-auth/react";
 import { apiOrigin, saveSessionToken, sessionToken } from "./http";
 import { queryClient } from "./query";
+import { timerStore } from "./timer/timerStore";
 
 /**
  * Cliente de auth. Na web, a sessão vive em cookie HttpOnly da mesma origem.
@@ -18,9 +19,10 @@ export const authClient = createAuthClient({
   },
 });
 
-/** Sai da conta e esquece o token do aparelho. */
+/** Sai da conta e esquece o token e o cronômetro do aparelho. */
 export async function signOut() {
   await authClient.signOut();
+  timerStore.set(null);
   await saveSessionToken(null);
   queryClient.clear();
 }

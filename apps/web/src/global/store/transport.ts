@@ -7,6 +7,7 @@ import {
 } from "@meu-edital/sync";
 import { apiFetch, apiUrl, sessionToken } from "../http";
 import { notifyConsentRequired } from "../legal/legal";
+import { queryClient } from "../query";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -18,8 +19,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (cause) {
     throw new OfflineError(cause);
   }
-  // Gateway fora do ar ou limite de requisições: tenta de novo mais tarde.
-  if (response.status === 429 || response.status >= 502) throw new OfflineError(response.status);
+  // Erro transitório do servidor ou limite de requisições: mantém a fila para tentar de novo.
+  if (response.status === 429 || response.status >= 500) throw new OfflineError(response.status);
+  // Sessão expirou enquanto o aluno estudava: mantém a fila intacta e força nova checagem.
+  if (response.status === 401) {
+    void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+    throw new OfflineError(response.status);
+  }
   // Falta aceitar os termos: a interface pede o aceite e o sync tenta depois.
   if (response.status === 409) {
     notifyConsentRequired();

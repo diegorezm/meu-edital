@@ -1,6 +1,8 @@
 import { authClient, authErrorMessage, signOut as endSession, useSession } from "@global/auth";
+import { saveSessionToken } from "@global/http";
 import { queryClient } from "@global/query";
 import { syncLabel, useStore } from "@global/store/useStore";
+import { timerStore } from "@global/timer/timerStore";
 import { platform } from "@platform/index";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -25,6 +27,8 @@ export function useAccount() {
       const userId = session.data?.user.id;
       const { error } = await authClient.deleteUser(password ? { password } : {});
       if (error) return form.setError(authErrorMessage(error));
+      timerStore.set(null);
+      await saveSessionToken(null);
       if (userId) await platform.clearSyncStorage(userId);
       queryClient.clear();
       await navigate({ to: "/entrar", search: { aviso: "conta-excluida" } });

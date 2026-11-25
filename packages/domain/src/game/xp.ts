@@ -1,6 +1,5 @@
-import { addDays, today, weekStartOf } from "../dates";
-import { weekSummary } from "../tracking";
-import type { AppData, StudySession } from "../types";
+import { today, weekStartOf } from "../dates";
+import type { AppData, StudySession, WeekTarget } from "../types";
 import { LIMITS, XP } from "./constants";
 
 /**
@@ -45,17 +44,33 @@ export function reviewsOnTime(data: AppData): number {
 
 /** Semanas (por concurso) com a meta batida, até a semana de `date`. */
 export function weeksWithGoal(data: AppData, date = today()): { examId: string; weekStart: string }[] {
-  const result: { examId: string; weekStart: string }[] = [];
   const lastWeek = weekStartOf(date);
+  // Pré-agrega minutos por (examId, weekStart) em O(Sessions), sem recalcular weeklyAllocation.
+  const minutesByExamWeek = new Map<string, number>();
+  for (const session of data.sessions) {
+    const weekStart = weekStartOf(session.date);
+    if (weekStart > lastWeek) continue;
+    const key = `${session.examId}:${weekStart}`;
+    minutesByExamWeek.set(key, (minutesByExamWeek.get(key) ?? 0) + session.minutes);
+  }
+  const savedTargetByExamWeek = new Map<string, WeekTarget>();
+  for (const target of data.weekTargets) {
+    const key = `${target.examId}:${target.weekStart}`;
+    const prev = savedTargetByExamWeek.get(key);
+    if (!prev || target.id.localeCompare(prev.id) < 0) savedTargetByExamWeek.set(key, target);
+  }
+  const result: { examId: string; weekStart: string }[] = [];
   for (const exam of data.exams) {
-    const dates = data.sessions.filter((s) => s.examId === exam.id).map((s) => s.date);
-    if (!dates.length) continue;
-    let week = weekStartOf(dates.reduce((min, d) => (d < min ? d : min)));
-    for (; week <= lastWeek; week = addDays(week, 7)) {
-      const summary = weekSummary(data, exam.id, week);
-      if (summary.targetMinutes > 0 && summary.minutes >= summary.targetMinutes)
-        result.push({ examId: exam.id, weekStart: week });
+    const defaultTarget = Math.round(exam.hoursPerWeek * 60);
+    const weeks: string[] = [];
+    for (const [key, minutes] of minutesByExamWeek) {
+      if (!key.startsWith(`${exam.id}:`)) continue;
+      const weekStart = key.slice(exam.id.length + 1);
+      const targetMinutes = savedTargetByExamWeek.get(key)?.totalMinutes ?? defaultTarget;
+      if (targetMinutes > 0 && minutes >= targetMinutes) weeks.push(weekStart);
     }
+    weeks.sort();
+    for (const weekStart of weeks) result.push({ examId: exam.id, weekStart });
   }
   return result;
 }

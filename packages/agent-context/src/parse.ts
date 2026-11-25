@@ -1,19 +1,31 @@
 import { z } from "zod";
 
-/** Extrai o JSON de uma resposta, aceitando um bloco ```json``` com texto ao redor. */
+/** Extrai o JSON de uma resposta, aceitando blocos ```json``` com texto ao redor. */
 export function extractJson(text: string): unknown {
   const pasted = text.trim();
-  const codeBlock = /```(?:json)?\s*([\s\S]*?)\s*```/i.exec(pasted);
-  const clean = (codeBlock?.[1] || pasted).trim();
-  try {
-    return JSON.parse(clean);
-  } catch (cause) {
-    const detail = cause instanceof Error ? ` Detalhe: ${cause.message}` : "";
-    throw new Error(
-      `A resposta não é um JSON válido. Confira o texto colado e as aspas duplas.${detail}`,
-      { cause },
-    );
+  const candidates: string[] = [];
+  // Tenta primeiro blocos explicitamente marcados com ```json, depois blocos genéricos, depois o texto todo.
+  for (const match of pasted.matchAll(/```json\s*([\s\S]*?)\s*```/gi)) candidates.push(match[1].trim());
+  for (const match of pasted.matchAll(/```(?:[a-z]*)\s*([\s\S]*?)\s*```/gi)) candidates.push(match[1].trim());
+  const firstBrace = pasted.indexOf("{");
+  const lastBrace = pasted.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) candidates.push(pasted.slice(firstBrace, lastBrace + 1));
+  candidates.push(pasted);
+
+  let lastCause: unknown;
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      return JSON.parse(candidate);
+    } catch (cause) {
+      lastCause = cause;
+    }
   }
+  const detail = lastCause instanceof Error ? ` Detalhe: ${lastCause.message}` : "";
+  throw new Error(
+    `A resposta não é um JSON válido. Confira o texto colado e as aspas duplas.${detail}`,
+    { cause: lastCause },
+  );
 }
 
 /** Valida a resposta de um agente e devolve uma mensagem de erro legível. */
@@ -44,4 +56,4 @@ export const nameSchema = z
   .trim()
   .min(1, "O nome não pode ficar vazio.")
   .max(1024);
-export const positiveSchema = z.number().finite().positive();
+export const positiveSchema = z.number().finite().positive().max(100_000);

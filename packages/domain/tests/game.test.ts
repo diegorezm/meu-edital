@@ -261,4 +261,14 @@ describe("conquistas e comemorações", () => {
     };
     expect(playerXp(tampered, DAY).correct).toBe(0);
   });
+
+  it("contrato diário de questões não troca de matéria no meio do dia no fallback de cobertura", async () => {
+    const { dailyContracts } = await import("../src");
+    const { data, examId } = setup();
+    const before = dailyContracts(data, examId, DAY).find((c) => c.kind === "questions");
+    expect(before?.subjectId).toBeTruthy();
+    const after = study(data, examId, DAY, { subjectIndex: 0, type: "Teoria", minutes: 30 });
+    const sameDay = dailyContracts(after, examId, DAY).find((c) => c.kind === "questions");
+    expect(sameDay?.subjectId).toBe(before?.subjectId);
+  });
 });

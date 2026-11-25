@@ -43,8 +43,9 @@ export function weekTargetFor(
   data: AppData,
   examId: string,
   weekStart: string,
+  date = today(),
 ): Omit<WeekTarget, "id"> {
-  return savedWeekTarget(data, examId, weekStart) || computeWeekTarget(data, examId, weekStart);
+  return savedWeekTarget(data, examId, weekStart) || computeWeekTarget(data, examId, weekStart, date);
 }
 
 /** Salva o retrato da semana de `date`, se ainda não existir. Chame ao abrir o app e ao registrar estudo. */

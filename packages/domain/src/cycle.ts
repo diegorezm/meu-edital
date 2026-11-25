@@ -1,4 +1,5 @@
 import { weeklyAllocation } from "./allocation";
+import { today } from "./dates";
 import { uid } from "./ids";
 import type { AppData, CycleItem, Exam } from "./types";
 
@@ -31,13 +32,14 @@ export function cycleState(data: AppData, examId: string) {
 export function buildCycle(
   data: AppData,
   examId: string,
-  { blockMinutes = 60 }: { blockMinutes?: number } = {},
+  { blockMinutes = 60, date = today() }: { blockMinutes?: number; date?: string } = {},
 ): CycleItem[] {
-  const allocation = weeklyAllocation(data, examId).filter(
+  const safeBlock = Number.isFinite(blockMinutes) ? Math.max(1, Math.round(blockMinutes)) : 60;
+  const allocation = weeklyAllocation(data, examId, date).filter(
     (item) => item.minutes > 0,
   );
   const plans = allocation.map((item) => {
-    const blocks = Math.max(1, Math.round(item.minutes / blockMinutes));
+    const blocks = Math.max(1, Math.round(item.minutes / safeBlock));
     const minutes = Math.max(
       15,
       Math.round(item.minutes / blocks / 5) * 5,
@@ -142,19 +144,23 @@ export function addCycleItem(
   minutes: number,
 ): AppData {
   const items = getCycleItems(data, examId);
-  return {
-    ...data,
-    cycle: [
-      ...data.cycle,
-      {
-        id: uid(),
-        examId,
-        subjectId,
-        minutes,
-        order: (items.at(-1)?.order ?? -1) + 1,
-      },
-    ],
-  };
+  return updateExam(
+    {
+      ...data,
+      cycle: [
+        ...data.cycle,
+        {
+          id: uid(),
+          examId,
+          subjectId,
+          minutes,
+          order: (items.at(-1)?.order ?? -1) + 1,
+        },
+      ],
+    },
+    examId,
+    (exam) => exam,
+  );
 }
 
 export function updateCycleItem(
@@ -181,16 +187,20 @@ export function moveCycleItem(
   const neighbor = items[index + direction];
   if (index < 0 || !neighbor) return data;
   const selected = items[index];
-  return {
-    ...data,
-    cycle: data.cycle.map((item) =>
-      item.id === selected.id
-        ? { ...item, order: neighbor.order }
-        : item.id === neighbor.id
-          ? { ...item, order: selected.order }
-          : item,
-    ),
-  };
+  return updateExam(
+    {
+      ...data,
+      cycle: data.cycle.map((item) =>
+        item.id === selected.id
+          ? { ...item, order: neighbor.order }
+          : item.id === neighbor.id
+            ? { ...item, order: selected.order }
+            : item,
+      ),
+    },
+    examId,
+    (exam) => exam,
+  );
 }
 
 export function removeCycleItem(
@@ -201,13 +211,14 @@ export function removeCycleItem(
   const items = getCycleItems(data, examId);
   const index = items.findIndex((item) => item.id === id);
   const { position } = cycleState(data, examId);
+  const remaining = items.length - (index >= 0 ? 1 : 0);
+  const nextPosition = index >= 0 && index < position ? position - 1 : position;
   return updateExam(
     { ...data, cycle: data.cycle.filter((item) => item.id !== id) },
     examId,
     (exam) => ({
       ...exam,
-      cyclePosition:
-        index >= 0 && index < position ? position - 1 : position,
+      cyclePosition: remaining > 0 ? nextPosition % remaining : 0,
     }),
   );
 }

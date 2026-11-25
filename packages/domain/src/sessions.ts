@@ -1,5 +1,5 @@
 import { advanceCycle, getCycleItems } from "./cycle";
-import { addDays, daysUntil, today } from "./dates";
+import { addDays, daysUntil, isDateKey, today } from "./dates";
 import { uid } from "./ids";
 import { isReviewDone } from "./reviews";
 import type { AppData, Review, StudySession } from "./types";
@@ -22,7 +22,9 @@ export function recordSession(
   date = today(),
 ): AppData {
   const entry: StudySession = { ...session, id: uid(), date };
-  const alreadyStudied = data.sessions.some((s) => s.topicId === session.topicId);
+  const alreadyStudied = data.sessions.some(
+    (s) => s.topicId === session.topicId && s.type !== "Revisão",
+  );
   const reviews: Review[] =
     !alreadyStudied && session.type !== "Revisão"
       ? data.reviewOffsets.map((offset, stage) => ({
@@ -107,14 +109,16 @@ export function updateSession(
 ): AppData {
   const current = data.sessions.find((s) => s.id === id);
   if (!current) return data;
+  if (change.date !== undefined && !isDateKey(change.date)) return data;
   const updated = { ...current, ...change };
+  if (validateSession(updated)) return data;
   const shift = change.date ? daysUntil(change.date, current.date) : 0;
   return {
     ...data,
     sessions: data.sessions.map((s) => (s.id === id ? updated : s)),
     reviews: shift
       ? data.reviews.map((review) =>
-          review.sessionId === id
+          review.sessionId === id && !isReviewDone(review)
             ? { ...review, dueDate: addDays(review.dueDate, shift) }
             : review,
         )
@@ -176,11 +180,16 @@ export function deleteSession(data: AppData, id: string): AppData {
 export function validateSession(input: SessionInput): string | null {
   if (!input.subjectId || !input.topicId)
     return "Selecione uma matéria e um assunto.";
-  if (!Number.isFinite(input.minutes) || input.minutes < 1)
-    return "A duração deve ser maior que zero.";
-  if ((input.questions ?? 0) < 0 || (input.correct ?? 0) < 0)
-    return "Questões e acertos não podem ser negativos.";
+  if (!Number.isInteger(input.minutes) || input.minutes < 1 || input.minutes > 24 * 60)
+    return "A duração deve ser entre 1 e 1440 minutos.";
+  if (
+    (input.questions !== undefined && (!Number.isInteger(input.questions) || input.questions < 0 || input.questions > 100_000)) ||
+    (input.correct !== undefined && (!Number.isInteger(input.correct) || input.correct < 0 || input.correct > 100_000))
+  )
+    return "Questões e acertos devem ser números inteiros válidos.";
   if ((input.questions ?? 0) < (input.correct ?? 0))
     return "Acertos não podem superar o número de questões.";
+  if (input.note && input.note.length > 5000)
+    return "A anotação pode ter no máximo 5000 caracteres.";
   return null;
 }

@@ -113,6 +113,9 @@ export function taskRequest<R>(task: AgentTask<R>, data: AppData, examId: string
   };
 }
 
+const safeJsonBlock = (value: unknown) =>
+  JSON.stringify(value).replace(/```/g, "\\u0060\\u0060\\u0060");
+
 /** Pedido em texto para copiar e colar em qualquer IA. */
 export function renderPrompt<R>(task: AgentTask<R>, data: AppData, examId: string) {
   const request = taskRequest(task, data, examId);
@@ -124,15 +127,15 @@ export function renderPrompt<R>(task: AgentTask<R>, data: AppData, examId: strin
     `- ${jsonInstruction}`,
     "## Contexto",
     "```json",
-    JSON.stringify(request.context),
+    safeJsonBlock(request.context),
     "```",
     "## Formato da resposta (JSON Schema)",
     "```json",
-    JSON.stringify(request.responseSchema),
+    safeJsonBlock(request.responseSchema),
     "```",
     "## Exemplo de resposta",
     "```json",
-    JSON.stringify(task.example),
+    safeJsonBlock(task.example),
     "```",
   ].join("\n\n");
 }

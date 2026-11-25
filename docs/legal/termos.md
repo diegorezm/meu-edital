@@ -8,7 +8,7 @@ O Meu Edital é um app para organizar o estudo para concursos, oferecido por [no
 ## 2. A conta
 - Você precisa ter pelo menos 18 anos, ou autorização de um responsável legal.
 - Os dados do cadastro devem ser verdadeiros. A senha é pessoal: cuide dela.
-- Você pode excluir a conta quando quiser, em Configurações.
+- Você pode excluir a conta quando quiser, em Conta.
 
 ## 3. O que o app faz e o que não faz
 O app ajuda a planejar e registrar o estudo. Não garantimos aprovação em concurso nem a exatidão das informações sobre editais, que devem ser conferidas na fonte oficial.

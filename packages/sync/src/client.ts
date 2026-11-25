@@ -75,9 +75,13 @@ export class SyncClient {
   private state: SyncState = { status: "idle", ready: false, pending: 0, rejected: [] };
   private readonly listeners = new Set<(state: SyncState) => void>();
   private readonly dataListeners = new Set<() => void>();
+  private readonly cachedRows = new Map<TableName, AnyRow[]>();
   private cachedData: AppData | null = null;
+  private batching = false;
+  private batchDirty = false;
   private readonly subscriptions: { unsubscribe(): void }[] = [];
   private pulling: Promise<void> | null = null;
+  private disposed = false;
   /** Transações desta sessão ainda não confirmadas. */
   private tracked = 0;
   private again = false;
@@ -112,11 +116,16 @@ export class SyncClient {
       ]),
     ) as unknown as SyncCollections;
 
-    // Qualquer mudança numa coleção invalida o `AppData` montado.
+    // Qualquer mudança numa coleção invalida só o cache dela e o `AppData` montado.
     for (const table of TABLES)
       this.subscriptions.push(
         (this.collections[table] as unknown as Collection<AnyRow, string>).subscribeChanges(() => {
+          this.cachedRows.delete(table);
           this.cachedData = null;
+          if (this.batching) {
+            this.batchDirty = true;
+            return;
+          }
           for (const listener of this.dataListeners) listener();
         }),
       );
@@ -150,9 +159,14 @@ export class SyncClient {
 
   /** O `AppData` atual (sincronizado com as alterações locais por cima). Mesma referência até mudar. */
   data = (): AppData =>
-    (this.cachedData ??= assemble((table) =>
-      [...this.collections[table].values()].map((row) => plain(row as AnyRow)),
-    ));
+    (this.cachedData ??= assemble((table) => {
+      let rows = this.cachedRows.get(table);
+      if (!rows) {
+        rows = [...this.collections[table].values()].map((row) => plain(row as AnyRow));
+        this.cachedRows.set(table, rows);
+      }
+      return rows;
+    }));
 
   /** Avisa quando o `AppData` muda (para `useSyncExternalStore`). */
   subscribeData = (listener: () => void) => {
@@ -236,6 +250,7 @@ export class SyncClient {
   }
 
   dispose() {
+    this.disposed = true;
     for (const subscription of this.subscriptions) subscription.unsubscribe();
     this.executor.dispose();
     for (const collection of Object.values(this.collections)) void collection.cleanup().catch(() => undefined);
@@ -250,7 +265,18 @@ export class SyncClient {
           .catch(() => undefined),
       ),
     );
+    if (this.disposed) return;
+    // Se já há dados hidratados localmente (cursor > 0), libera a interface na hora
+    // e sincroniza com o servidor em segundo plano (sem bloquear abertura offline/lenta).
+    if (this.cursor() > 0) {
+      for (const params of this.channels.values()) params.markReady();
+      this.setState({ ready: true });
+      this.readyResolve();
+      void this.sync();
+      return;
+    }
     await this.sync();
+    if (this.disposed) return;
     for (const params of this.channels.values()) params.markReady();
     this.setState({ ready: true });
     this.readyResolve();
@@ -258,45 +284,62 @@ export class SyncClient {
 
   private async pullLoop() {
     do {
+      if (this.disposed) return;
       this.again = false;
       this.setStatus("syncing");
       try {
         await this.pullAll();
-        this.setStatus("idle");
+        if (!this.disposed) this.setStatus("idle");
       } catch (error) {
-        this.setStatus(error instanceof OfflineError ? "offline" : "error");
+        if (!this.disposed) this.setStatus(error instanceof OfflineError ? "offline" : "error");
         return;
       }
-    } while (this.again);
+    } while (this.again && !this.disposed);
   }
 
   private async pullAll() {
     for (;;) {
+      if (this.disposed || this.channels.size === 0) return;
       const since = this.cursor();
       const page = await this.options.transport.pull(since);
+      if (this.disposed || this.channels.size === 0) return;
       const byTable = new Map<TableName, PullResponse["changes"]>();
       for (const change of page.changes) {
         const list = byTable.get(change.table) ?? [];
         list.push(change);
         byTable.set(change.table, list);
       }
-      for (const table of TABLES) {
-        const params = this.channels.get(table);
-        if (!params) continue;
-        const changes = byTable.get(table) ?? [];
-        params.begin();
-        for (const change of changes) {
-          if (change.deleted) {
-            if (params.collection.has(change.row.id)) params.write({ type: "delete", key: change.row.id });
-          } else {
-            params.write({ type: "update", value: cleanRow(change.row) as AnyRow });
+      this.batching = true;
+      this.batchDirty = false;
+      try {
+        for (const table of TABLES) {
+          const params = this.channels.get(table);
+          if (!params) continue;
+          const changes = byTable.get(table) ?? [];
+          const currentCursor = params.metadata
+            ? params.metadata.collection.get(CURSOR)
+            : this.memoryCursor.get(table);
+          if (!changes.length && currentCursor === page.version) continue;
+          params.begin();
+          for (const change of changes) {
+            if (change.deleted) {
+              if (params.collection.has(change.row.id)) params.write({ type: "delete", key: change.row.id });
+            } else {
+              params.write({ type: "update", value: cleanRow(change.row) as AnyRow });
+            }
           }
+          if (params.metadata) params.metadata.collection.set(CURSOR, page.version);
+          else this.memoryCursor.set(table, page.version);
+          params.commit();
         }
-        if (params.metadata) params.metadata.collection.set(CURSOR, page.version);
-        else this.memoryCursor.set(table, page.version);
-        params.commit();
+      } finally {
+        this.batching = false;
+        if (this.batchDirty) {
+          this.batchDirty = false;
+          for (const listener of this.dataListeners) listener();
+        }
       }
-      if (!page.hasMore) return;
+      if (!page.hasMore || page.version <= since) return;
     }
   }
 
@@ -305,6 +348,7 @@ export class SyncClient {
    * idempotência, então reenviar depois de uma falha não aplica duas vezes.
    */
   private async pushTransaction(pending: PendingMutation[], idempotencyKey: string) {
+    if (this.disposed) throw new OfflineError("Cliente encerrado.");
     const mutations = orderBatch(pending.map((m, i) => toMutation(m, `${idempotencyKey}:${i}`)));
     const rejected: RejectedMutation[] = [];
     try {
@@ -322,12 +366,17 @@ export class SyncClient {
         this.setStatus("offline");
         throw error;
       }
+      this.setStatus("error");
       throw new NonRetriableError(error instanceof Error ? error.message : String(error));
     }
     if (rejected.length) this.setState({ rejected: [...this.state.rejected, ...rejected] });
     void sleep(0).then(() => this.refreshPending());
-    // O TanStack DB pede que as linhas do servidor cheguem antes de a transação terminar.
+    // O TanStack DB pede que as linhas do servidor cheguem antes de a transação
+    // terminar. Se o pull cair por rede, mantém a transação otimista para retry
+    // idempotente (evita sumir da tela até a próxima busca).
     await this.sync();
+    if (!this.disposed && this.state.status === "offline")
+      throw new OfflineError("Aguardando reconexão para confirmar a sincronização.");
   }
 
   private track(done: Promise<unknown>) {

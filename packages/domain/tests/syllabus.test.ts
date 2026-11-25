@@ -163,4 +163,106 @@ describe("catálogo de editais", () => {
     expect(data.exams[0].board).toBe("Cebraspe");
     expect(subjectWeight(data.subjects.find((s) => s.name === "Direito Previdenciário")!)).toBe(30);
   });
+
+  it("topicTreeIds termina mesmo se houver ciclo em parentId e CSV neutraliza fórmulas", async () => {
+    const { recordSession, sessionsCsv, topicTreeIds } = await import("../src");
+    const base = startExam(emptyData(), {
+      name: "=HYPERLINK(\"http://evil\")",
+      hoursPerWeek: 10,
+      subjects: [{ name: "+SUM(A1:A2)", topics: ["Crase"] }],
+    });
+    const subjectId = base.subjects[0].id;
+    const cyclic = {
+      ...base,
+      topics: [
+        { id: "a", subjectId, parentId: "b", name: "A", position: 0 },
+        { id: "b", subjectId, parentId: "a", name: "B", position: 1 },
+      ],
+    };
+    expect(topicTreeIds(cyclic, "a").sort()).toEqual(["a", "b"]);
+
+    const withSession = recordSession(
+      base,
+      {
+        examId: base.activeExamId!,
+        subjectId,
+        topicId: base.topics[0].id,
+        type: "Teoria",
+        minutes: 30,
+        note: "=CMD()",
+      },
+      "2026-11-12",
+    );
+    const csv = sessionsCsv(withSession);
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).toContain("'+SUM(A1:A2)");
+    expect(csv).toContain("'=CMD()");
+  });
+
+  it("removeCycleItem normaliza cyclePosition e updateSession não desloca revisão já concluída", async () => {
+    const { addDays, cycleState, recordSession, removeCycleItem, updateSession } = await import("../src");
+    let data = startExam(emptyData(), {
+      name: "TRT",
+      hoursPerWeek: 2,
+      subjects: [
+        { name: "Português", topics: ["Crase"] },
+        { name: "Direito", topics: ["Princípios"] },
+      ],
+    });
+    const examId = data.activeExamId!;
+    const lastBlock = cycleState(data, examId).items.at(-1)!;
+    data = { ...data, exams: data.exams.map((e) => ({ ...e, cyclePosition: cycleState(data, examId).items.length - 1 })) };
+    const afterRemove = removeCycleItem(data, examId, lastBlock.id);
+    expect(afterRemove.exams[0].cyclePosition).toBeLessThan(cycleState(afterRemove, examId).items.length);
+
+    const topic = data.topics[0];
+    const studied = recordSession(
+      data,
+      { examId, subjectId: topic.subjectId, topicId: topic.id, type: "Teoria", minutes: 30 },
+      "2026-11-10",
+    );
+    const firstSessionId = studied.sessions[0].id;
+    const reviewed = recordSession(
+      studied,
+      { examId, subjectId: topic.subjectId, topicId: topic.id, type: "Revisão", minutes: 15 },
+      addDays("2026-11-10", 1),
+    );
+    const doneBefore = reviewed.reviews.find((r) => r.completedBySessionId)!;
+    const pendingBefore = reviewed.reviews.find((r) => !r.completedBySessionId)!;
+    const shifted = updateSession(reviewed, firstSessionId, { date: "2026-11-08" });
+    expect(shifted.reviews.find((r) => r.id === doneBefore.id)?.dueDate).toBe(doneBefore.dueDate);
+    expect(shifted.reviews.find((r) => r.id === pendingBefore.id)?.dueDate).toBe(addDays(pendingBefore.dueDate, -2));
+  });
+
+  it("removeSubject normaliza cyclePosition, recordMockExam deduplica matérias e inFinalStretch valida janela", async () => {
+    const { cycleState, inFinalStretch, recordMockExam, removeSubject } = await import("../src");
+    let data = startExam(emptyData(), {
+      name: "INSS",
+      hoursPerWeek: 4,
+      subjects: [
+        { name: "Português", topics: ["Crase"] },
+        { name: "Previdenciário", topics: ["Segurados"] },
+      ],
+    });
+    const examId = data.activeExamId!;
+    data = { ...data, exams: data.exams.map((e) => ({ ...e, cyclePosition: 3 })) };
+    const afterSub = removeSubject(data, data.subjects[1].id);
+    expect(afterSub.exams[0].cyclePosition).toBeLessThan(cycleState(afterSub, examId).items.length);
+
+    const ptId = afterSub.subjects[0].id;
+    const mocked = recordMockExam(afterSub, {
+      examId,
+      date: "2026-11-12",
+      title: "  Simulado 1  ",
+      lap: 1,
+      subjects: [
+        { subjectId: ptId, questions: 10, correct: 7 },
+        { subjectId: ptId, questions: 5, correct: 4 },
+      ],
+    });
+    expect(mocked.mockExams[0].subjects).toEqual([{ subjectId: ptId, questions: 15, correct: 11 }]);
+    expect(inFinalStretch("2026-11-20", "2026-11-10")).toBe(true);
+    expect(inFinalStretch("2026-12-30", "2026-11-10")).toBe(false);
+    expect(inFinalStretch("2026-11-01", "2026-11-10")).toBe(false);
+  });
 });

@@ -8,16 +8,14 @@ import {
   weekSummary,
 } from "@meu-edital/domain";
 import { useMemo } from "react";
-import { useSession } from "../auth";
 import { useStore } from "../store/useStore";
 
 /**
  * Dados do jogador e do concurso ativo para o shell (viga, ficha, navegação).
  * Tudo derivado do estado local pelas funções de domínio.
  */
-export function usePlayer() {
+export function usePlayer(userName?: string | null) {
   const store = useStore();
-  const session = useSession();
   const data = store.data;
   return useMemo(() => {
     const date = today();
@@ -25,7 +23,7 @@ export function usePlayer() {
     const player = playerProfile(data, date);
     const week = exam ? weekSummary(data, exam.id) : null;
     return {
-      name: session.data?.user.name ?? "Aventureiro",
+      name: userName || "Aventureiro",
       player,
       exam,
       exams: data.exams,
@@ -39,7 +37,7 @@ export function usePlayer() {
       selectExam: (examId: string) =>
         store.update((current) => (current.activeExamId === examId ? current : { ...current, activeExamId: examId })),
     };
-  }, [data, session.data?.user.name, store]);
+  }, [data, userName, store]);
 }
 
 export type PlayerView = ReturnType<typeof usePlayer>;

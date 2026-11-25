@@ -14,12 +14,19 @@ const EntrySchema = z.object({
 async function captchaOk(secret: string, token: string | undefined, ip: string) {
   if (!secret) return true;
   if (!token) return false;
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    body: new URLSearchParams({ secret, response: token, remoteip: ip }),
-  });
-  const result = (await response.json()) as { success?: boolean };
-  return result.success === true;
+  try {
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) return false;
+    const result = (await response.json()) as { success?: boolean };
+    return result.success === true;
+  } catch (error) {
+    console.error("Falha ao validar Turnstile", error);
+    return false;
+  }
 }
 
 /**

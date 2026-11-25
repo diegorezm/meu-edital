@@ -1,3 +1,4 @@
+import { apiFetch } from "@global/http";
 import { useState } from "react";
 
 export type ConsentSearch = { handle?: string; cliente?: string; destino?: string; escopos?: string };
@@ -13,9 +14,8 @@ export function useConsent(search: ConsentSearch) {
     setPending(true);
     setError("");
     try {
-      const response = await fetch("/oauth/consent", {
+      const response = await apiFetch("/oauth/consent", {
         method: "POST",
-        credentials: "same-origin",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ handle: search.handle, decision }),
       });

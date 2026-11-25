@@ -26,8 +26,11 @@ export function useMockExams() {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(today());
   const [rows, setRows] = useState<Record<string, Row>>({});
+  const [rowsExamId, setRowsExamId] = useState<string | null>(exam?.id ?? null);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const activeRows = rowsExamId === (exam?.id ?? null) ? rows : {};
 
   const view = useMemo(() => {
     if (!exam) return null;
@@ -58,37 +61,59 @@ export function useMockExams() {
   }, [data, exam]);
 
   const register = () => {
-    if (!exam) return;
-    const subjects = Object.entries(rows)
+    if (submitting || !exam) return;
+    const subjects = Object.entries(activeRows)
       .map(([subjectId, r]) => ({ subjectId, questions: Number(r.questions) || 0, correct: Number(r.correct) || 0 }))
       .filter((r) => r.questions > 0);
     if (!subjects.length) return setError("Preencha as questões de pelo menos uma matéria.");
-    if (subjects.some((r) => r.correct > r.questions)) return setError("Acertos não podem superar as questões.");
-    if (date > today()) return setError("A data não pode estar no futuro.");
-    const before = data;
-    const after = recordMockExam(before, { examId: exam.id, date, title, lap: exam.cycleLaps, subjects });
-    const events = celebrationsBetween(before, after);
-    store.update(() => markCelebrationsSeen(after, events.map((e) => e.id)));
-    const xp = playerXp(after).total;
-    celebrationStore.show({ xpGained: Math.max(0, xp - playerXp(before).total), level: levelInfo(xp), events, contractsDone: [] });
-    setRegistering(false);
-    setRows({});
-    setTitle("");
-    setError("");
+    if (subjects.some((r) => r.correct < 0 || r.correct > r.questions))
+      return setError("Acertos devem ficar entre 0 e o número de questões.");
+    if (!date || date > today()) return setError("A data não pode estar no futuro.");
+    setSubmitting(true);
+    try {
+      let payload: Parameters<typeof celebrationStore.show>[0] | null = null;
+      store.update((before) => {
+        const after = recordMockExam(before, { examId: exam.id, date, title, lap: exam.cycleLaps, subjects });
+        const events = celebrationsBetween(before, after);
+        const xp = playerXp(after).total;
+        payload = {
+          xpGained: Math.max(0, xp - playerXp(before).total),
+          level: levelInfo(xp),
+          events,
+          contractsDone: [],
+        };
+        return markCelebrationsSeen(after, events.map((e) => e.id));
+      });
+      if (payload) celebrationStore.show(payload);
+      setRegistering(false);
+      setRows({});
+      setTitle("");
+      setError("");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return {
     view,
     registering,
-    setRegistering,
+    setRegistering: (open: boolean) => {
+      if (open) setDate(today());
+      setRegistering(open);
+    },
     title,
     setTitle,
     date,
     setDate,
-    rows,
-    setRow: (subjectId: string, field: keyof Row, value: string) =>
-      setRows((r) => ({ ...r, [subjectId]: { ...(r[subjectId] ?? { questions: "", correct: "" }), [field]: value } })),
+    rows: activeRows,
+    setRow: (subjectId: string, field: keyof Row, value: string) => {
+      const currentExamId = exam?.id ?? null;
+      const base = rowsExamId === currentExamId ? rows : {};
+      setRowsExamId(currentExamId);
+      setRows({ ...base, [subjectId]: { ...(base[subjectId] ?? { questions: "", correct: "" }), [field]: value } });
+    },
     error,
+    submitting,
     register,
     deleting: view?.mocks.find((m) => m.id === deletingId) ?? null,
     askDelete: setDeletingId,

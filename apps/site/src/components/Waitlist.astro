@@ -30,7 +30,10 @@ import { APP } from "../content/links";
   };
 
   fetch(`${api}/api/config`)
-    .then((r) => r.json() as Promise<{ turnstileSiteKey: string | null }>)
+    .then((r) => {
+      if (!r.ok) throw new Error("config");
+      return r.json() as Promise<{ turnstileSiteKey: string | null }>;
+    })
     .then(({ turnstileSiteKey }) => {
       siteKey = turnstileSiteKey;
       if (!siteKey) return;
@@ -46,12 +49,13 @@ import { APP } from "../content/links";
         });
       document.head.appendChild(script);
     })
-    .catch(() => undefined);
+    .catch(() => say("Não foi possível carregar a verificação agora. Recarregue a página se precisar.", true));
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
-    if (!email.includes("@")) return say("Confira o e-mail.", true);
+    const emailInput = form.elements.namedItem("email") as HTMLInputElement;
+    const email = emailInput.value.trim();
+    if (!email || !emailInput.checkValidity()) return say("Confira o e-mail.", true);
     if (siteKey && !token) return say("Confirme que você não é um robô.", true);
     const button = form.querySelector("button")!;
     button.disabled = true;

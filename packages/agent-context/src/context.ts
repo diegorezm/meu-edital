@@ -141,10 +141,11 @@ export function buildStudyContext(
     return topic ? topicPath(data, topic) : "Assunto";
   };
   const allocation = weeklyAllocation(data, examId, date);
-  const performance = topicPerformance(data, examId);
+  const allocationBySubject = new Map(allocation.map((item) => [item.subjectId, item.minutes]));
+  const performanceByTopic = new Map(topicPerformance(data, examId).map((item) => [item.topic.id, item]));
   const cycle = cycleState(data, examId);
   const due = dueReviews(data, examId, date);
-  const history = weekHistory(data, examId, weeks, weekStartOf(date));
+  const history = weekHistory(data, examId, weeks, weekStartOf(date), date);
   const examSessions = data.sessions.filter((item) => item.examId === examId);
   return {
     version: STUDY_CONTEXT_VERSION,
@@ -173,14 +174,13 @@ export function buildStudyContext(
         weight: subjectWeight(subject),
         questions: subject.questions,
         pointsPerQuestion: subject.pointsPerQuestion,
-        weeklyTargetMinutes:
-          allocation.find((item) => item.subjectId === subject.id)?.minutes || 0,
+        weeklyTargetMinutes: allocationBySubject.get(subject.id) || 0,
         coverage: { studied: coverage.studied, total: coverage.total },
         totalMinutes: own.reduce((sum, item) => sum + item.minutes, 0),
         accuracy: questions ? Math.round((100 * correct) / questions) : null,
         topics: includeTopics
           ? topicsInOrder(data, subject.id).map((topic) => {
-              const row = performance.find((item) => item.topic.id === topic.id);
+              const row = performanceByTopic.get(topic.id);
               return {
                 name: topic.name,
                 path: topicPath(data, topic),

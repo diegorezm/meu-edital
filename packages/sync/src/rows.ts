@@ -28,12 +28,15 @@ export function assemble(rowsOf: (table: TableName) => AnyRow[]): AppData {
 
 /** Reconstrói o `AppData` a partir das linhas puxadas (vale a versão mais nova de cada linha). */
 export function dataFromRows(changes: PulledRow[]): AppData {
-  const byTable = new Map<TableName, Map<string, AnyRow>>();
+  const byTable = new Map<TableName, Map<string, { version: number; row?: AnyRow }>>();
   for (const change of changes) {
-    const rows = byTable.get(change.table) ?? new Map<string, AnyRow>();
-    if (change.deleted) rows.delete(change.row.id);
-    else rows.set(change.row.id, change.row as AnyRow);
+    const rows = byTable.get(change.table) ?? new Map<string, { version: number; row?: AnyRow }>();
+    const prev = rows.get(change.row.id);
+    if (!prev || change.version >= prev.version)
+      rows.set(change.row.id, change.deleted ? { version: change.version } : { version: change.version, row: change.row as AnyRow });
     byTable.set(change.table, rows);
   }
-  return assemble((table) => [...(byTable.get(table)?.values() ?? [])]);
+  return assemble((table) =>
+    [...(byTable.get(table)?.values() ?? [])].flatMap((entry) => (entry.row ? [entry.row] : [])),
+  );
 }

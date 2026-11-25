@@ -1,13 +1,11 @@
-import { AccountView } from "./components/AccountView";
+import { Button, Notice, Sheet } from "@meu-edital/ui";
+import { lazy, Suspense } from "react";
 import { CheckEmailView } from "./components/CheckEmailView";
 import { ForgotPasswordView } from "./components/ForgotPasswordView";
 import { ResetPasswordView } from "./components/ResetPasswordView";
 import { SignInView } from "./components/SignInView";
 import { SignUpView } from "./components/SignUpView";
 import { WaitlistView } from "./components/WaitlistView";
-import { useAccount } from "./hooks/useAccount";
-import { useNotifications } from "./hooks/useNotifications";
-import { usePrivacy } from "./hooks/usePrivacy";
 import { useForgotPassword } from "./hooks/useForgotPassword";
 import { useResendVerification } from "./hooks/useResendVerification";
 import { useResetPassword } from "./hooks/useResetPassword";
@@ -15,6 +13,8 @@ import { useSignIn } from "./hooks/useSignIn";
 import { useAuthConfig } from "./hooks/useAuthConfig";
 import { useSignUp } from "./hooks/useSignUp";
 import { useWaitlist } from "./hooks/useWaitlist";
+
+const AccountSection = lazy(() => import("./account"));
 
 const notices: Record<string, string> = {
   "senha-trocada": "Senha trocada. Entre com a senha nova.",
@@ -32,7 +32,19 @@ export function SignInPage({ aviso, volta }: { aviso?: string; volta?: string })
 
 /** Com o cadastro fechado, a tela de criar conta vira a lista de espera. */
 export function SignUpPage() {
-  const { loaded, signupOpen } = useAuthConfig();
+  const { loaded, failed, retry, signupOpen } = useAuthConfig();
+  if (failed) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md items-center px-4">
+        <Sheet title="Sem conexão">
+          <div className="grid gap-4">
+            <Notice tone="error">Não deu para carregar a página agora. Confira sua conexão.</Notice>
+            <Button onClick={retry}>Tentar novamente</Button>
+          </div>
+        </Sheet>
+      </div>
+    );
+  }
   if (!loaded) return null;
   return signupOpen ? <SignUpForm /> : <WaitlistForm />;
 }
@@ -58,6 +70,10 @@ export function ResetPasswordPage({ token, error }: { token?: string; error?: st
 }
 
 export function AccountPage() {
-  return <AccountView form={useAccount()} notifications={useNotifications()} privacy={usePrivacy()} />;
+  return (
+    <Suspense fallback={null}>
+      <AccountSection />
+    </Suspense>
+  );
 }
 

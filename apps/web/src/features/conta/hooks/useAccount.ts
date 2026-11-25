@@ -1,6 +1,9 @@
 import { authClient, authErrorMessage, signOut as endSession, useSession } from "@global/auth";
+import { clearCachedSessionUser } from "@global/guards";
+import { saveSessionToken } from "@global/http";
 import { queryClient } from "@global/query";
-import { syncLabel, useStore } from "@global/store/useStore";
+import { syncLabel, useSyncState } from "@global/store/useStore";
+import { timerStore } from "@global/timer/timerStore";
 import { platform } from "@platform/index";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -9,7 +12,7 @@ import { useSubmit } from "./useSubmit";
 export function useAccount() {
   const navigate = useNavigate();
   const session = useSession();
-  const store = useStore();
+  const sync = useSyncState();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [password, setPassword] = useState("");
   const form = useSubmit();
@@ -25,6 +28,9 @@ export function useAccount() {
       const userId = session.data?.user.id;
       const { error } = await authClient.deleteUser(password ? { password } : {});
       if (error) return form.setError(authErrorMessage(error));
+      timerStore.set(null);
+      clearCachedSessionUser();
+      await saveSessionToken(null);
       if (userId) await platform.clearSyncStorage(userId);
       queryClient.clear();
       await navigate({ to: "/entrar", search: { aviso: "conta-excluida" } });
@@ -33,7 +39,7 @@ export function useAccount() {
   return {
     user: session.data?.user,
     loading: session.isPending,
-    syncStatus: syncLabel(store),
+    syncStatus: syncLabel(sync),
     confirmingDelete,
     setConfirmingDelete,
     password,

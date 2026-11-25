@@ -51,6 +51,7 @@
   ],
   "env": {
     "preview": {
+      "preview_urls": true,
       "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "38022bc855ef4ebc8275f30e05725d88" }],
       "durable_objects": { "bindings": [{ "name": "USER_HUB", "class_name": "UserHub" }] },
       "secrets": { "required": ["BETTER_AUTH_SECRET", "TURNSTILE_SECRET_KEY", "VAPID_PRIVATE_KEY"] },

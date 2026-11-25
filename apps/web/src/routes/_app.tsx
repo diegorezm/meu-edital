@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_app")({
     const { user } = Route.useRouteContext();
     return (
       <StoreProvider userId={user.id}>
-        <AppShell>
+        <AppShell userName={user.name}>
           <Outlet />
         </AppShell>
         <LegalGate />

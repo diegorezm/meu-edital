@@ -7,7 +7,7 @@ type Card = Oracle["cards"][number];
 export function ProposalCard({ card, oracle }: { card: Card; oracle: Oracle }) {
   const { proposal } = card;
   return (
-    <article className="mb-3 rounded-[6px] border-2 border-ink bg-paper-raised px-3 py-2.5">
+    <article className="mb-3 rounded border-2 border-ink bg-paper-raised px-3 py-2.5">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="font-extrabold">
           {card.title} · {card.when}

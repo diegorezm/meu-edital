@@ -2,7 +2,7 @@ import { z } from "zod";
 import { addDays, type AppData, subjectsInOrder } from "@meu-edital/domain";
 import { applyChanges, ChangeSchema, type ChangePreview, previewChanges } from "./changes";
 import { applyNewExam, NewExamSchema, previewNewExam } from "./exam";
-import { importSyllabus, SyllabusImportSchema } from "./syllabus";
+import { importSyllabus, SyllabusImportSchema, validateSyllabusImport } from "./syllabus";
 
 /** Propostas pendentes expiram depois deste prazo. */
 export const PROPOSAL_TTL_DAYS = 7;
@@ -73,6 +73,8 @@ export function proposalSize(input: unknown): number {
 export function previewProposal(data: AppData, examId: string, payload: ProposalPayload): ChangePreview[] {
   if (payload.kind === "changes") return previewChanges(data, examId, payload.changes);
   if (payload.kind === "exam") return previewNewExam(data, payload.exam);
+  if (!data.exams.some((e) => e.id === examId)) throw new Error("Concurso não encontrado.");
+  validateSyllabusImport(data, examId, payload.syllabus);
   const existing = new Map(
     subjectsInOrder(data, examId).map((s) => [s.name.toLocaleLowerCase("pt-BR"), s]),
   );
@@ -92,6 +94,8 @@ export function previewProposal(data: AppData, examId: string, payload: Proposal
 export function applyProposal(data: AppData, examId: string, payload: ProposalPayload): AppData {
   if (payload.kind === "changes") return applyChanges(data, examId, payload.changes);
   if (payload.kind === "exam") return applyNewExam(data, payload.exam);
+  if (!data.exams.some((e) => e.id === examId)) throw new Error("Concurso não encontrado.");
+  validateSyllabusImport(data, examId, payload.syllabus);
   return importSyllabus(data, examId, payload.syllabus);
 }
 

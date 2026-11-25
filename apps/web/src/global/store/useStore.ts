@@ -37,9 +37,15 @@ export function useStoreActions() {
     () => ({
       update: (change: Parameters<SyncClient["update"]>[0]) => client.update(change),
       syncNow: () => client.sync(),
+      dismissRejected: () => client.dismissRejected(),
     }),
     [client],
   );
+}
+
+/** Só o estado da sincronização (sem assinar os dados de estudo). */
+export function useSyncState() {
+  return useClientState(useClient());
 }
 
 /** As coleções do TanStack DB, para `useLiveQuery` com só as linhas que a tela usa. */

@@ -17,7 +17,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={clsx(
-        "grid size-11 flex-none cursor-pointer place-items-center rounded-[5px] hover:bg-paper-raised disabled:cursor-not-allowed disabled:opacity-40",
+        "grid size-11 flex-none cursor-pointer place-items-center rounded-control hover:bg-paper-raised disabled:cursor-not-allowed disabled:opacity-40",
         tone === "danger" ? "text-rose-strong" : "text-ink",
         className,
       )}

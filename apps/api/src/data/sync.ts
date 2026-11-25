@@ -1,4 +1,4 @@
-import { and, asc, eq, getTableColumns, gt, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, getTableColumns, gt, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { type Db, type StudyTableName, studyTables, syncCounters, syncMutations } from "@meu-edital/db";
 import {
@@ -16,6 +16,30 @@ import {
 const META = new Set(["userId", "updatedAt", "deletedAt", "version"]);
 const PULL_LIMIT = 500;
 const MUTATION_RETENTION_MS = 30 * 86_400_000;
+/** O Cloudflare D1 limita a 100 parâmetros por consulta; mantemos folga para `userId`. */
+const MAX_SQL_IN = 80;
+/** Limites generosos de registros ativos por conta para proteger o D1 compartilhado. */
+const TABLE_QUOTAS: Partial<Record<TableName, number>> = {
+  exams: 50,
+  subjects: 500,
+  topics: 5_000,
+  cycleItems: 500,
+  studySessions: 25_000,
+  reviews: 25_000,
+  mockExams: 1_000,
+  weekTargets: 1_000,
+};
+
+function chunks<T>(items: T[], size = MAX_SQL_IN): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
+  return result;
+}
+
+const isUniqueConstraint = (error: unknown) => {
+  const text = String(error instanceof Error ? `${error.message} ${error.cause ?? ""}` : error);
+  return /UNIQUE constraint failed/i.test(text);
+};
 
 type Incoming = { id: string; table: TableName; op: "upsert" | "delete"; rowId: string; row?: unknown };
 
@@ -35,31 +59,98 @@ export function syncData(db: Db, userId: string) {
   const nextVersion = sql`(select ${syncCounters.version} from ${syncCounters} where ${syncCounters.userId} = ${userId})`;
 
   async function alreadyApplied(ids: string[]) {
-    if (!ids.length) return new Set<string>();
-    const rows = await db
-      .select({ id: syncMutations.mutationId })
-      .from(syncMutations)
-      .where(and(eq(syncMutations.userId, userId), inArray(syncMutations.mutationId, ids)));
-    return new Set(rows.map((row) => row.id));
+    const unique = [...new Set(ids)];
+    if (!unique.length) return new Set<string>();
+    const queries = chunks(unique).map((slice) =>
+      db
+        .select({ id: syncMutations.mutationId })
+        .from(syncMutations)
+        .where(and(eq(syncMutations.userId, userId), inArray(syncMutations.mutationId, slice))),
+    );
+    const pages = await db.batch(queries as [typeof queries[0], ...typeof queries]);
+    return new Set(pages.flat().map((row) => row.id));
   }
 
   /** Ids que já existem e pertencem a outro usuário, por tabela. */
   async function foreignIds(mutations: Incoming[]) {
     const taken = new Set<string>();
-    const byTable = new Map<TableName, string[]>();
+    const byTable = new Map<TableName, Set<string>>();
     for (const m of mutations) {
       if (m.table === "userSettings") continue;
-      byTable.set(m.table, [...(byTable.get(m.table) ?? []), m.rowId]);
+      const set = byTable.get(m.table) ?? new Set<string>();
+      set.add(m.rowId);
+      byTable.set(m.table, set);
     }
+    const entries: { name: TableName; query: BatchItem<"sqlite"> }[] = [];
     for (const [name, ids] of byTable) {
       const table = studyTables[name];
-      const rows = await db
-        .select({ id: table.id })
-        .from(table)
-        .where(and(inArray(table.id, ids), ne(table.userId, userId)));
-      for (const row of rows) taken.add(`${name}:${row.id}`);
+      for (const slice of chunks([...ids])) {
+        entries.push({
+          name,
+          query: db
+            .select({ id: table.id })
+            .from(table)
+            .where(and(inArray(table.id, slice), ne(table.userId, userId))),
+        });
+      }
+    }
+    if (!entries.length) return taken;
+    const queries = entries.map((e) => e.query) as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]];
+    const results = (await db.batch(queries)) as unknown as { id: string }[][];
+    for (let i = 0; i < entries.length; i += 1) {
+      for (const row of results[i] ?? []) taken.add(`${entries[i].name}:${row.id}`);
     }
     return taken;
+  }
+
+  /** Contagem de linhas ativas e ids já ativos do usuário nas tabelas com upsert. */
+  async function loadQuotas(mutations: Incoming[]) {
+    const upsertIds = new Map<TableName, Set<string>>();
+    for (const m of mutations) {
+      if (m.op !== "upsert" || TABLE_QUOTAS[m.table] === undefined) continue;
+      const set = upsertIds.get(m.table) ?? new Set<string>();
+      set.add(m.rowId);
+      upsertIds.set(m.table, set);
+    }
+    const activeCount = new Map<TableName, number>();
+    const activeIds = new Map<TableName, Set<string>>();
+    if (!upsertIds.size) return { activeCount, activeIds };
+    const entries: { kind: "count" | "ids"; name: TableName; query: BatchItem<"sqlite"> }[] = [];
+    for (const [name, ids] of upsertIds) {
+      const table = studyTables[name];
+      activeIds.set(name, new Set());
+      entries.push({
+        kind: "count",
+        name,
+        query: db
+          .select({ total: count() })
+          .from(table)
+          .where(and(eq(table.userId, userId), isNull(table.deletedAt))),
+      });
+      for (const slice of chunks([...ids])) {
+        entries.push({
+          kind: "ids",
+          name,
+          query: db
+            .select({ id: table.id })
+            .from(table)
+            .where(and(eq(table.userId, userId), isNull(table.deletedAt), inArray(table.id, slice))),
+        });
+      }
+    }
+    const results = (await db.batch(
+      entries.map((e) => e.query) as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]],
+    )) as unknown as Record<string, unknown>[][];
+    for (let i = 0; i < entries.length; i += 1) {
+      const entry = entries[i];
+      if (entry.kind === "count") {
+        activeCount.set(entry.name, Number(results[i]?.[0]?.total ?? 0));
+      } else {
+        const set = activeIds.get(entry.name)!;
+        for (const row of results[i] ?? []) set.add(String(row.id));
+      }
+    }
+    return { activeCount, activeIds };
   }
 
   function upsertStatement(name: TableName, row: Record<string, unknown>, now: number) {
@@ -95,84 +186,133 @@ export function syncData(db: Db, userId: string) {
     return row?.version ?? 0;
   }
 
-  return {
-    async push(mutations: Incoming[]): Promise<PushResponse> {
-      const now = Date.now();
-      const applied = await alreadyApplied(mutations.map((m) => m.id));
-      const taken = await foreignIds(mutations.filter((m) => !applied.has(m.id)));
-      const accepted: string[] = [];
-      const rejected: Rejection[] = [];
-      const statements: BatchItem<"sqlite">[] = [];
-      const seen = new Set<string>();
+  async function pushAttempt(mutations: Incoming[], allowRetry: boolean): Promise<PushResponse> {
+    const now = Date.now();
+    const applied = await alreadyApplied(mutations.map((m) => m.id));
+    const fresh = mutations.filter((m) => !applied.has(m.id));
+    const taken = await foreignIds(fresh);
+    const { activeCount, activeIds } = await loadQuotas(fresh);
+    const accepted: string[] = [];
+    const rejected: Rejection[] = [];
+    const statements: BatchItem<"sqlite">[] = [];
+    const seen = new Set<string>();
 
-      for (const m of mutations) {
-        if (applied.has(m.id) || seen.has(m.id)) {
-          accepted.push(m.id);
-          continue;
-        }
-        seen.add(m.id);
-        if (taken.has(`${m.table}:${m.rowId}`)) {
-          rejected.push({ id: m.id, reason: "Esse registro pertence a outra conta." });
-          continue;
-        }
-        let write: BatchItem<"sqlite">;
-        if (m.op === "upsert") {
-          const parsed = rowSchemas[m.table].safeParse(m.row);
-          if (!parsed.success) {
-            const issue = parsed.error.issues[0];
-            rejected.push({
-              id: m.id,
-              reason: `Dado inválido em ${m.table}${issue?.path.length ? `.${issue.path.join(".")}` : ""}.`,
-            });
-            continue;
-          }
-          if (parsed.data.id !== m.rowId) {
-            rejected.push({ id: m.id, reason: "O id da linha não confere com a mutação." });
-            continue;
-          }
-          write = upsertStatement(m.table, parsed.data as Record<string, unknown>, now);
-        } else {
-          write = deleteStatement(m.table, m.rowId, now);
-        }
-        statements.push(
-          db
-            .update(syncCounters)
-            .set({ version: sql`${syncCounters.version} + 1` })
-            .where(eq(syncCounters.userId, userId)),
-          write,
-          db.insert(syncMutations).values({ userId, mutationId: m.id, appliedAt: now }).onConflictDoNothing(),
-        );
+    for (const m of mutations) {
+      if (applied.has(m.id) || seen.has(m.id)) {
         accepted.push(m.id);
+        continue;
       }
+      seen.add(m.id);
+      if (taken.has(`${m.table}:${m.rowId}`)) {
+        rejected.push({ id: m.id, reason: "Esse registro pertence a outra conta." });
+        continue;
+      }
+      let write: BatchItem<"sqlite">;
+      if (m.op === "upsert") {
+        const parsed = rowSchemas[m.table].safeParse(m.row);
+        if (!parsed.success) {
+          const issue = parsed.error.issues[0];
+          rejected.push({
+            id: m.id,
+            reason: `Dado inválido em ${m.table}${issue?.path.length ? `.${issue.path.join(".")}` : ""}.`,
+          });
+          continue;
+        }
+        if (parsed.data.id !== m.rowId) {
+          rejected.push({ id: m.id, reason: "O id da linha não confere com a mutação." });
+          continue;
+        }
+        const quota = TABLE_QUOTAS[m.table];
+        if (quota !== undefined) {
+          const existing = activeIds.get(m.table);
+          const current = activeCount.get(m.table) ?? 0;
+          if (!existing?.has(m.rowId)) {
+            if (current >= quota) {
+              rejected.push({ id: m.id, reason: "Limite de registros atingido nesta conta." });
+              continue;
+            }
+            activeCount.set(m.table, current + 1);
+            existing?.add(m.rowId);
+          }
+        }
+        write = upsertStatement(m.table, parsed.data as Record<string, unknown>, now);
+      } else {
+        if (m.table === "userSettings") {
+          rejected.push({ id: m.id, reason: "As preferências da conta não podem ser apagadas." });
+          continue;
+        }
+        const existing = activeIds.get(m.table);
+        if (existing?.delete(m.rowId)) {
+          activeCount.set(m.table, Math.max(0, (activeCount.get(m.table) ?? 1) - 1));
+        }
+        write = deleteStatement(m.table, m.rowId, now);
+      }
+      statements.push(
+        db
+          .update(syncCounters)
+          .set({ version: sql`${syncCounters.version} + 1` })
+          .where(eq(syncCounters.userId, userId)),
+        write,
+        // Sem onConflictDoNothing: se um retry idêntico chegar em paralelo, o
+        // lote inteiro aborta atomicamente em vez de sobrescrever dados mais novos.
+        db.insert(syncMutations).values({ userId, mutationId: m.id, appliedAt: now }),
+      );
+      accepted.push(m.id);
+    }
 
-      if (statements.length) {
-        await db.batch([
+    if (statements.length) {
+      try {
+        const results = await db.batch([
           db.insert(syncCounters).values({ userId, version: 0 }).onConflictDoNothing(),
           ...statements,
+          db.select({ version: syncCounters.version }).from(syncCounters).where(eq(syncCounters.userId, userId)),
         ] as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
+        const last = results.at(-1) as unknown as { version: number }[] | undefined;
+        return { accepted, rejected, version: last?.[0]?.version ?? (await currentVersion()) };
+      } catch (error) {
+        if (allowRetry && isUniqueConstraint(error)) return pushAttempt(mutations, false);
+        throw error;
       }
-      return { accepted, rejected, version: await currentVersion() };
+    }
+    return { accepted, rejected, version: await currentVersion() };
+  }
+
+  return {
+    push(mutations: Incoming[]): Promise<PushResponse> {
+      return pushAttempt(mutations, true);
     },
 
     async pull(since: number, limit = PULL_LIMIT): Promise<PullResponse> {
+      const names = Object.keys(studyTables) as StudyTableName[];
+      // Um único batch garante snapshot consistente entre todas as tabelas e a versão atual.
+      const queries: BatchItem<"sqlite">[] = [
+        ...names.map((name) => {
+          const table = studyTables[name];
+          return db
+            .select()
+            .from(table)
+            .where(and(eq(table.userId, userId), gt(table.version, since)))
+            .orderBy(asc(table.version))
+            .limit(limit + 1);
+        }),
+        db.select({ version: syncCounters.version }).from(syncCounters).where(eq(syncCounters.userId, userId)),
+      ];
+      const results = (await db.batch(
+        queries as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]],
+      )) as unknown as Record<string, unknown>[][];
       const changes: PulledRow[] = [];
-      for (const name of Object.keys(studyTables) as StudyTableName[]) {
-        const table = studyTables[name];
-        const rows = await db
-          .select()
-          .from(table)
-          .where(and(eq(table.userId, userId), gt(table.version, since)))
-          .orderBy(asc(table.version))
-          .limit(limit + 1);
-        for (const row of rows) changes.push(toPulled(name, row as Record<string, unknown>));
+      for (let i = 0; i < names.length; i += 1) {
+        for (const row of results[i] ?? []) changes.push(toPulled(names[i], row));
       }
+      const counterRows = results[names.length] as unknown as { version: number }[] | undefined;
+      const versionNow = counterRows?.[0]?.version ?? 0;
       changes.sort((a, b) => a.version - b.version);
       const page = changes.slice(0, limit);
       const hasMore = changes.length > limit;
       return {
         changes: page,
         hasMore,
-        version: hasMore ? page[page.length - 1].version : Math.max(since, await currentVersion()),
+        version: hasMore ? page[page.length - 1].version : Math.max(since, versionNow),
       };
     },
 

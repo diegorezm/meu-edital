@@ -13,7 +13,7 @@ export function StudyView({ study }: { study: Study }) {
   const { mobile } = useLayout();
   if (!study.exam || !study.hasSubjects)
     return (
-      <Sheet title="Estudar" className="mx-auto max-w-xl">
+      <Sheet title="Estudar" headingLevel="h1" className="mx-auto max-w-xl">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-36" />
           <p>Para estudar, primeiro monte seu concurso.</p>

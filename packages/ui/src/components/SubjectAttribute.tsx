@@ -18,7 +18,7 @@ export function SubjectAttribute({
     <div className="min-w-0 text-center">
       <div
         className={clsx(
-          "grid h-[62px] place-items-center rounded-t-[5px] border-2 border-ink shadow-[inset_0_0_0_2px_rgb(255_255_255/.25)]",
+          "grid h-[62px] place-items-center rounded-t-control border-2 border-ink shadow-[inset_0_0_0_2px_rgb(255_255_255/.25)]",
           subjectBackground(index),
         )}
       >

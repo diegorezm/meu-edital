@@ -64,7 +64,13 @@ export function TabBar({ dueReviews }: { dueReviews: number }) {
           active={isActive(pathname, tabs[3].to)}
           label={dueReviews ? `Revisões (${dueReviews})` : undefined}
         />
-        <button type="button" onClick={() => setMore(true)} className={tabItemClass(restActive)}>
+        <button
+          type="button"
+          onClick={() => setMore(true)}
+          aria-expanded={more}
+          aria-haspopup="dialog"
+          className={tabItemClass(restActive)}
+        >
           <TabItemContent icon="more" label="Mais" />
         </button>
       </nav>

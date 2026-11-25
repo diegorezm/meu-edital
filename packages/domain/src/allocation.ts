@@ -57,15 +57,20 @@ export function weeklyAllocation(
   if (!exam || !subjects.length) return [];
 
   const totalMinutes = Math.round(exam.hoursPerWeek * 60);
+  const topicSubject = new Map(data.topics.map((topic) => [topic.id, topic.subjectId]));
+  const topicsBySubject = new Map<string, string[]>();
+  for (const topic of data.topics) {
+    const list = topicsBySubject.get(topic.subjectId) ?? [];
+    list.push(topic.id);
+    topicsBySubject.set(topic.subjectId, list);
+  }
   const due = data.reviews.filter(
     (item) =>
       item.examId === examId && !isReviewDone(item) && item.dueDate <= date,
   );
   const reviewCount = new Map<string, number>();
   for (const review of due) {
-    const subjectId = data.topics.find(
-      (topic) => topic.id === review.topicId,
-    )?.subjectId;
+    const subjectId = topicSubject.get(review.topicId);
     if (subjectId)
       reviewCount.set(subjectId, (reviewCount.get(subjectId) || 0) + 1);
   }
@@ -82,30 +87,23 @@ export function weeklyAllocation(
 
   const studied = studiedTopicIds(data);
   const windowStart = addDays(date, -ACCURACY_WINDOW_DAYS);
+  const qaBySubject = new Map<string, { asked: number; correct: number }>();
+  for (const session of data.sessions) {
+    if (session.examId !== examId || session.date <= windowStart || session.date > date) continue;
+    const entry = qaBySubject.get(session.subjectId) ?? { asked: 0, correct: 0 };
+    entry.asked += session.questions || 0;
+    entry.correct += session.correct || 0;
+    qaBySubject.set(session.subjectId, entry);
+  }
   const scores = subjects.map((subject) => {
-    const questions = data.sessions.filter(
-      (session) =>
-        session.examId === examId &&
-        session.subjectId === subject.id &&
-        session.date > windowStart &&
-        session.date <= date,
-    );
-    const asked = questions.reduce(
-      (sum, session) => sum + (session.questions || 0),
-      0,
-    );
-    const correct = questions.reduce(
-      (sum, session) => sum + (session.correct || 0),
-      0,
-    );
-    const accuracyBoost = asked
-      ? Math.min(rules.maxAccuracyBoost, Math.max(0, (0.7 - correct / asked) * 0.5))
-      : 0;
-    const topics = data.topics.filter(
-      (topic) => topic.subjectId === subject.id,
-    );
-    const coverageBoost = topics.length
-      ? (topics.filter((topic) => !studied.has(topic.id)).length / topics.length) * 0.1
+    const qa = qaBySubject.get(subject.id);
+    const accuracyBoost =
+      qa && qa.asked
+        ? Math.min(rules.maxAccuracyBoost, Math.max(0, (0.7 - qa.correct / qa.asked) * 0.5))
+        : 0;
+    const topicIds = topicsBySubject.get(subject.id) ?? [];
+    const coverageBoost = topicIds.length
+      ? (topicIds.filter((id) => !studied.has(id)).length / topicIds.length) * 0.1
       : 0;
     return subjectWeight(subject) * (1 + accuracyBoost + coverageBoost);
   });
@@ -131,9 +129,11 @@ export function weeklyAllocation(
   if (totalMinutes >= subjects.length * 30) {
     for (let index = 0; index < minutes.length; index += 1) {
       while (minutes[index] < 30) {
-        const donor = minutes.findIndex(
-          (value, donorIndex) => donorIndex !== index && value > 30,
-        );
+        let donor = -1;
+        for (let d = 0; d < minutes.length; d += 1) {
+          if (d !== index && minutes[d] > 30 && (donor < 0 || minutes[d] > minutes[donor]))
+            donor = d;
+        }
         if (donor < 0) break;
         minutes[donor] -= 1;
         minutes[index] += 1;

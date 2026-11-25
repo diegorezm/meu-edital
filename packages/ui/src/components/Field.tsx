@@ -21,7 +21,7 @@ export function Field({
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={clsx(
-          "min-h-11 w-full rounded-[5px] border-2 bg-paper-raised px-2.5 py-1.5 text-ink",
+          "min-h-11 w-full rounded-control border-2 bg-paper-raised px-2.5 py-1.5 text-ink",
           error ? "border-rose-strong" : "border-ink",
         )}
         {...input}

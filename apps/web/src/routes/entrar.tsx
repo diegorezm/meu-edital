@@ -1,6 +1,7 @@
 import { SignInPage } from "@features/conta";
 import { requireGuest, searchText } from "@global/guards";
-import { createFileRoute } from "@tanstack/react-router";
+import { apiUrl } from "@global/http";
+import { createFileRoute, isRedirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/entrar")({
   validateSearch: (search: Record<string, unknown>): { aviso?: string; volta?: string } => ({
@@ -12,8 +13,12 @@ export const Route = createFileRoute("/entrar")({
     if (search.volta?.startsWith("/authorize?")) {
       try {
         await requireGuest();
-      } catch {
-        window.location.assign(search.volta);
+      } catch (error) {
+        if (isRedirect(error)) {
+          window.location.assign(apiUrl(search.volta));
+          return;
+        }
+        throw error;
       }
       return;
     }

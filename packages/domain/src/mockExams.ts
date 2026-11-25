@@ -7,11 +7,27 @@ export type MockExamInput = Omit<MockExam, "id">;
 
 /** Registra um simulado (o chefe da volta). Linhas de matéria sem questões são ignoradas. */
 export function recordMockExam(data: AppData, input: MockExamInput): AppData {
-  const subjects = input.subjects
-    .filter((s) => s.questions > 0)
-    .map((s) => ({ ...s, correct: Math.max(0, Math.min(s.correct, s.questions)) }));
+  const merged = new Map<string, { subjectId: string; questions: number; correct: number }>();
+  for (const row of input.subjects) {
+    const q = Number.isFinite(row.questions) ? Math.min(100_000, Math.round(row.questions)) : 0;
+    if (q <= 0) continue;
+    const c = Number.isFinite(row.correct) ? Math.max(0, Math.min(Math.round(row.correct), q)) : 0;
+    const prev = merged.get(row.subjectId);
+    if (prev) {
+      prev.questions = Math.min(100_000, prev.questions + q);
+      prev.correct = Math.min(prev.questions, prev.correct + c);
+    } else {
+      merged.set(row.subjectId, { subjectId: row.subjectId, questions: q, correct: c });
+    }
+  }
+  const subjects = [...merged.values()];
   if (!subjects.length) return data;
-  const entry: MockExam = { ...input, title: input.title.trim() || "Simulado", subjects, id: uid() };
+  const entry: MockExam = {
+    ...input,
+    title: (input.title.trim() || "Simulado").slice(0, 200),
+    subjects,
+    id: uid(),
+  };
   return { ...data, mockExams: [...data.mockExams, entry] };
 }
 
@@ -39,7 +55,9 @@ export function mockExamHistory(data: AppData, examId: string) {
       name: subject.name,
       points: mocks.flatMap((mock) => {
         const line = mock.subjects.find((s) => s.subjectId === subject.id);
-        return line ? [{ date: mock.date, score: line.correct / line.questions }] : [];
+        return line && line.questions > 0
+          ? [{ date: mock.date, score: Math.min(1, line.correct / line.questions) }]
+          : [];
       }),
     })),
   };

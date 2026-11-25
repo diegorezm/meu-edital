@@ -3,6 +3,7 @@ import type { SyncNotice } from "@meu-edital/sync";
 import { sendPush } from "../push/send";
 
 type BlockEnd = { userId: string; endsAt: number; subject: string };
+const MAX_SOCKETS_PER_USER = 15;
 
 /**
  * Um por usuário. Guarda os WebSockets dos aparelhos dele (com hibernação,
@@ -11,9 +12,25 @@ type BlockEnd = { userId: string; endsAt: number; subject: string };
  * dados vêm sempre pelo pull, então perder a conexão não perde nada.
  */
 export class UserHub extends DurableObject<Env> {
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    // Responde ping/pong sem acordar o Durable Object da hibernação.
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("upgrade")?.toLowerCase() !== "websocket")
       return new Response("Esperava um WebSocket.", { status: 426 });
+    const existing = this.ctx.getWebSockets();
+    if (existing.length >= MAX_SOCKETS_PER_USER) {
+      for (const old of existing.slice(0, existing.length - MAX_SOCKETS_PER_USER + 1)) {
+        try {
+          old.close(1000, "Muitas conexões abertas");
+        } catch {
+          // Já fechado.
+        }
+      }
+    }
     const { 0: client, 1: server } = new WebSocketPair();
     this.ctx.acceptWebSocket(server);
     return new Response(null, { status: 101, webSocket: client });
@@ -44,6 +61,19 @@ export class UserHub extends DurableObject<Env> {
     await this.ctx.storage.deleteAlarm();
   }
 
+  /** Encerra todas as conexões e apaga o estado ao excluir a conta. */
+  async destroy(): Promise<void> {
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        socket.close(1000, "Conta excluída");
+      } catch {
+        // Já fechado.
+      }
+    }
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
+  }
+
   async alarm(): Promise<void> {
     const block = await this.ctx.storage.get<BlockEnd>("blockEnd");
     await this.ctx.storage.delete("blockEnd");
@@ -65,6 +95,14 @@ export class UserHub extends DurableObject<Env> {
     const valid = code === 1000 || (code >= 3000 && code < 5000);
     try {
       socket.close(valid ? code : 1000, valid ? reason : "");
+    } catch {
+      // Já fechado.
+    }
+  }
+
+  async webSocketError(socket: WebSocket) {
+    try {
+      socket.close(1011, "Erro na conexão");
     } catch {
       // Já fechado.
     }

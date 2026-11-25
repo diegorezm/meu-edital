@@ -16,7 +16,7 @@ export function TextAreaField({
       <textarea
         id={id}
         rows={3}
-        className="w-full rounded-[5px] border-2 border-ink bg-paper-raised px-2.5 py-1.5 text-ink"
+        className="w-full rounded-control border-2 border-ink bg-paper-raised px-2.5 py-1.5 text-ink"
         {...textarea}
       />
     </div>

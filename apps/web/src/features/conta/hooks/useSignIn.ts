@@ -1,4 +1,5 @@
 import { authClient, authErrorMessage } from "@global/auth";
+import { apiUrl } from "@global/http";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuthConfig } from "./useAuthConfig";
@@ -20,7 +21,7 @@ export function useSignIn(volta?: string) {
       if (error) return form.setError(authErrorMessage(error));
       const back = safeReturn(volta);
       // /authorize é do Worker, não do app: precisa de navegação completa.
-      if (back) window.location.assign(back);
+      if (back) window.location.assign(apiUrl(back));
       else await navigate({ to: "/" });
     });
 

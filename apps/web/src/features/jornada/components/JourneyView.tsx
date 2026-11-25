@@ -10,7 +10,7 @@ export function JourneyView({ journey }: { journey: Journey }) {
   const { view } = journey;
   if (!view)
     return (
-      <Sheet title="Jornada" className="mx-auto max-w-xl">
+      <Sheet title="Jornada" headingLevel="h1" className="mx-auto max-w-xl">
         <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-36" />
           <p>Sem concurso, sem jornada. Vamos montar o seu?</p>
@@ -22,7 +22,7 @@ export function JourneyView({ journey }: { journey: Journey }) {
     );
 
   return (
-    <Sheet title={`Jornada · volta ${view.lap}`} ribbonSize="lg" className="pt-[30px]">
+    <Sheet title={`Jornada · volta ${view.lap}`} ribbonSize="lg" headingLevel="h1" className="pt-[30px]">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm text-ink-muted">
           {view.cards.length} blocos · {view.lapTime} por volta (meta {view.target})

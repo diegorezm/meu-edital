@@ -1,8 +1,7 @@
 import { addDays, today, weekStartOf } from "../dates";
 import { studiedTopicIds } from "../topics";
-import type { AppData } from "../types";
+import type { AppData, WeekTarget } from "../types";
 import { ACCURACY_WINDOW_DAYS } from "../allocation";
-import { weekSummary } from "../tracking";
 
 /**
  * Ofensiva: semanas seguidas com a meta batida, contando para trás a partir
@@ -10,17 +9,31 @@ import { weekSummary } from "../tracking";
  * se ainda não, ela não quebra a sequência. Faltar um dia nunca pune.
  */
 export function weeklyStreak(data: AppData, examId: string, date = today()) {
+  const exam = data.exams.find((e) => e.id === examId);
+  const defaultTarget = Math.round((exam?.hoursPerWeek || 0) * 60);
+  const minutesByWeek = new Map<string, number>();
+  let first = date;
+  for (const session of data.sessions) {
+    if (session.examId !== examId) continue;
+    if (session.date < first) first = session.date;
+    const ws = weekStartOf(session.date);
+    minutesByWeek.set(ws, (minutesByWeek.get(ws) ?? 0) + session.minutes);
+  }
+  const targetByWeek = new Map<string, WeekTarget>();
+  for (const target of data.weekTargets) {
+    if (target.examId !== examId) continue;
+    const prev = targetByWeek.get(target.weekStart);
+    if (!prev || target.id.localeCompare(prev.id) < 0) targetByWeek.set(target.weekStart, target);
+  }
   const met = (weekStart: string) => {
-    const week = weekSummary(data, examId, weekStart);
-    return week.targetMinutes > 0 && week.minutes >= week.targetMinutes;
+    const targetMinutes = targetByWeek.get(weekStart)?.totalMinutes ?? defaultTarget;
+    return targetMinutes > 0 && (minutesByWeek.get(weekStart) ?? 0) >= targetMinutes;
   };
   const current = weekStartOf(date);
   const currentMet = met(current);
   let streak = currentMet ? 1 : 0;
-  const first = data.sessions
-    .filter((s) => s.examId === examId)
-    .reduce((min, s) => (s.date < min ? s.date : min), date);
-  for (let week = addDays(current, -7); week >= weekStartOf(first); week = addDays(week, -7)) {
+  const firstWeek = weekStartOf(first);
+  for (let week = addDays(current, -7); week >= firstWeek; week = addDays(week, -7)) {
     if (!met(week)) break;
     streak += 1;
   }

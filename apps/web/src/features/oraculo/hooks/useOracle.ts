@@ -10,6 +10,7 @@ import {
   weeklyReviewTask,
 } from "@meu-edital/agent-context";
 import { getJson, sendJson } from "@global/api";
+import { apiUrl } from "@global/http";
 import { useStore } from "@global/store/useStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -82,11 +83,14 @@ export function useOracle() {
   );
 
   const settle = async (proposal: Proposal, status: "aplicada" | "descartada") => {
+    if (busy) return;
     setBusy(proposal.id);
     setError("");
     try {
-      if (status === "aplicada") store.update((d) => applyProposal(d, proposal.examId, proposal.payload));
+      // Valida antes de confirmar no servidor; só aplica localmente depois que o servidor marcar o status.
+      if (status === "aplicada") previewProposal(data, proposal.examId, proposal.payload);
       await sendJson(`/proposals/${proposal.id}/status`, "POST", { status });
+      if (status === "aplicada") store.update((d) => applyProposal(d, proposal.examId, proposal.payload));
       setProposals((list) => list.filter((p) => p.id !== proposal.id));
       setNotice(
         status === "descartada"
@@ -115,6 +119,8 @@ export function useOracle() {
   };
 
   const submitPasted = async () => {
+    if (busy) return;
+    setBusy("paste");
     setError("");
     let payload: ProposalPayload;
     let reason: string;
@@ -139,27 +145,35 @@ export function useOracle() {
       setNotice("A resposta entrou na caixa. Confira antes de aplicar.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "A resposta não está no formato esperado.");
+    } finally {
+      setBusy(null);
     }
   };
 
   const disconnect = async (id: string) => {
+    if (busy) return;
+    setBusy(id);
     try {
       await sendJson(`/oraculo/conexoes/${id}`, "DELETE");
       setConnections((list) => list.filter((c) => c.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não deu para desconectar.");
+    } finally {
+      setBusy(null);
     }
   };
+
+  const mcpUrl = new URL(apiUrl("/mcp"), window.location.origin).href;
 
   return {
     hasExam: Boolean(examId),
     loading: proposals === null,
     cards,
     connections,
-    mcpUrl: `${window.location.origin}/mcp`,
+    mcpUrl,
     copyUrl: () =>
       navigator.clipboard
-        .writeText(`${window.location.origin}/mcp`)
+        .writeText(mcpUrl)
         .then(() => setNotice("Endereço copiado."))
         .catch(() => setError("Não deu para copiar.")),
     error,

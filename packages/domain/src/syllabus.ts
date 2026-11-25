@@ -7,9 +7,15 @@ import type { AppData, Exam, Subject, Topic } from "./types";
 export type ExamChange = Partial<Pick<Exam, "name" | "role" | "board" | "examDate" | "hoursPerWeek">>;
 
 export function updateExam(data: AppData, examId: string, change: ExamChange): AppData {
+  const safe: ExamChange = { ...change };
+  if (safe.hoursPerWeek !== undefined) {
+    if (!Number.isFinite(safe.hoursPerWeek)) delete safe.hoursPerWeek;
+    else safe.hoursPerWeek = Math.min(112, Math.max(0, safe.hoursPerWeek));
+  }
+  if (safe.examDate === "") safe.examDate = undefined;
   return {
     ...data,
-    exams: data.exams.map((exam) => (exam.id === examId ? { ...exam, ...change } : exam)),
+    exams: data.exams.map((exam) => (exam.id === examId ? { ...exam, ...safe } : exam)),
   };
 }
 
@@ -36,15 +42,19 @@ export function addSubject(data: AppData, examId: string, name: string): AppData
 export type SubjectChange = Partial<Pick<Subject, "name" | "weight" | "questions" | "pointsPerQuestion">>;
 
 export function updateSubject(data: AppData, subjectId: string, change: SubjectChange): AppData {
+  const pos = (v: number | undefined) => (v !== undefined && Number.isFinite(v) && v > 0 ? Math.min(100_000, v) : undefined);
   return {
     ...data,
     subjects: data.subjects.map((subject) => {
       if (subject.id !== subjectId) return subject;
       const next = { ...subject, ...change };
-      if (change.weight !== undefined && change.weight > 0) {
+      if ("weight" in change) next.weight = pos(change.weight);
+      if ("questions" in change) next.questions = change.questions !== undefined ? pos(Math.round(change.questions)) : undefined;
+      if ("pointsPerQuestion" in change) next.pointsPerQuestion = pos(change.pointsPerQuestion);
+      if (next.weight !== undefined && "weight" in change) {
         next.questions = undefined;
         next.pointsPerQuestion = undefined;
-      } else if (change.questions !== undefined || change.pointsPerQuestion !== undefined) {
+      } else if ("questions" in change || "pointsPerQuestion" in change) {
         next.weight = undefined;
       }
       if (typeof next.name === "string") next.name = next.name.trim() || subject.name;
@@ -131,10 +141,17 @@ export function sessionsAffected(
   ).length;
 }
 
-/** Assunto e todos os descendentes. */
+/** Assunto e todos os descendentes (protegido contra ciclos em `parentId`). */
 export function topicTreeIds(data: AppData, topicId: string): string[] {
+  const seen = new Set<string>([topicId]);
   const ids = [topicId];
-  for (let i = 0; i < ids.length; i += 1)
-    for (const t of data.topics) if (t.parentId === ids[i]) ids.push(t.id);
+  for (let i = 0; i < ids.length; i += 1) {
+    for (const t of data.topics) {
+      if (t.parentId === ids[i] && !seen.has(t.id)) {
+        seen.add(t.id);
+        ids.push(t.id);
+      }
+    }
+  }
   return ids;
 }

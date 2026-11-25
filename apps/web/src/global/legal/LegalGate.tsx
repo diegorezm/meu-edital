@@ -1,7 +1,7 @@
-import { BottomSheet, Button, buttonClass, Notice, textLinkClass } from "@meu-edital/ui";
-import { Link } from "@tanstack/react-router";
-import { apiUrl } from "../http";
-import { useStore } from "../store/useStore";
+import { BottomSheet, Button, Notice, textLinkClass } from "@meu-edital/ui";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { downloadExport } from "../exportDownload";
+import { useStoreActions } from "../store/useStore";
 import { LEGAL_PATHS, LEGAL_TITLES } from "./legal";
 import { useLegalGate } from "./useLegalGate";
 
@@ -11,9 +11,11 @@ import { useLegalGate } from "./useLegalGate";
  * conta continuam ao alcance.
  */
 export function LegalGate() {
-  const store = useStore();
-  const { pending, accept, busy, error } = useLegalGate(() => void store.syncNow());
-  if (pending.length === 0) return null;
+  const { syncNow } = useStoreActions();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { pending, accept, busy, error } = useLegalGate(() => void syncNow());
+  // Em /conta o estudante pode sair, exportar ou excluir a conta mesmo sem aceitar.
+  if (pending.length === 0 || pathname === "/conta") return null;
   const first = pending.every((p) => p.first);
 
   return (
@@ -53,9 +55,9 @@ export function LegalGate() {
           Aceitar e continuar
         </Button>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <a href={apiUrl("/api/export?formato=json")} download className={buttonClass("quiet")}>
+          <Button variant="quiet" onClick={() => void downloadExport("json").catch(() => undefined)}>
             Exportar meus dados
-          </a>
+          </Button>
           <Link to="/conta" className={textLinkClass}>
             Excluir conta
           </Link>

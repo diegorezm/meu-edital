@@ -47,7 +47,24 @@ describe("propostas", () => {
     const preview = previewProposal(data, examId, payload);
     expect(preview.map((p) => p.title)).toEqual(["Atualizar Português", "Nova matéria: Legislação de Trânsito"]);
     expect(preview[1].after).toBe("2 assuntos no edital · 20 questões");
-    expect(applyProposal(data, examId, payload).subjects.some((s) => s.name === "Legislação de Trânsito")).toBe(true);
+    const applied = applyProposal(data, examId, payload);
+    const created = applied.subjects.find((s) => s.name === "Legislação de Trânsito")!;
+    expect(created).toBeTruthy();
+    expect(subjectWeight(created)).toBe(20);
+  });
+
+  it("recusa importação de edital com nome de concurso diferente do ativo", () => {
+    const data = createSeed();
+    expect(() =>
+      previewProposal(data, data.activeExamId!, {
+        kind: "syllabus",
+        syllabus: {
+          exam: "Outro Concurso",
+          role: "Cargo",
+          subjects: [{ name: "Português", topics: [{ name: "Crase" }] }],
+        },
+      }),
+    ).toThrow(/não corresponde/);
   });
 
   it("recusa referência inexistente na prévia", () => {
@@ -86,7 +103,7 @@ describe("propostas", () => {
     expect(preview[0]).toMatchObject({
       title: "Nova matéria: Legislação de Trânsito",
       before: "não existe",
-      after: "3 assuntos · 20 questões · entra na jornada com 30 min",
+      after: "2 assuntos · 20 questões · entra na jornada com 30 min",
     });
     const next = applyProposal(data, examId, payload);
     const created = next.subjects.find((s) => s.name === "Legislação de Trânsito")!;
@@ -170,5 +187,20 @@ describe("propostas", () => {
     expect(isExpired({ expiresAt: expires }, expires)).toBe(true);
     expect(proposalSize({ a: "é" })).toBe(10);
     expect(proposalSize({ a: "é" })).toBeLessThan(MAX_PROPOSAL_BYTES);
+  });
+
+  it("extractJson lida com múltiplos blocos markdown e renderPrompt escapa cercas", async () => {
+    const { extractJson, renderPrompt, weeklyReviewTask } = await import("../src");
+    const wrapped = "Veja o exemplo:\n```text\nnão é json\n```\nAgora sim:\n```json\n{\"ok\": true}\n```";
+    expect(extractJson(wrapped)).toEqual({ ok: true });
+
+    const data = createSeed();
+    const withTicks = {
+      ...data,
+      exams: data.exams.map((e, i) => (i === 0 ? { ...e, name: "Concurso ```inject```" } : e)),
+    };
+    const prompt = renderPrompt(weeklyReviewTask, withTicks, withTicks.activeExamId!);
+    expect(prompt).not.toContain("Concurso ```inject```");
+    expect(prompt).toContain("\\u0060\\u0060\\u0060inject\\u0060\\u0060\\u0060");
   });
 });

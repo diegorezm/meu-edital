@@ -9,13 +9,13 @@ export function AchievementsView({ screen }: { screen: AchievementsScreen }) {
   const { view } = screen;
   return (
     <div className="grid items-start gap-[18px] lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-      <Sheet title={`Conquistas · ${view.unlocked} de ${view.total}`}>
+      <Sheet title={`Conquistas · ${view.unlocked} de ${view.total}`} headingLevel="h1">
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-3">
           {view.achievements.map((a) => (
             <li
               key={a.id}
               className={clsx(
-                "rounded-[6px] border-2 border-ink px-1.5 py-2.5 text-center",
+                "rounded border-2 border-ink px-1.5 py-2.5 text-center",
                 a.unlocked ? "bg-paper-raised" : "border-dashed bg-paper-sunken text-ink-muted",
               )}
               title={a.description}
@@ -52,7 +52,7 @@ export function AchievementsView({ screen }: { screen: AchievementsScreen }) {
                 disabled={!s.unlocked}
                 onClick={() => screen.choose(s.id)}
                 className={clsx(
-                  "rounded-[6px] border-2 border-ink p-2 text-center text-sm font-bold",
+                  "rounded border-2 border-ink p-2 text-center text-sm font-bold",
                   active
                     ? "bg-maroon text-paper-raised"
                     : s.unlocked

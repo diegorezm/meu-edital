@@ -7,6 +7,7 @@ import {
 } from "@meu-edital/sync";
 import { apiFetch, apiUrl, sessionToken } from "../http";
 import { notifyConsentRequired } from "../legal/legal";
+import { queryClient } from "../query";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -18,8 +19,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch (cause) {
     throw new OfflineError(cause);
   }
-  // Gateway fora do ar ou limite de requisições: tenta de novo mais tarde.
-  if (response.status === 429 || response.status >= 502) throw new OfflineError(response.status);
+  // Erro transitório do servidor ou limite de requisições: mantém a fila para tentar de novo.
+  if (response.status === 429 || response.status >= 500) throw new OfflineError(response.status);
+  // Sessão expirou enquanto o aluno estudava: mantém a fila intacta e força nova checagem.
+  if (response.status === 401) {
+    void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+    throw new OfflineError(response.status);
+  }
   // Falta aceitar os termos: a interface pede o aceite e o sync tenta depois.
   if (response.status === 409) {
     notifyConsentRequired();
@@ -37,24 +43,54 @@ export const httpTransport: Transport = {
 
 /**
  * Escuta os avisos de "versão nova" do servidor e chama `onNotice`.
- * Reconecta sozinho, com espera crescente, e para com `close()`.
+ * Reconecta sozinho, com espera crescente, e dispara `onReconnect` depois de
+ * uma queda para buscar o que mudou enquanto desconectado.
  */
-export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
+export function listenForChanges(
+  onNotice: (notice: SyncNotice) => void,
+  onReconnect?: () => void,
+) {
   let socket: WebSocket | null = null;
   let attempts = 0;
+  let hasConnectedOnce = false;
   let closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const connect = () => {
+  const scheduleReconnect = () => {
+    if (closed) return;
+    attempts += 1;
+    timer = setTimeout(() => void connect(), Math.min(60_000, 1000 * 2 ** attempts));
+  };
+
+  const connect = async () => {
     if (closed) return;
     const url = new URL(apiUrl("/api/sync/ws"), window.location.href);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    // No app nativo não há cookie: o token vai na URL (só nesta rota).
-    const token = sessionToken();
-    if (token) url.searchParams.set("token", token);
+    // No app nativo não há cookie: pede um ticket efêmero (30 s) em vez de expor o Bearer na URL.
+    if (sessionToken()) {
+      try {
+        const res = await apiFetch("/api/sync/ws-ticket", { method: "POST" });
+        if (res.status === 401) {
+          void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+          return;
+        }
+        if (!res.ok) return scheduleReconnect();
+        const { ticket } = (await res.json()) as { ticket?: string };
+        if (!ticket || closed) return;
+        url.searchParams.set("ticket", ticket);
+      } catch {
+        return scheduleReconnect();
+      }
+    }
+    if (closed) return;
+    let opened = false;
     socket = new WebSocket(url);
     socket.onopen = () => {
+      opened = true;
+      const reconnecting = hasConnectedOnce && attempts > 0;
+      hasConnectedOnce = true;
       attempts = 0;
+      if (reconnecting) onReconnect?.();
     };
     socket.onmessage = (event) => {
       try {
@@ -64,13 +100,33 @@ export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
         // Mensagem que não é aviso (ex.: "pong").
       }
     };
-    socket.onclose = () => {
+    socket.onclose = (event) => {
       if (closed) return;
-      attempts += 1;
-      timer = setTimeout(connect, Math.min(60_000, 1000 * 2 ** attempts));
+      if (event.code === 1008 || event.code === 4401) {
+        closed = true;
+        void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+        return;
+      }
+      // Navegadores escondem o HTTP 401 no handshake do WebSocket (código 1006).
+      // Se falhar antes de abrir, verifica a sessão para não ficar reconectando em loop.
+      if (!opened && attempts >= 1) {
+        void apiFetch("/api/auth/get-session")
+          .then(async (res) => {
+            const body = res.ok ? ((await res.json().catch(() => null)) as { user?: unknown } | null) : null;
+            if (res.status === 401 || (res.ok && !body?.user)) {
+              closed = true;
+              void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+              return;
+            }
+            scheduleReconnect();
+          })
+          .catch(() => scheduleReconnect());
+        return;
+      }
+      scheduleReconnect();
     };
   };
-  connect();
+  void connect();
 
   return {
     /** Verdadeiro com o aviso do servidor ligado: aí não precisa perguntar de tempos em tempos. */

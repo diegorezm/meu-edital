@@ -4,7 +4,7 @@ import { nameSchema, positiveSchema } from "./parse";
 
 const topicSchema = z.strictObject({
   name: nameSchema,
-  subtopics: z.array(z.strictObject({ name: nameSchema })).optional(),
+  subtopics: z.array(z.strictObject({ name: nameSchema })).max(100).optional(),
 });
 
 /** Resposta da tarefa de importação do edital. */
@@ -15,15 +15,18 @@ export const SyllabusImportSchema = z.strictObject({
     .array(
       z.strictObject({
         name: nameSchema,
-        questions: z.number().int().positive().optional(),
+        questions: z.number().int().positive().max(100_000).optional(),
         pointsPerQuestion: positiveSchema.optional(),
         weight: positiveSchema.optional(),
-        topics: z.array(topicSchema).min(1),
+        topics: z.array(topicSchema).min(1).max(500),
       }),
     )
-    .min(1),
+    .min(1)
+    .max(50),
 });
 export type SyllabusImport = z.infer<typeof SyllabusImportSchema>;
+
+const norm = (value: string) => value.trim().toLocaleLowerCase("pt-BR");
 
 export function validateSyllabusImport(
   data: AppData,
@@ -31,7 +34,7 @@ export function validateSyllabusImport(
   value: SyllabusImport,
 ): void {
   const exam = data.exams.find((item) => item.id === examId);
-  if (value.exam.toLocaleLowerCase() !== exam?.name.toLocaleLowerCase()) {
+  if (!exam || norm(value.exam) !== norm(exam.name)) {
     throw new Error(
       "O nome do concurso na resposta não corresponde ao concurso ativo.",
     );
@@ -44,86 +47,93 @@ export function importSyllabus(
   input: SyllabusImport,
 ): AppData {
   const existing = data.subjects.filter((s) => s.examId === examId);
+  const existingById = new Map(existing.map((s) => [s.id, s]));
+  const subjectByName = new Map(existing.map((s) => [norm(s.name), s]));
+  let nextSubjectPos = nextPosition(existing);
   const subjects: Subject[] = [];
   const topics: Topic[] = [];
+
+  // Índice O(1) de tópicos existentes e próxima posição por (subjectId, parentId).
+  const topicIndex = new Map<string, Topic>();
+  const nextTopicPos = new Map<string, number>();
+  const scopeKey = (subjectId: string, parentId?: string) => `${subjectId}:${parentId ?? ""}`;
+  const topicKey = (subjectId: string, parentId: string | undefined, name: string) =>
+    `${subjectId}:${parentId ?? ""}:${norm(name)}`;
+
+  for (const t of data.topics) {
+    topicIndex.set(topicKey(t.subjectId, t.parentId, t.name), t);
+    const sk = scopeKey(t.subjectId, t.parentId);
+    nextTopicPos.set(sk, Math.max(nextTopicPos.get(sk) ?? 0, t.position + 1));
+  }
+
   for (const item of input.subjects) {
-    let subject = [...existing, ...subjects].find(
-      (s) => s.name.toLocaleLowerCase() === item.name.toLocaleLowerCase(),
-    );
+    const key = norm(item.name);
+    let subject = subjectByName.get(key);
     if (!subject) {
       subject = {
         id: uid(),
         examId,
         name: item.name,
-        position: nextPosition([...existing, ...subjects]),
-        weight: item.weight,
-        questions: item.questions,
-        pointsPerQuestion: item.pointsPerQuestion,
+        position: nextSubjectPos++,
+        ...(item.questions !== undefined
+          ? { questions: item.questions, pointsPerQuestion: item.pointsPerQuestion ?? 1 }
+          : item.weight !== undefined
+            ? { weight: item.weight }
+            : {}),
       };
       subjects.push(subject);
-    } else {
-      const subjectId = subject.id;
-      const index = existing.findIndex((entry) => entry.id === subjectId);
-      if (index >= 0) {
-        existing[index] = {
-          ...subject,
-          weight:
-            item.questions && item.pointsPerQuestion
-              ? undefined
-              : (item.weight ?? subject.weight),
-          questions:
-            item.weight && !item.questions
-              ? undefined
-              : (item.questions ?? subject.questions),
-          pointsPerQuestion:
-            item.weight && !item.pointsPerQuestion
-              ? undefined
+      subjectByName.set(key, subject);
+    } else if (existingById.has(subject.id)) {
+      const hasQuestions = item.questions !== undefined;
+      const updated: Subject = {
+        ...subject,
+        weight: hasQuestions ? undefined : (item.weight ?? subject.weight),
+        questions: item.weight !== undefined && !hasQuestions ? undefined : (item.questions ?? subject.questions),
+        pointsPerQuestion:
+          item.weight !== undefined && !hasQuestions
+            ? undefined
+            : hasQuestions
+              ? (item.pointsPerQuestion ?? subject.pointsPerQuestion ?? 1)
               : (item.pointsPerQuestion ?? subject.pointsPerQuestion),
-        };
-      }
-    }
-    for (const entry of item.topics) {
-      const exists = [...data.topics, ...topics].find(
-        (t) =>
-          t.subjectId === subject.id &&
-          !t.parentId &&
-          t.name.toLocaleLowerCase() === entry.name.toLocaleLowerCase(),
-      );
-      const siblings = (parentId?: string) =>
-        [...data.topics, ...topics].filter(
-          (t) => t.subjectId === subject.id && t.parentId === parentId,
-        );
-      const parent: Topic = exists || {
-        id: uid(),
-        subjectId: subject.id,
-        name: entry.name,
-        position: nextPosition(siblings(undefined)),
       };
-      if (!exists) topics.push(parent);
+      existingById.set(subject.id, updated);
+      subjectByName.set(key, updated);
+      subject = updated;
+    }
+
+    for (const entry of item.topics) {
+      const rootKey = topicKey(subject.id, undefined, entry.name);
+      let parent = topicIndex.get(rootKey);
+      if (!parent) {
+        const sk = scopeKey(subject.id, undefined);
+        const pos = nextTopicPos.get(sk) ?? 0;
+        nextTopicPos.set(sk, pos + 1);
+        parent = { id: uid(), subjectId: subject.id, name: entry.name, position: pos };
+        topics.push(parent);
+        topicIndex.set(rootKey, parent);
+      }
       for (const sub of entry.subtopics || []) {
-        if (
-          ![...data.topics, ...topics].some(
-            (t) =>
-              t.parentId === parent.id &&
-              t.name.toLocaleLowerCase() === sub.name.toLocaleLowerCase(),
-          )
-        )
-          topics.push({
-            id: uid(),
-            subjectId: subject.id,
-            parentId: parent.id,
-            name: sub.name,
-            position: nextPosition(siblings(parent.id)),
-          });
+        const subKey = topicKey(subject.id, parent.id, sub.name);
+        if (topicIndex.has(subKey)) continue;
+        const sk = scopeKey(subject.id, parent.id);
+        const pos = nextTopicPos.get(sk) ?? 0;
+        nextTopicPos.set(sk, pos + 1);
+        const child: Topic = {
+          id: uid(),
+          subjectId: subject.id,
+          parentId: parent.id,
+          name: sub.name,
+          position: pos,
+        };
+        topics.push(child);
+        topicIndex.set(subKey, child);
       }
     }
   }
   return {
     ...data,
     subjects: [
-      ...data.subjects.map(
-        (item) => existing.find((entry) => entry.id === item.id) || item,
-      ),
+      ...data.subjects.map((item) => existingById.get(item.id) ?? item),
       ...subjects,
     ],
     topics: [...data.topics, ...topics],

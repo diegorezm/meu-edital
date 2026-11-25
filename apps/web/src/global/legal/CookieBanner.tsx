@@ -1,4 +1,5 @@
 import { BottomSheet, Button, Sheet, textLinkClass } from "@meu-edital/ui";
+import { Link } from "@tanstack/react-router";
 import { ConsentToggle } from "./ConsentToggle";
 import { useCookieBanner } from "./useCookieBanner";
 
@@ -17,9 +18,9 @@ export function CookieBanner() {
             <p className="mb-3 text-sm">
               Usamos cookies necessários para manter você conectado. Com a sua permissão, também medimos o
               uso do app para melhorá-lo.{" "}
-              <a href="/privacidade" className={textLinkClass}>
+              <Link to="/privacidade" className={textLinkClass}>
                 Política de Privacidade
-              </a>
+              </Link>
             </p>
             <div className="grid grid-cols-3 gap-2">
               <Button variant="quiet" className="px-1" onClick={() => void banner.rejectAll()}>

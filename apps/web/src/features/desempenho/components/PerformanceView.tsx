@@ -1,5 +1,6 @@
-import { BottomSheet, Crest, Icon, ListRow, Mascot, Sheet, Tag } from "@meu-edital/ui";
+import { BottomSheet, buttonClass, Crest, Icon, ListRow, Mascot, Sheet, Tag } from "@meu-edital/ui";
 import { useLayout } from "@global/hooks/useLayout";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { Fragment } from "react";
 import type { Performance } from "../hooks/usePerformance";
@@ -8,7 +9,12 @@ type Subject = NonNullable<Performance["subjects"]>[number];
 
 function WeakTag({ topicId, perf }: { topicId: string; perf: Performance }) {
   return (
-    <button type="button" onClick={() => void perf.practice(topicId)} className="ml-1 cursor-pointer" title="Estudar questões deste assunto">
+    <button
+      type="button"
+      onClick={() => void perf.practice(topicId)}
+      className="ml-1 inline-flex min-h-11 cursor-pointer items-center"
+      title="Estudar questões deste assunto"
+    >
       <Tag>reforçar</Tag>
     </button>
   );
@@ -18,10 +24,13 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   const { mobile } = useLayout();
   if (!perf.subjects)
     return (
-      <Sheet title="Desempenho" className="mx-auto max-w-xl">
-        <div className="flex flex-col items-center gap-2 text-center">
+      <Sheet title="Desempenho" headingLevel="h1" className="mx-auto max-w-xl">
+        <div className="flex flex-col items-center gap-3 text-center">
           <Mascot pose="dormindo" className="w-32" />
           <p>Monte seu concurso para ver o desempenho.</p>
+          <Link to="/comecar" className={buttonClass()}>
+            Começar
+          </Link>
         </div>
       </Sheet>
     );
@@ -29,7 +38,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   if (mobile) {
     const current = perf.subjects.find((s) => s.id === perf.open);
     return (
-      <Sheet title="Desempenho">
+      <Sheet title="Desempenho" headingLevel="h1">
         {perf.subjects.map((s) => (
           <ListRow key={s.id} aside={<Icon name="back" className="rotate-180" />}>
             <button type="button" onClick={() => perf.toggle(s.id)} className="flex min-h-11 w-full items-center gap-2 text-left">
@@ -64,7 +73,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
     <Fragment key={s.id}>
       <tr className="border-b-[1.5px] border-dashed border-rule">
         <td className="py-1.5">
-          <button type="button" onClick={() => perf.toggle(s.id)} className="flex min-h-9 items-center gap-2 font-extrabold" aria-expanded={perf.open === s.id}>
+          <button type="button" onClick={() => perf.toggle(s.id)} className="flex min-h-11 items-center gap-2 font-extrabold" aria-expanded={perf.open === s.id}>
             <Icon name="caret" className={clsx("size-3.5 transition-transform", perf.open !== s.id && "-rotate-90")} />
             <Crest name={s.name} index={s.index} size={22} showInitials={false} />
             {s.name}
@@ -94,7 +103,7 @@ export function PerformanceView({ perf }: { perf: Performance }) {
   );
 
   return (
-    <Sheet title="Desempenho">
+    <Sheet title="Desempenho" headingLevel="h1">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-ink text-left text-xs text-ink-muted">

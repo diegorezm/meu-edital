@@ -129,8 +129,10 @@ export function weakestSubject(data: AppData, examId: string, date = today()) {
   });
   if (scored.length)
     return scored.reduce((worst, item) => (item.accuracy < worst.accuracy ? item : worst)).subject;
+  // Cobertura antes do dia `date`, para o contrato 3 não trocar de matéria no meio do dia.
+  const priorData: AppData = { ...data, sessions: data.sessions.filter((s) => s.date < date) };
   return subjects.reduce((least, subject) =>
-    subjectCoverage(data, subject.id).percent < subjectCoverage(data, least.id).percent
+    subjectCoverage(priorData, subject.id).percent < subjectCoverage(priorData, least.id).percent
       ? subject
       : least,
   );

@@ -10,7 +10,16 @@ const fallback: PublicConfig = {
 };
 
 /** A configuração pública e se ela já chegou (para não piscar a tela errada). */
-export function useAuthConfig(): PublicConfig & { loaded: boolean } {
-  const { data } = useQuery(publicConfigQuery);
-  return { ...(data ?? fallback), loaded: Boolean(data) };
+export function useAuthConfig(): PublicConfig & {
+  loaded: boolean;
+  failed: boolean;
+  retry: () => void;
+} {
+  const { data, isError, refetch } = useQuery(publicConfigQuery);
+  return {
+    ...(data ?? fallback),
+    loaded: Boolean(data),
+    failed: isError && !data,
+    retry: () => void refetch(),
+  };
 }

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { ProposalInputSchema } from "@meu-edital/agent-context";
 import { createDb } from "@meu-edital/db";
@@ -9,16 +10,24 @@ import { requireUser } from "./session";
 import { requireConsent } from "../legal/routes";
 import { jsonBody } from "./validate";
 
+const MAX_PROPOSAL_BODY_BYTES = 128 * 1024;
 const StatusSchema = z.strictObject({ status: z.enum(["aplicada", "descartada"]) });
 
 /** Caixa de propostas para o app: listar, enviar resposta colada, aplicar ou descartar. */
 export const proposalRoutes = new Hono<AppContext>()
-  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")), requireConsent)
   .get("/", async (c) => {
     const data = proposalsData(createDb(c.env.DB), c.get("userId"));
     return c.json({ proposals: await data.pending() });
   })
-  .post("/", jsonBody(ProposalInputSchema, "A resposta não está no formato esperado."), async (c) => {
+  .post(
+    "/",
+    bodyLimit({
+      maxSize: MAX_PROPOSAL_BODY_BYTES,
+      onError: (c) => c.json({ error: "A proposta é grande demais." }, 422),
+    }),
+    jsonBody(ProposalInputSchema, "A resposta não está no formato esperado."),
+    async (c) => {
     const parsed = c.req.valid("json");
     try {
       const proposal = await proposalsData(createDb(c.env.DB), c.get("userId")).create(parsed, {

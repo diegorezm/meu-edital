@@ -128,6 +128,76 @@ describe("sync: push e pull", () => {
     expect((await call("/api/sync/pull?since=0")).status).toBe(401);
     expect((await call("/api/sync/push", { body: { mutations: [] } })).status).toBe(401);
   });
+
+  it("suporta lote com mais de 100 mutações sem estourar o limite de parâmetros do D1", async () => {
+    const { cookie } = await verifiedUser();
+    const base = exam();
+    const subjectId = base.subjects[0].id;
+    const many: AppData = {
+      ...base,
+      topics: Array.from({ length: 140 }, (_, i) => ({
+        id: uid(),
+        subjectId,
+        name: `Assunto ${i}`,
+        position: i,
+      })),
+    };
+    const mutations = diffData(emptyData(), many);
+    expect(mutations.length).toBeGreaterThan(140);
+    const { status, body } = await push(cookie, mutations);
+    expect(status).toBe(200);
+    expect(body.rejected).toEqual([]);
+    expect(body.accepted).toHaveLength(mutations.length);
+    const rebuilt = dataFromRows((await pullAll(cookie)).changes);
+    expect(rebuilt.topics).toHaveLength(140);
+  });
+
+  it("lotes idênticos enviados em paralelo não aplicam duas vezes", async () => {
+    const { cookie } = await verifiedUser();
+    const mutations = diffData(emptyData(), exam());
+    const [a, b] = await Promise.all([push(cookie, mutations), push(cookie, mutations)]);
+    expect(a.status).toBe(200);
+    expect(b.status).toBe(200);
+    expect(a.body.accepted).toHaveLength(mutations.length);
+    expect(b.body.accepted).toHaveLength(mutations.length);
+    expect(Math.max(a.body.version, b.body.version)).toBe(mutations.length);
+  });
+
+  it("recusa exclusão de userSettings, datas impossíveis, acertos acima das questões e ciclo em parentId", async () => {
+    const { cookie } = await verifiedUser();
+    const data = exam();
+    const subjectId = data.subjects[0].id;
+    const topicId = data.topics[0].id;
+    const examId = data.exams[0].id;
+    const bad: Mutation[] = [
+      { id: uid(), table: "userSettings", op: "delete", rowId: "me" },
+      {
+        id: uid(),
+        table: "topics",
+        op: "upsert",
+        rowId: topicId,
+        row: { id: topicId, subjectId, parentId: topicId, name: "Ciclo", position: 0 },
+      },
+      {
+        id: uid(),
+        table: "studySessions",
+        op: "upsert",
+        rowId: "s-data",
+        row: { id: "s-data", examId, subjectId, topicId, type: "Teoria", minutes: 30, date: "2026-02-30" },
+      },
+      {
+        id: uid(),
+        table: "studySessions",
+        op: "upsert",
+        rowId: "s-acertos",
+        row: { id: "s-acertos", examId, subjectId, topicId, type: "Questões", minutes: 30, date: "2026-11-12", questions: 5, correct: 8 },
+      },
+    ];
+    const { status, body } = await push(cookie, bad);
+    expect(status).toBe(200);
+    expect(body.accepted).toEqual([]);
+    expect(body.rejected).toHaveLength(4);
+  });
 });
 
 describe("sync: isolamento entre usuários", () => {
@@ -180,5 +250,63 @@ describe("sync: avisos em tempo real", () => {
     const { body } = await push(cookie, diffData(emptyData(), exam()));
     expect(await notice).toEqual({ type: "version", version: body.version });
     socket.close();
+  });
+
+  it("recusa WebSocket de origem desconhecida", async () => {
+    const { cookie } = await verifiedUser();
+    const response = await app.fetch(
+      new Request(`${env.APP_URL}/api/sync/ws`, {
+        headers: { upgrade: "websocket", cookie, origin: "https://site-estranho.com" },
+      }),
+      env,
+      { waitUntil: () => undefined, passThroughOnException: () => undefined, props: {} } as never,
+    );
+    expect(response.status).toBe(403);
+  });
+
+  it("autentica WebSocket via ticket efêmero (POST /api/sync/ws-ticket) e recusa ticket adulterado", async () => {
+    const { cookie } = await verifiedUser();
+    const issued = await call("/api/sync/ws-ticket", { method: "POST", cookie });
+    expect(issued.status).toBe(200);
+    const { ticket } = (await issued.json()) as { ticket: string };
+    expect(ticket).toBeTruthy();
+
+    const ok = await app.fetch(
+      new Request(`${env.APP_URL}/api/sync/ws?ticket=${encodeURIComponent(ticket)}`, {
+        headers: { upgrade: "websocket", origin: env.APP_URL },
+      }),
+      env,
+      { waitUntil: () => undefined, passThroughOnException: () => undefined, props: {} } as never,
+    );
+    expect(ok.status).toBe(101);
+    ok.webSocket?.accept();
+    ok.webSocket?.close();
+
+    const bad = await app.fetch(
+      new Request(`${env.APP_URL}/api/sync/ws?ticket=${encodeURIComponent(`${ticket}x`)}`, {
+        headers: { upgrade: "websocket", origin: env.APP_URL },
+      }),
+      env,
+      { waitUntil: () => undefined, passThroughOnException: () => undefined, props: {} } as never,
+    );
+    expect(bad.status).toBe(401);
+  });
+
+  it("housekeeping remove sessões, mutações antigas e propostas expiradas", async () => {
+    const { createDb } = await import("@meu-edital/db");
+    const { runHousekeeping } = await import("../src/data/cleanup");
+    const { userId } = await verifiedUser();
+    const now = Date.now();
+    await env.DB.prepare("insert into sync_mutations (user_id, mutation_id, applied_at) values (?, 'old-m', ?)")
+      .bind(userId, now - 40 * 86_400_000)
+      .run();
+    await env.DB.prepare(
+      "insert into proposals (id, user_id, exam_id, source, author, reason, payload, status, created_at, expires_at) values ('old-p', ?, 'e1', 'colar', 'IA', 'x', '{}', 'pendente', ?, ?)",
+    )
+      .bind(userId, now - 10 * 86_400_000, now - 1000)
+      .run();
+    await runHousekeeping(createDb(env.DB), now);
+    expect(await env.DB.prepare("select 1 from sync_mutations where mutation_id = 'old-m'").first()).toBeNull();
+    expect(await env.DB.prepare("select 1 from proposals where id = 'old-p'").first()).toBeNull();
   });
 });

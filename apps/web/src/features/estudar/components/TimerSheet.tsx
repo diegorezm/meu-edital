@@ -9,7 +9,7 @@ export function TimerSheet({ study }: { study: Study }) {
       ? "Revisão"
       : "Estudo livre";
   return (
-    <Sheet title={title}>
+    <Sheet title={title} headingLevel="h1">
       <div className="flex flex-col items-center gap-4 text-center">
         {study.subject && (
           <div className="flex items-center gap-3 text-left">
@@ -82,10 +82,21 @@ export function TimerSheet({ study }: { study: Study }) {
               Estudar outra coisa
             </button>
           )}
-          {study.started && (
-            <button type="button" onClick={study.discard} className="min-h-11 underline">
+          {study.started && !study.confirmingDiscard && (
+            <button type="button" onClick={() => study.setConfirmingDiscard(true)} className="min-h-11 underline">
               Descartar o cronômetro
             </button>
+          )}
+          {study.started && study.confirmingDiscard && (
+            <span className="flex flex-wrap items-center justify-center gap-2">
+              <span className="font-bold text-ink">Descartar o tempo medido?</span>
+              <Button variant="quiet" onClick={() => study.setConfirmingDiscard(false)}>
+                Manter
+              </Button>
+              <Button variant="quiet" className="text-rose-strong" onClick={study.discard}>
+                Descartar
+              </Button>
+            </span>
           )}
         </div>
       </div>

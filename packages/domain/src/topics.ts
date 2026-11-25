@@ -24,10 +24,13 @@ export function nextPosition(items: { position: number }[]): number {
 
 /** Nome do assunto com os assuntos-pai, ex.: "Crase › Uso facultativo". */
 export function topicPath(data: AppData, topic: Topic) {
+  const byId = new Map(data.topics.map((item) => [item.id, item]));
   const names = [topic.name];
+  const seen = new Set<string>([topic.id]);
   let parentId = topic.parentId;
-  for (let depth = 0; parentId && depth < 6; depth += 1) {
-    const parent = data.topics.find((item) => item.id === parentId);
+  for (let depth = 0; parentId && depth < 6 && !seen.has(parentId); depth += 1) {
+    seen.add(parentId);
+    const parent = byId.get(parentId);
     if (!parent) break;
     names.unshift(parent.name);
     parentId = parent.parentId;
@@ -39,18 +42,30 @@ export function topicPath(data: AppData, topic: Topic) {
 export function topicsInOrder(data: AppData, subjectId: string): Topic[] {
   const topics = data.topics.filter((t) => t.subjectId === subjectId).sort(byPosition);
   const ids = new Set(topics.map((t) => t.id));
+  const children = new Map<string, Topic[]>();
+  const roots: Topic[] = [];
+  for (const topic of topics) {
+    if (!topic.parentId || !ids.has(topic.parentId)) {
+      roots.push(topic);
+    } else {
+      const list = children.get(topic.parentId) ?? [];
+      list.push(topic);
+      children.set(topic.parentId, list);
+    }
+  }
   const result: Topic[] = [];
-  const visit = (parentId: string | undefined, depth: number) => {
+  const visited = new Set<string>();
+  const visit = (list: Topic[], depth: number) => {
     if (depth > 6) return;
-    for (const topic of topics) {
-      const isRoot = !topic.parentId || !ids.has(topic.parentId);
-      if (parentId ? topic.parentId === parentId : isRoot) {
-        result.push(topic);
-        visit(topic.id, depth + 1);
-      }
+    for (const topic of list) {
+      if (visited.has(topic.id)) continue;
+      visited.add(topic.id);
+      result.push(topic);
+      const sub = children.get(topic.id);
+      if (sub) visit(sub, depth + 1);
     }
   };
-  visit(undefined, 0);
+  visit(roots, 0);
   return result;
 }
 

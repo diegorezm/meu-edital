@@ -19,15 +19,31 @@ import { syncRoutes } from "./sync/routes";
 
 const app = new Hono<AppContext>().basePath("/api");
 
-// A resposta 101 do WebSocket tem cabeçalhos imutáveis.
+// A resposta 101 do WebSocket tem cabeçalhos imutáveis; só pula nela.
 const headers = secureHeaders();
-app.use("*", (c, next) => (c.req.header("upgrade") ? next() : headers(c, next)));
-
-// O app nativo chama a API de outra origem (WebView), e o site de divulgação
-// lê a configuração e manda a lista de espera; a web é mesma origem.
 app.use("*", (c, next) =>
-  cors({
-    origin: (origin) => (NATIVE_ORIGINS.includes(origin) || origin === c.env.SITE_URL ? origin : null),
+  c.req.path === "/api/sync/ws" && c.req.header("upgrade")?.toLowerCase() === "websocket"
+    ? next()
+    : headers(c, next),
+);
+
+const PUBLIC_SITE_PATHS = new Set(["/api/config", "/api/lista-de-espera"]);
+
+// O site de divulgação só lê /api/config e envia /api/lista-de-espera (sem
+// credenciais). O app nativo (WebView) chama a API inteira com bearer/cookie.
+app.use("*", (c, next) => {
+  const origin = c.req.header("origin");
+  if (origin && origin === c.env.SITE_URL && PUBLIC_SITE_PATHS.has(c.req.path)) {
+    return cors({
+      origin: c.env.SITE_URL,
+      allowHeaders: ["content-type", "x-captcha-response"],
+      credentials: false,
+      allowMethods: ["GET", "POST", "OPTIONS"],
+      maxAge: 600,
+    })(c, next);
+  }
+  return cors({
+    origin: (o) => (NATIVE_ORIGINS.includes(o) ? o : null),
     allowHeaders: ["authorization", "content-type", "x-captcha-response"],
     exposeHeaders: ["set-auth-token"],
     // O cliente do Better Auth manda `credentials: include`; sem isso o
@@ -35,15 +51,30 @@ app.use("*", (c, next) =>
     credentials: true,
     allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
     maxAge: 600,
-  })(c, next),
-);
+  })(c, next);
+});
 
 // Só as ações (POST) contam para o limite; ler a sessão não.
-app.use("/auth/*", async (c, next) =>
-  c.req.method === "POST"
-    ? rateLimit("AUTH_LIMITER", (ctx) => `${clientIp(ctx)}:${ctx.req.path}`)(c, next)
-    : next(),
-);
+// No login por e-mail também limitamos por conta para frear tentativas distribuídas.
+app.use("/auth/*", async (c, next) => {
+  if (c.req.method !== "POST") return next();
+  const byIp = await c.env.AUTH_LIMITER.limit({ key: `${clientIp(c)}:${c.req.path}` });
+  if (!byIp.success)
+    return c.json({ error: "Muitas tentativas. Espere um minuto e tente de novo." }, 429);
+  if (c.req.path === "/api/auth/sign-in/email") {
+    const body = (await c.req.raw
+      .clone()
+      .json()
+      .catch(() => null)) as { email?: unknown } | null;
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (email) {
+      const byEmail = await c.env.AUTH_LIMITER.limit({ key: `login:${email}` });
+      if (!byEmail.success)
+        return c.json({ error: "Muitas tentativas. Espere um minuto e tente de novo." }, 429);
+    }
+  }
+  return next();
+});
 app.on(["GET", "POST"], "/auth/*", (c) =>
   createAuth(c.env, (promise) => c.executionCtx.waitUntil(promise)).handler(c.req.raw),
 );
@@ -59,7 +90,15 @@ const routes = app
   .route("/oraculo/conexoes", connectionRoutes)
   .route("/lista-de-espera", waitlistRoutes)
   .route("/legal", legalRoutes)
-  .get("/health", (c) => c.json({ ok: true }))
+  .get("/health", async (c) => {
+    try {
+      await c.env.DB.prepare("SELECT 1").first();
+      return c.json({ ok: true });
+    } catch (error) {
+      console.error("Healthcheck D1 falhou", error);
+      return c.json({ ok: false }, 503);
+    }
+  })
   /** O que a tela de login precisa saber antes de existir sessão. */
   .get("/config", (c) =>
     c.json({
@@ -84,7 +123,16 @@ const routes = app
 
 routes.notFound((c) => c.json({ error: "Rota não encontrada." }, 404));
 routes.onError((error, c) => {
-  console.error(error);
+  console.error(
+    JSON.stringify({
+      level: "error",
+      requestId: c.req.header("cf-ray") ?? null,
+      method: c.req.method,
+      path: c.req.path,
+      userId: c.get("userId") ?? null,
+      message: error instanceof Error ? error.message : String(error),
+    }),
+  );
   return c.json({ error: "Algo deu errado do nosso lado. Tente de novo." }, 500);
 });
 

@@ -10,7 +10,7 @@ export type BlockState = "done" | "now" | "next" | "boss";
 
 const surfaces: Record<BlockState, string> = {
   done: "bg-card-done shadow-[inset_0_0_0_3px_var(--color-card-done),inset_0_0_0_4px_var(--color-rule)]",
-  now: "bg-card-now shadow-[inset_0_0_0_3px_var(--color-card-now),inset_0_0_0_5px_var(--color-gold),0_0_0_4px_rgb(227_176_75/.45)]",
+  now: "bg-card-now shadow-[inset_0_0_0_3px_var(--color-card-now),inset_0_0_0_5px_var(--color-gold),0_0_0_4px_color-mix(in_srgb,var(--color-gold)_45%,transparent)]",
   next: "bg-paper-sunken shadow-[inset_0_0_0_3px_var(--color-paper-sunken),inset_0_0_0_4px_var(--color-rule)]",
   boss: "bg-card-boss shadow-[inset_0_0_0_3px_var(--color-card-boss),inset_0_0_0_4px_var(--color-rule)]",
 };
@@ -57,7 +57,7 @@ export function BlockCard({
     <>
       <span
         className={clsx(
-          "font-title absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-[4px] border-2 border-ink px-2.5 pt-px pb-0.5 text-lg leading-none whitespace-nowrap",
+          "font-title absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-chip border-2 border-ink px-2.5 pt-px pb-0.5 text-lg leading-none whitespace-nowrap",
           tabs[state],
         )}
       >
@@ -93,7 +93,7 @@ export function BlockCard({
     </>
   );
   const classes = clsx(
-    "relative flex min-h-[158px] flex-col items-center rounded-[6px] border-2 border-ink px-2 pt-[18px] pb-2.5 text-center",
+    "relative flex min-h-[158px] flex-col items-center rounded border-2 border-ink px-2 pt-[18px] pb-2.5 text-center",
     surfaces[state],
     state !== "done" && "lift",
     state === "now" && "motion-safe:animate-[halo_2.4s_ease-in-out_infinite]",

@@ -1,6 +1,9 @@
-@import "@fontsource/alegreya-sans/500.css";
-@import "@fontsource/alegreya-sans/800.css";
-@import "@fontsource/amatic-sc/700.css";
+@import "@fontsource/alegreya-sans/latin-500.css";
+@import "@fontsource/alegreya-sans/latin-ext-500.css";
+@import "@fontsource/alegreya-sans/latin-800.css";
+@import "@fontsource/alegreya-sans/latin-ext-800.css";
+@import "@fontsource/amatic-sc/latin-700.css";
+@import "@fontsource/amatic-sc/latin-ext-700.css";
 @import "./tokens.css";
 
 * { box-sizing: border-box; margin: 0; }
@@ -17,6 +20,9 @@ body {
 a { color: var(--teal-strong); font-weight: 800; }
 
 .beam { background: var(--wood); border-bottom: 3px solid var(--wood-dark); display: flex; align-items: center; gap: 10px; padding: 8px 16px; position: sticky; top: 0; z-index: 2; }
+.nav { display: flex; align-items: center; gap: 10px; }
+.skip { position: absolute; left: -9999px; top: 8px; z-index: 10; background: var(--paper-raised); color: var(--ink); border: 2px solid var(--ink); border-radius: 5px; padding: 8px 12px; text-decoration: none; }
+.skip:focus { left: 8px; }
 .ol { filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink)); }
 .logo { display: block; background: var(--maroon); color: var(--paper-raised); padding: 3px 16px 14px; font-size: 26px; margin-bottom: -22px; text-decoration: none; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 11px), 0 100%); }
 .spacer { flex: 1; }
@@ -57,7 +63,7 @@ section { margin-top: 58px; }
 
 details { border-bottom: 1.5px dashed var(--rule); padding: 12px 0; }
 details:last-child { border-bottom: 0; }
-summary { font-weight: 800; cursor: pointer; min-height: 28px; }
+summary { font-weight: 800; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 details p { margin-top: 6px; color: var(--ink-muted); }
 
 .closing h2 { font-size: 42px; color: var(--paper-raised); text-shadow: 0 2px 0 var(--ink); }

@@ -66,7 +66,7 @@ export type Change = z.infer<typeof ChangeSchema>;
 export type ChangePreview = { title: string; before: string; after: string; reason?: string };
 
 const sameName = (a: string, b: string) =>
-  a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
+  a.trim().toLocaleLowerCase("pt-BR") === b.trim().toLocaleLowerCase("pt-BR");
 
 function findSubject(data: AppData, examId: string, name: string) {
   const subject = data.subjects.find(
@@ -144,7 +144,10 @@ function previewOne(data: AppData, examId: string, change: Change): ChangePrevie
       };
     }
     case "addSubject": {
-      const topics = change.topics?.length ?? 0;
+      const uniqueTopics: string[] = [];
+      for (const name of change.topics ?? [])
+        if (!uniqueTopics.some((seen) => sameName(seen, name))) uniqueTopics.push(name);
+      const topics = uniqueTopics.length;
       const weight = change.questions
         ? `${change.questions} questões`
         : `peso ${change.weight ?? 1}`;

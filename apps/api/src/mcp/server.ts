@@ -34,7 +34,7 @@ export const mcpApiHandler = {
   async fetch(request: Request, env: AppEnv, ctx: OAuthContext): Promise<Response> {
     const props = ctx.props;
     if (!props) return new Response("Não autorizado.", { status: 401 });
-    const { success } = await env.API_LIMITER.limit({ key: `mcp:${props.userId}:${props.clientName}` });
+    const { success } = await env.API_LIMITER.limit({ key: `mcp:${props.userId}` });
     if (!success) return new Response("Muitas chamadas. Espere um minuto.", { status: 429 });
     const pending = await acceptancesData(createDb(env.DB), props.userId).pending();
     if (pending.length > 0)

@@ -14,7 +14,13 @@ let token: string | null = null;
 
 /** Carrega o token salvo. Chame antes de montar o app. */
 export async function loadSessionToken() {
-  if (platform.native) token = await platform.secureStorage.get(TOKEN_KEY);
+  if (!platform.native) return;
+  try {
+    token = await platform.secureStorage.get(TOKEN_KEY);
+  } catch (error) {
+    console.error("Falha ao ler token seguro", error);
+    token = null;
+  }
 }
 
 export const sessionToken = () => token;
@@ -28,6 +34,9 @@ export async function saveSessionToken(value: string | null) {
 
 /** fetch para a API com a sessão certa para a plataforma. */
 export function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (platform.native && !apiOrigin) {
+    return Promise.reject(new Error("Endereço da API (VITE_API_ORIGIN) não configurado neste build."));
+  }
   const headers = new Headers(init.headers);
   if (token && !headers.has("authorization")) headers.set("authorization", `Bearer ${token}`);
   return fetch(apiUrl(path), {

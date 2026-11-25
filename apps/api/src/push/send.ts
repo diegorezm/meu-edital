@@ -7,6 +7,8 @@ export type PushMessage = { title: string; body: string; url?: string; tag?: str
 
 type PushEnv = Pick<Env, "DB" | "VAPID_PRIVATE_KEY" | "APP_URL">;
 
+const PUSH_TIMEOUT_MS = 5_000;
+
 /**
  * Envia um aviso para todos os navegadores do usuário. Assinaturas que o
  * serviço de push diz não existirem mais (404/410) são apagadas.
@@ -17,21 +19,30 @@ export async function sendPush(env: PushEnv, userId: string, message: PushMessag
   const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
   let sent = 0;
   for (const sub of subs) {
-    const { endpoint, headers, body } = await buildPushHTTPRequest({
-      privateJWK: env.VAPID_PRIVATE_KEY,
-      subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-      message: {
-        payload: message,
-        adminContact: env.APP_URL,
-        options: { ttl: 3600, urgency: "normal", ...(message.tag ? { topic: message.tag } : {}) },
-      },
-    });
-    const response = await fetch(endpoint, { method: "POST", headers, body });
-    if (response.status === 404 || response.status === 410)
-      await db
-        .delete(pushSubscriptions)
-        .where(and(eq(pushSubscriptions.endpoint, sub.endpoint), eq(pushSubscriptions.userId, userId)));
-    else if (response.ok) sent += 1;
+    try {
+      const { endpoint, headers, body } = await buildPushHTTPRequest({
+        privateJWK: env.VAPID_PRIVATE_KEY,
+        subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        message: {
+          payload: message,
+          adminContact: env.APP_URL,
+          options: { ttl: 3600, urgency: "normal", ...(message.tag ? { topic: message.tag } : {}) },
+        },
+      });
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body,
+        signal: AbortSignal.timeout(PUSH_TIMEOUT_MS),
+      });
+      if (response.status === 404 || response.status === 410)
+        await db
+          .delete(pushSubscriptions)
+          .where(and(eq(pushSubscriptions.endpoint, sub.endpoint), eq(pushSubscriptions.userId, userId)));
+      else if (response.ok) sent += 1;
+    } catch (error) {
+      console.error("Falha ao enviar Web Push", { userId, error });
+    }
   }
   return sent;
 }

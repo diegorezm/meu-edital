@@ -1,4 +1,3 @@
-import { browserSyncStorage, clearBrowserSyncStorage } from "./browserSync";
 import type { Platform } from "./types";
 import { webPush } from "./webPush";
 
@@ -19,8 +18,8 @@ const blockEndApi = (init: RequestInit) =>
 
 export const webPlatform: Platform = {
   native: false,
-  syncStorage: browserSyncStorage,
-  clearSyncStorage: clearBrowserSyncStorage,
+  syncStorage: async (userId) => (await import("./browserSync")).browserSyncStorage(userId),
+  clearSyncStorage: async (userId) => (await import("./browserSync")).clearBrowserSyncStorage(userId),
   preferences: {
     get: (key) => storage()?.getItem(key) ?? null,
     set: (key, value) => storage()?.setItem(key, value),
@@ -65,7 +64,7 @@ export const webPlatform: Platform = {
     onPause: () => () => undefined,
   },
   reviewReminders: { set: async () => undefined },
-  push: webPush,
+  push: { ...webPush, serverManaged: true },
   vibrate(pattern) {
     navigator.vibrate?.(pattern);
   },

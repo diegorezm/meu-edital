@@ -1,11 +1,18 @@
-import { and, eq, max } from "drizzle-orm";
+import { eq, max } from "drizzle-orm";
 import { type Db, legalAcceptances } from "@meu-edital/db";
 import { uid } from "@meu-edital/domain";
 import { currentVersion, type LegalDocument, pendingDocuments } from "./documents";
 
-/** SHA-256 do IP com um segredo: identifica o aceite sem guardar o IP. */
+/** HMAC-SHA256 do IP com chave derivada: identifica o aceite sem guardar o IP. */
 async function hashIp(ip: string, secret: string) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${secret}:${ip}`));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(`legal-ip-hash:v1:${secret}`),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const bytes = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(ip));
   return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -35,26 +42,18 @@ export function acceptancesData(db: Db, userId: string) {
       const ipHash = await hashIp(meta.ip, meta.secret);
       const acceptedAt = Date.now();
       for (const item of items) {
-        const [already] = await db
-          .select({ id: legalAcceptances.id })
-          .from(legalAcceptances)
-          .where(
-            and(
-              eq(legalAcceptances.userId, userId),
-              eq(legalAcceptances.document, item.document),
-              eq(legalAcceptances.version, item.version),
-            ),
-          );
-        if (already) continue;
-        await db.insert(legalAcceptances).values({
-          id: uid(),
-          userId,
-          document: item.document,
-          version: item.version,
-          acceptedAt,
-          ipHash,
-          userAgent: meta.userAgent?.slice(0, 300) ?? null,
-        });
+        await db
+          .insert(legalAcceptances)
+          .values({
+            id: uid(),
+            userId,
+            document: item.document,
+            version: item.version,
+            acceptedAt,
+            ipHash,
+            userAgent: meta.userAgent?.slice(0, 300) ?? null,
+          })
+          .onConflictDoNothing();
       }
       return true;
     },

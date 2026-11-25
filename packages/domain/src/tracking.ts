@@ -85,9 +85,9 @@ export function monthSummary(
   date = today(),
 ): MonthSummary {
   const monthStart = `${date.slice(0, 7)}-01`;
-  const sessions = sessionsBetween(data, examId, monthStart, `${date.slice(0, 7)}-31`)
-    .slice()
-    .sort((a, b) => (a.date === b.date ? (a.id < b.id ? 1 : -1) : a.date < b.date ? 1 : -1));
+  const sessions = sessionsBetween(data, examId, monthStart, `${date.slice(0, 7)}-31`).sort((a, b) =>
+    a.date === b.date ? b.id.localeCompare(a.id) : b.date.localeCompare(a.date),
+  );
   return {
     monthStart,
     sessions,
@@ -103,10 +103,11 @@ export function weekSummary(
   data: AppData,
   examId: string,
   weekStart = currentWeekStart(),
+  referenceDate = today(),
 ): WeekSummary {
   const weekEnd = addDays(weekStart, 6);
   const sessions = sessionsBetween(data, examId, weekStart, weekEnd);
-  const target = weekTargetFor(data, examId, weekStart);
+  const target = weekTargetFor(data, examId, weekStart, referenceDate);
   const subjects = subjectsInOrder(data, examId)
     .map((subject): SubjectWeek => {
       const own = sessions.filter((s) => s.subjectId === subject.id);
@@ -126,11 +127,10 @@ export function weekSummary(
     });
   const questions = subjects.reduce((sum, s) => sum + s.questions, 0);
   const correct = subjects.reduce((sum, s) => sum + s.correct, 0);
-  const now = today();
   return {
     weekStart,
     weekEnd,
-    current: weekStart <= now && now <= weekEnd,
+    current: weekStart <= referenceDate && referenceDate <= weekEnd,
     minutes: sessions.reduce((sum, s) => sum + s.minutes, 0),
     targetMinutes: target.totalMinutes,
     sessions: sessions.length,
@@ -156,9 +156,10 @@ export function weekHistory(
   examId: string,
   count = 4,
   from = currentWeekStart(),
+  referenceDate = today(),
 ): WeekSummary[] {
   return Array.from({ length: count }, (_, index) =>
-    weekSummary(data, examId, addDays(from, -7 * index)),
+    weekSummary(data, examId, addDays(from, -7 * index), referenceDate),
   );
 }
 

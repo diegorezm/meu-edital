@@ -11,7 +11,7 @@ export function OracleView({ oracle }: { oracle: Oracle }) {
   const [panel, setPanel] = useState<"conectar" | "colar" | null>(null);
 
   const inbox = (
-    <Sheet title={`Caixa de propostas${oracle.cards.length ? ` · ${oracle.cards.length}` : ""}`}>
+    <Sheet title={`Caixa de propostas${oracle.cards.length ? ` · ${oracle.cards.length}` : ""}`} headingLevel="h1">
       {oracle.notice && (
         <div className="mb-3">
           <Notice>{oracle.notice}</Notice>
@@ -39,7 +39,7 @@ export function OracleView({ oracle }: { oracle: Oracle }) {
     <div className="flex flex-col gap-3">
       <p className="text-sm">Conecte o ChatGPT, o Claude ou o Perplexity ao seu estudo com este endereço:</p>
       <div className="flex items-center gap-2">
-        <code className="min-h-11 flex-1 truncate rounded-[5px] border-2 border-ink bg-paper-raised px-2.5 py-2.5 text-sm">{oracle.mcpUrl}</code>
+        <code className="min-h-11 flex-1 truncate rounded-control border-2 border-ink bg-paper-raised px-2.5 py-2.5 text-sm">{oracle.mcpUrl}</code>
         <Button variant="quiet" onClick={() => void oracle.copyUrl()}>
           Copiar
         </Button>

@@ -263,4 +263,50 @@ describe("sync: avisos em tempo real", () => {
     );
     expect(response.status).toBe(403);
   });
+
+  it("autentica WebSocket via ticket efêmero (POST /api/sync/ws-ticket) e recusa ticket adulterado", async () => {
+    const { cookie } = await verifiedUser();
+    const issued = await call("/api/sync/ws-ticket", { method: "POST", cookie });
+    expect(issued.status).toBe(200);
+    const { ticket } = (await issued.json()) as { ticket: string };
+    expect(ticket).toBeTruthy();
+
+    const ok = await app.fetch(
+      new Request(`${env.APP_URL}/api/sync/ws?ticket=${encodeURIComponent(ticket)}`, {
+        headers: { upgrade: "websocket", origin: env.APP_URL },
+      }),
+      env,
+      { waitUntil: () => undefined, passThroughOnException: () => undefined, props: {} } as never,
+    );
+    expect(ok.status).toBe(101);
+    ok.webSocket?.accept();
+    ok.webSocket?.close();
+
+    const bad = await app.fetch(
+      new Request(`${env.APP_URL}/api/sync/ws?ticket=${encodeURIComponent(`${ticket}x`)}`, {
+        headers: { upgrade: "websocket", origin: env.APP_URL },
+      }),
+      env,
+      { waitUntil: () => undefined, passThroughOnException: () => undefined, props: {} } as never,
+    );
+    expect(bad.status).toBe(401);
+  });
+
+  it("housekeeping remove sessões, mutações antigas e propostas expiradas", async () => {
+    const { createDb } = await import("@meu-edital/db");
+    const { runHousekeeping } = await import("../src/data/cleanup");
+    const { userId } = await verifiedUser();
+    const now = Date.now();
+    await env.DB.prepare("insert into sync_mutations (user_id, mutation_id, applied_at) values (?, 'old-m', ?)")
+      .bind(userId, now - 40 * 86_400_000)
+      .run();
+    await env.DB.prepare(
+      "insert into proposals (id, user_id, exam_id, source, author, reason, payload, status, created_at, expires_at) values ('old-p', ?, 'e1', 'colar', 'IA', 'x', '{}', 'pendente', ?, ?)",
+    )
+      .bind(userId, now - 10 * 86_400_000, now - 1000)
+      .run();
+    await runHousekeeping(createDb(env.DB), now);
+    expect(await env.DB.prepare("select 1 from sync_mutations where mutation_id = 'old-m'").first()).toBeNull();
+    expect(await env.DB.prepare("select 1 from proposals where id = 'old-p'").first()).toBeNull();
+  });
 });

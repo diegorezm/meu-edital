@@ -2,7 +2,9 @@ import { OAuthProvider } from "@cloudflare/workers-oauth-provider";
 import { env } from "cloudflare:workers";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
+import { createDb } from "@meu-edital/db";
 import { routes } from "./app";
+import { runHousekeeping } from "./data/cleanup";
 import type { AppContext } from "./env";
 import { oauthRoutes, SCOPES } from "./mcp/oauth";
 import { mcpApiHandler } from "./mcp/server";
@@ -59,7 +61,12 @@ export default {
     return provider.fetch(request, runtimeEnv, ctx);
   },
   scheduled(_controller: ScheduledController, runtimeEnv: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(sendDueReviewReminders(runtimeEnv).catch((error) => console.error("Falha nos lembretes", error)));
+    ctx.waitUntil(
+      Promise.allSettled([
+        sendDueReviewReminders(runtimeEnv).catch((error) => console.error("Falha nos lembretes", error)),
+        runHousekeeping(createDb(runtimeEnv.DB)).catch((error) => console.error("Falha na limpeza diária", error)),
+      ]),
+    );
   },
 } satisfies ExportedHandler<Env>;
 

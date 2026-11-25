@@ -6,6 +6,7 @@ import { syncData } from "../data/sync";
 import { type AppContext, NATIVE_ORIGINS } from "../env";
 import { rateLimit } from "../http/rateLimit";
 import { requireUser } from "../http/session";
+import { createWsTicket } from "../http/wsTicket";
 import { requireConsent } from "../legal/routes";
 
 /** Lotes maiores que isso são recusados antes de carregar em memória. */
@@ -27,10 +28,9 @@ export const syncRoutes = new Hono<AppContext>()
       const data = syncData(createDb(c.env.DB), userId);
       const result = await data.push(parsed.data.mutations);
       c.executionCtx.waitUntil(
-        Promise.all([
-          c.env.USER_HUB.getByName(userId).notify(result.version),
-          data.pruneMutations(),
-        ]).catch((error) => console.error("Falha ao avisar aparelhos", error)),
+        c.env.USER_HUB.getByName(userId)
+          .notify(result.version)
+          .catch((error) => console.error("Falha ao avisar aparelhos", error)),
       );
       return c.json(result);
     },
@@ -40,6 +40,11 @@ export const syncRoutes = new Hono<AppContext>()
     if (!Number.isInteger(since) || since < 0) return c.json({ error: "Cursor inválido." }, 400);
     const data = syncData(createDb(c.env.DB), c.get("userId"));
     return c.json(await data.pull(since));
+  })
+  /** Ticket efêmero (30 s) para abrir o WebSocket sem expor o token Bearer na URL. */
+  .post("/ws-ticket", async (c) => {
+    const ticket = await createWsTicket(c.get("userId"), c.env.BETTER_AUTH_SECRET);
+    return c.json({ ticket });
   })
   /** WebSocket de avisos: "versão nova, faça pull". */
   .get("/ws", (c) => {

@@ -75,7 +75,15 @@ const routes = app
   .route("/oraculo/conexoes", connectionRoutes)
   .route("/lista-de-espera", waitlistRoutes)
   .route("/legal", legalRoutes)
-  .get("/health", (c) => c.json({ ok: true }))
+  .get("/health", async (c) => {
+    try {
+      await c.env.DB.prepare("SELECT 1").first();
+      return c.json({ ok: true });
+    } catch (error) {
+      console.error("Healthcheck D1 falhou", error);
+      return c.json({ ok: false }, 503);
+    }
+  })
   /** O que a tela de login precisa saber antes de existir sessão. */
   .get("/config", (c) =>
     c.json({

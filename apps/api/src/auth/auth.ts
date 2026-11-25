@@ -28,6 +28,18 @@ async function revokeAllOAuthGrants(env: AppEnv, userId: string) {
  * mobile usará o token do plugin `bearer` (cabeçalho `Authorization`).
  * Criado por requisição porque os bindings só existem dentro dela.
  */
+function trustedOriginsFor(env: AppEnv): string[] {
+  const origins = [env.APP_URL, ...env.EXTRA_ORIGINS.split(",").filter(Boolean), ...NATIVE_ORIGINS];
+  // Em preview, cada PR ganha um alias `https://pr-<N>-<host>` no Workers.
+  try {
+    const url = new URL(env.APP_URL);
+    if (url.hostname.includes("-preview.")) origins.push(`${url.protocol}//pr-*-${url.host}`);
+  } catch {
+    // APP_URL inválido: ignora wildcard.
+  }
+  return origins;
+}
+
 export function createAuth(env: AppEnv, waitUntil: WaitUntil) {
   const mailer = createMailer(env);
   const canEmail = emailEnabled(env);
@@ -41,7 +53,7 @@ export function createAuth(env: AppEnv, waitUntil: WaitUntil) {
     baseURL: env.APP_URL,
     basePath: "/api/auth",
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.APP_URL, ...env.EXTRA_ORIGINS.split(",").filter(Boolean), ...NATIVE_ORIGINS],
+    trustedOrigins: trustedOriginsFor(env),
     database: drizzleAdapter(createDb(env.DB), {
       provider: "sqlite",
       schema: { user, session, account, verification },

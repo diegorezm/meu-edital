@@ -64,6 +64,13 @@
       "when": 1794594667431,
       "tag": "0008_consentimento_rastreamento",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795617058663,
+      "tag": "0009_indices_e_constraints",
+      "breakpoints": true
     }
   ]
 }

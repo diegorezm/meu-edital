@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
-import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import type { StudyType } from "@meu-edital/domain";
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { SkinId, StudyType } from "@meu-edital/domain";
 
 const now = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
 const timestamp = (name: string) => integer(name, { mode: "timestamp_ms" });
@@ -37,7 +37,7 @@ export const session = sqliteTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (t) => [index("session_user_id_idx").on(t.userId)],
+  (t) => [index("session_user_id_idx").on(t.userId), index("session_expires_idx").on(t.expiresAt)],
 );
 
 export const account = sqliteTable(
@@ -62,7 +62,10 @@ export const account = sqliteTable(
       .default(now)
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("account_user_id_idx").on(t.userId)],
+  (t) => [
+    index("account_user_id_idx").on(t.userId),
+    index("account_provider_account_idx").on(t.providerId, t.accountId),
+  ],
 );
 
 export const verification = sqliteTable(
@@ -78,7 +81,10 @@ export const verification = sqliteTable(
       .default(now)
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("verification_identifier_idx").on(t.identifier)],
+  (t) => [
+    index("verification_identifier_idx").on(t.identifier),
+    index("verification_expires_idx").on(t.expiresAt),
+  ],
 );
 
 // --- Dados de estudo ---
@@ -189,7 +195,10 @@ export const reviews = sqliteTable(
     shiftedBySessionId: text("shifted_by_session_id"),
     shiftDays: integer("shift_days"),
   },
-  (t) => [index("reviews_user_version_idx").on(t.userId, t.version)],
+  (t) => [
+    index("reviews_user_version_idx").on(t.userId, t.version),
+    index("reviews_user_exam_due_idx").on(t.userId, t.examId, t.dueDate),
+  ],
 );
 
 export const weekTargets = sqliteTable(
@@ -228,13 +237,16 @@ export const userSettings = sqliteTable(
     ...owned(),
     activeExamId: text("active_exam_id"),
     reviewOffsets: text("review_offsets", { mode: "json" }).$type<number[]>().notNull(),
-    skin: text("skin").notNull().default("rosa"),
+    skin: text("skin").$type<SkinId>().notNull().default("rosa"),
     seenCelebrations: text("seen_celebrations", { mode: "json" })
       .$type<string[]>()
       .notNull()
       .default(sql`'[]'`),
   },
-  (t) => [index("user_settings_user_version_idx").on(t.userId, t.version)],
+  (t) => [
+    index("user_settings_user_version_idx").on(t.userId, t.version),
+    uniqueIndex("user_settings_user_uidx").on(t.userId),
+  ],
 );
 
 /** Último `version` atribuído a cada usuário. O próximo é sempre este + 1. */
@@ -262,6 +274,7 @@ export const syncMutations = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.mutationId] }),
     index("sync_mutations_applied_idx").on(t.appliedAt),
+    index("sync_mutations_user_applied_idx").on(t.userId, t.appliedAt),
   ],
 );
 
@@ -286,7 +299,11 @@ export const proposals = sqliteTable(
     createdAt: integer("created_at").notNull(),
     expiresAt: integer("expires_at").notNull(),
   },
-  (t) => [index("proposals_user_status_idx").on(t.userId, t.status)],
+  (t) => [
+    index("proposals_user_status_idx").on(t.userId, t.status),
+    index("proposals_user_status_exp_idx").on(t.userId, t.status, t.expiresAt),
+    index("proposals_expires_idx").on(t.expiresAt),
+  ],
 );
 
 /** Assinaturas de Web Push (um registro por navegador). */
@@ -347,7 +364,10 @@ export const legalAcceptances = sqliteTable(
     ipHash: text("ip_hash"),
     userAgent: text("user_agent"),
   },
-  (t) => [index("legal_acceptances_user_idx").on(t.userId, t.document)],
+  (t) => [
+    index("legal_acceptances_user_idx").on(t.userId, t.document),
+    uniqueIndex("legal_acceptances_user_doc_ver_uidx").on(t.userId, t.document, t.version),
+  ],
 );
 
 /**
@@ -367,5 +387,8 @@ export const trackingConsents = sqliteTable(
     policyVersion: text("policy_version").notNull(),
     decidedAt: integer("decided_at").notNull(),
   },
-  (t) => [index("tracking_consents_user_idx").on(t.userId, t.category)],
+  (t) => [
+    index("tracking_consents_user_idx").on(t.userId, t.category),
+    index("tracking_consents_user_decided_idx").on(t.userId, t.decidedAt, t.id),
+  ],
 );

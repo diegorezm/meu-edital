@@ -1,4 +1,5 @@
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
 import {
   MAX_PROPOSAL_BYTES,
   previewProposal,
@@ -7,22 +8,47 @@ import {
   proposalExpiry,
   proposalSize,
 } from "@meu-edital/agent-context";
-import { type Db, proposals } from "@meu-edital/db";
+import { type Db, proposals, type StudyTableName, studyTables } from "@meu-edital/db";
 import { type AppData, uid } from "@meu-edital/domain";
-import { dataFromRows } from "@meu-edital/sync";
-import { syncData } from "./sync";
+import { assemble, type Row, SETTINGS_ID, type TableName } from "@meu-edital/sync";
 
-/** Dados de estudo do usuário montados a partir do banco (para o MCP e para validar propostas). */
-export async function loadAppData(db: Db, userId: string): Promise<AppData> {
-  const sync = syncData(db, userId);
-  let since = 0;
-  const changes = [];
-  for (;;) {
-    const page = await sync.pull(since, 2000);
-    changes.push(...page.changes);
-    if (!page.hasMore) return dataFromRows(changes);
-    since = page.version;
+const META = new Set(["userId", "updatedAt", "deletedAt", "version"]);
+
+function toActiveRow(table: TableName, row: Record<string, unknown>): Row & { id: string } {
+  const clean: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row))
+    if (!META.has(key) && value !== null) clean[key] = value;
+  if (table === "userSettings") {
+    clean.id = SETTINGS_ID;
+    if (!("activeExamId" in clean)) clean.activeExamId = null;
   }
+  return clean as Row & { id: string };
+}
+
+/**
+ * Dados ativos de estudo do usuário montados diretamente em um único `db.batch()`,
+ * filtrando `deleted_at IS NULL` (sem ler tombstones nem paginar).
+ */
+export async function loadAppData(db: Db, userId: string): Promise<AppData> {
+  const names = Object.keys(studyTables) as StudyTableName[];
+  const queries: BatchItem<"sqlite">[] = names.map((name) => {
+    const table = studyTables[name];
+    return db
+      .select()
+      .from(table)
+      .where(and(eq(table.userId, userId), isNull(table.deletedAt)));
+  });
+  const results = (await db.batch(
+    queries as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]],
+  )) as unknown as Record<string, unknown>[][];
+  const byTable = new Map<TableName, (Row & { id: string })[]>();
+  for (let i = 0; i < names.length; i += 1) {
+    byTable.set(
+      names[i],
+      (results[i] ?? []).map((row) => toActiveRow(names[i], row)),
+    );
+  }
+  return assemble((table) => byTable.get(table) ?? []);
 }
 
 export class ProposalError extends Error {}
@@ -76,11 +102,18 @@ export function proposalsData(db: Db, userId: string) {
       return proposal;
     },
 
-    async setStatus(id: string, status: "aplicada" | "descartada") {
+    async setStatus(id: string, status: "aplicada" | "descartada", now = Date.now()) {
       const result = await db
         .update(proposals)
         .set({ status })
-        .where(and(eq(proposals.id, id), eq(proposals.userId, userId), eq(proposals.status, "pendente")))
+        .where(
+          and(
+            eq(proposals.id, id),
+            eq(proposals.userId, userId),
+            eq(proposals.status, "pendente"),
+            gt(proposals.expiresAt, now),
+          ),
+        )
         .returning({ id: proposals.id });
       return result.length > 0;
     },

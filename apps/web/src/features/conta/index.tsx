@@ -1,3 +1,4 @@
+import { Button, Notice, Sheet } from "@meu-edital/ui";
 import { AccountView } from "./components/AccountView";
 import { CheckEmailView } from "./components/CheckEmailView";
 import { ForgotPasswordView } from "./components/ForgotPasswordView";
@@ -32,7 +33,19 @@ export function SignInPage({ aviso, volta }: { aviso?: string; volta?: string })
 
 /** Com o cadastro fechado, a tela de criar conta vira a lista de espera. */
 export function SignUpPage() {
-  const { loaded, signupOpen } = useAuthConfig();
+  const { loaded, failed, retry, signupOpen } = useAuthConfig();
+  if (failed) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md items-center px-4">
+        <Sheet title="Sem conexão">
+          <div className="grid gap-4">
+            <Notice tone="error">Não deu para carregar a página agora. Confira sua conexão.</Notice>
+            <Button onClick={retry}>Tentar novamente</Button>
+          </div>
+        </Sheet>
+      </div>
+    );
+  }
   if (!loaded) return null;
   return signupOpen ? <SignUpForm /> : <WaitlistForm />;
 }

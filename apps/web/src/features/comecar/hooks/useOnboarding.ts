@@ -1,5 +1,5 @@
 import { EXAM_CATALOG, type StarterSubject, startExam } from "@meu-edital/domain";
-import { useStore } from "@global/store/useStore";
+import { useStoreActions } from "@global/store/useStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -18,7 +18,7 @@ const draft = (subject: StarterSubject): DraftSubject => ({
 
 /** Primeiro concurso em três passos: qual prova, quanto tempo, quais matérias. */
 export function useOnboarding() {
-  const store = useStore();
+  const store = useStoreActions();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [name, setName] = useState("");

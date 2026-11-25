@@ -57,6 +57,15 @@ export const timerStore = {
   },
 };
 
+// Mantém o cronômetro sincronizado quando o estudante abre o app em mais de uma aba.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key !== KEY) return;
+    current = read();
+    for (const listener of listeners) listener();
+  });
+}
+
 // Tocar em "Pausar" na notificação do Android pausa o cronômetro do app.
 platform.studyTimer.onPause(() => {
   const timer = timerStore.get();
@@ -67,15 +76,27 @@ export function useTimerState(): TimerState | null {
   return useSyncExternalStore(timerStore.subscribe, timerStore.get, () => null);
 }
 
-/** Relógio que bate a cada segundo enquanto `active`. */
+/** Relógio que bate a cada segundo enquanto `active` (e atualiza na hora ao voltar para a aba). */
+let lastTick = 0;
 export function useNow(active: boolean): number {
   return useSyncExternalStore(
     (notify) => {
       if (!active) return () => undefined;
-      const id = setInterval(notify, 1000);
-      return () => clearInterval(id);
+      const tick = () => {
+        lastTick = Date.now();
+        notify();
+      };
+      const onVisible = () => {
+        if (document.visibilityState === "visible") tick();
+      };
+      const id = setInterval(tick, 1000);
+      document.addEventListener("visibilitychange", onVisible);
+      return () => {
+        clearInterval(id);
+        document.removeEventListener("visibilitychange", onVisible);
+      };
     },
-    () => (active ? Math.floor(Date.now() / 1000) * 1000 : 0),
+    () => (active ? Math.max(lastTick, Math.floor(Date.now() / 1000) * 1000) : 0),
     () => 0,
   );
 }

@@ -13,8 +13,8 @@ export function SessionForm({
   const [form, setForm] = useState({
     minutes: String(session.minutes),
     date: session.date,
-    questions: session.questions ? String(session.questions) : "",
-    correct: session.correct ? String(session.correct) : "",
+    questions: session.questions !== undefined ? String(session.questions) : "",
+    correct: session.correct !== undefined ? String(session.correct) : "",
     note: session.note ?? "",
   });
   const [error, setError] = useState("");
@@ -24,11 +24,17 @@ export function SessionForm({
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const minutes = Number(form.minutes);
-    const questions = form.questions ? Number(form.questions) : undefined;
-    const correct = form.correct ? Number(form.correct) : undefined;
-    if (!(minutes >= 1)) return setError("A duração deve ser maior que zero.");
+    const questions = form.questions !== "" ? Number(form.questions) : undefined;
+    const correct = form.correct !== "" ? Number(form.correct) : undefined;
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 24 * 60)
+      return setError("A duração deve ser um número inteiro entre 1 e 1440 minutos.");
+    if (
+      (questions !== undefined && (!Number.isInteger(questions) || questions < 0)) ||
+      (correct !== undefined && (!Number.isInteger(correct) || correct < 0))
+    )
+      return setError("Questões e acertos não podem ser negativos.");
     if ((correct ?? 0) > (questions ?? 0)) return setError("Acertos não podem superar o número de questões.");
-    if (form.date > today()) return setError("A data não pode estar no futuro.");
+    if (!form.date || form.date > today()) return setError("Informe uma data válida até hoje.");
     onSave(session.id, { minutes, date: form.date, questions, correct, note: form.note.trim() || undefined });
   };
 

@@ -1,6 +1,7 @@
 import { Button, buttonClass, Sheet, textLinkClass } from "@meu-edital/ui";
 import { apiUrl } from "@global/http";
 import { LEGAL_PATHS, LEGAL_TITLES, type LegalDocument } from "@global/legal/legal";
+import { Link } from "@tanstack/react-router";
 import type { usePrivacy } from "../hooks/usePrivacy";
 
 const formatDate = (version: string) => version.split("-").reverse().join("/");
@@ -26,9 +27,9 @@ export function PrivacySheet({ privacy }: { privacy: ReturnType<typeof usePrivac
           const accepted = privacy.latest(document);
           return (
             <li key={document}>
-              <a href={LEGAL_PATHS[document]} className={textLinkClass}>
+              <Link to={LEGAL_PATHS[document]} className={textLinkClass}>
                 {LEGAL_TITLES[document]}
-              </a>
+              </Link>
               {accepted && (
                 <span className="text-ink-muted"> · versão de {formatDate(accepted.version)} aceita</span>
               )}

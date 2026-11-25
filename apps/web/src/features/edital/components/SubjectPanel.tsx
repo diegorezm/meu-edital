@@ -22,7 +22,7 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
     const p = Number(weights.points);
     const w = Number(weights.weight);
     if (w > 0) syllabus.saveSubject(subject.id, { weight: w });
-    else if (q > 0 && p > 0) syllabus.saveSubject(subject.id, { questions: q, pointsPerQuestion: p });
+    else if (q > 0) syllabus.saveSubject(subject.id, { questions: q, pointsPerQuestion: p > 0 ? p : 1 });
   };
   const submitTopic = (event: FormEvent) => {
     event.preventDefault();
@@ -39,7 +39,7 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
       </div>
       <p className="text-xs text-ink-muted">Peso efetivo: {subject.weight}. Ele decide quanto tempo a matéria ganha na jornada.</p>
       <div>
-        {view.topics.map((topic, i) => {
+        {view.topics.map((topic) => {
           const siblings = view.topics.filter((t) => t.parentId === topic.parentId);
           const pos = siblings.findIndex((t) => t.id === topic.id);
           return (
@@ -61,7 +61,7 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    syllabus.renameTopic(topic.id, editing.name);
+                    if (editing.name.trim()) syllabus.renameTopic(topic.id, editing.name);
                     setEditing(null);
                   }}
                   className="flex gap-2"
@@ -69,18 +69,21 @@ export function SubjectPanel({ view, syllabus }: { view: View; syllabus: Syllabu
                   <input
                     aria-label="Novo nome"
                     autoFocus
-                    className="min-h-10 flex-1 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
+                    className="min-h-11 flex-1 rounded-[5px] border-2 border-ink bg-paper-raised px-2"
                     value={editing.name}
                     onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") setEditing(null);
+                    }}
                     onBlur={() => {
-                      syllabus.renameTopic(topic.id, editing.name);
+                      if (editing.name.trim()) syllabus.renameTopic(topic.id, editing.name);
                       setEditing(null);
                     }}
                   />
                 </form>
               ) : (
                 <span className={clsx("flex gap-2", topic.depth && "pl-6")}>
-                  <span className="text-xs text-ink-muted">{topic.depth ? "·" : i + 1}</span>
+                  <span className="text-xs text-ink-muted">{topic.depth ? "·" : pos + 1}</span>
                   {topic.name}
                 </span>
               )}

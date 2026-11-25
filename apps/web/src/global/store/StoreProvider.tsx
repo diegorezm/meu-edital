@@ -34,18 +34,29 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
         const online = () => instance.online();
         const onVisible = () => document.visibilityState === "visible" && sync();
         // O aviso da própria alteração volta pelo socket; se o cursor já chegou lá, não busca de novo.
-        const live = listenForChanges((notice) => {
-          if (notice.version > instance.cursor()) sync();
-        });
+        const live = listenForChanges(
+          (notice) => {
+            if (notice.version > instance.cursor()) sync();
+          },
+          () => sync(),
+        );
+        const onBeforeUnload = (event: BeforeUnloadEvent) => {
+          if (instance.getState().pending > 0) {
+            event.preventDefault();
+            event.returnValue = "";
+          }
+        };
         const interval = setInterval(() => {
           if (!live.connected()) sync();
         }, SYNC_INTERVAL_MS);
         window.addEventListener("online", online);
+        window.addEventListener("beforeunload", onBeforeUnload);
         document.addEventListener("visibilitychange", onVisible);
         cleanup = () => {
           live.close();
           clearInterval(interval);
           window.removeEventListener("online", online);
+          window.removeEventListener("beforeunload", onBeforeUnload);
           document.removeEventListener("visibilitychange", onVisible);
           instance.dispose();
           void local.close();

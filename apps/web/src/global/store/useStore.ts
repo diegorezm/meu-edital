@@ -42,6 +42,11 @@ export function useStoreActions() {
   );
 }
 
+/** Só o estado da sincronização (sem assinar os dados de estudo). */
+export function useSyncState() {
+  return useClientState(useClient());
+}
+
 /** As coleções do TanStack DB, para `useLiveQuery` com só as linhas que a tela usa. */
 export function useCollections(): SyncCollections {
   return useClient().collections;

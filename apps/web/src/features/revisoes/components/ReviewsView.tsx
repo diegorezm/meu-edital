@@ -1,4 +1,4 @@
-import { BottomSheet, Button, Chip, Crest, Field, ListRow, Mascot, Sheet, Tag } from "@meu-edital/ui";
+import { BottomSheet, Button, Chip, Crest, Field, ListRow, Mascot, Notice, Sheet, Tag } from "@meu-edital/ui";
 import { useState } from "react";
 import type { Reviews } from "../hooks/useReviews";
 
@@ -71,18 +71,32 @@ export function ReviewsView({ reviews }: { reviews: Reviews }) {
 
 function OffsetsSheet({ reviews }: { reviews: Reviews }) {
   const [values, setValues] = useState<string[]>([]);
+  const [error, setError] = useState("");
   const current = values.length ? values : reviews.offsets.map(String);
+  const save = () => {
+    const parsed = current.map((v) => Number(v.trim()));
+    if (parsed.some((n) => !Number.isInteger(n) || n < 1 || n > 365)) {
+      setError("Use dias inteiros entre 1 e 365.");
+      return;
+    }
+    setError("");
+    reviews.saveOffsets(parsed);
+  };
   return (
     <BottomSheet
       open={reviews.editing}
       onOpenChange={(open) => {
         reviews.setEditing(open);
-        if (!open) setValues([]);
+        if (!open) {
+          setValues([]);
+          setError("");
+        }
       }}
       title="Intervalos"
       description="Dias depois do primeiro estudo de um assunto. Valem para os próximos assuntos estudados."
     >
       <div className="flex flex-col gap-3">
+        {error && <Notice tone="error">{error}</Notice>}
         <div className="grid grid-cols-3 gap-2">
           {current.map((value, i) => (
             <Field
@@ -96,7 +110,7 @@ function OffsetsSheet({ reviews }: { reviews: Reviews }) {
             />
           ))}
         </div>
-        <Button onClick={() => reviews.saveOffsets(current.map(Number))}>Salvar</Button>
+        <Button onClick={save}>Salvar</Button>
       </div>
     </BottomSheet>
   );

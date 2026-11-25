@@ -43,24 +43,52 @@ export const httpTransport: Transport = {
 
 /**
  * Escuta os avisos de "versão nova" do servidor e chama `onNotice`.
- * Reconecta sozinho, com espera crescente, e para com `close()`.
+ * Reconecta sozinho, com espera crescente, e dispara `onReconnect` depois de
+ * uma queda para buscar o que mudou enquanto desconectado.
  */
-export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
+export function listenForChanges(
+  onNotice: (notice: SyncNotice) => void,
+  onReconnect?: () => void,
+) {
   let socket: WebSocket | null = null;
   let attempts = 0;
+  let hasConnectedOnce = false;
   let closed = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const connect = () => {
+  const scheduleReconnect = () => {
+    if (closed) return;
+    attempts += 1;
+    timer = setTimeout(() => void connect(), Math.min(60_000, 1000 * 2 ** attempts));
+  };
+
+  const connect = async () => {
     if (closed) return;
     const url = new URL(apiUrl("/api/sync/ws"), window.location.href);
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    // No app nativo não há cookie: o token vai na URL (só nesta rota).
-    const token = sessionToken();
-    if (token) url.searchParams.set("token", token);
+    // No app nativo não há cookie: pede um ticket efêmero (30 s) em vez de expor o Bearer na URL.
+    if (sessionToken()) {
+      try {
+        const res = await apiFetch("/api/sync/ws-ticket", { method: "POST" });
+        if (res.status === 401) {
+          void queryClient.invalidateQueries({ queryKey: ["sessao"] });
+          return;
+        }
+        if (!res.ok) return scheduleReconnect();
+        const { ticket } = (await res.json()) as { ticket?: string };
+        if (!ticket || closed) return;
+        url.searchParams.set("ticket", ticket);
+      } catch {
+        return scheduleReconnect();
+      }
+    }
+    if (closed) return;
     socket = new WebSocket(url);
     socket.onopen = () => {
+      const reconnecting = hasConnectedOnce && attempts > 0;
+      hasConnectedOnce = true;
       attempts = 0;
+      if (reconnecting) onReconnect?.();
     };
     socket.onmessage = (event) => {
       try {
@@ -71,12 +99,10 @@ export function listenForChanges(onNotice: (notice: SyncNotice) => void) {
       }
     };
     socket.onclose = () => {
-      if (closed) return;
-      attempts += 1;
-      timer = setTimeout(connect, Math.min(60_000, 1000 * 2 ** attempts));
+      scheduleReconnect();
     };
   };
-  connect();
+  void connect();
 
   return {
     /** Verdadeiro com o aviso do servidor ligado: aí não precisa perguntar de tempos em tempos. */

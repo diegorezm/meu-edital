@@ -5,16 +5,17 @@ import type { Journey } from "../hooks/useJourney";
 /** Folha de uma carta: minutos, mover, pular para ela e excluir. */
 export function CardSheet({ journey }: { journey: Journey }) {
   const { card } = journey;
-  const [minutes, setMinutes] = useState("");
+  const [minutes, setMinutes] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const total = journey.view?.cards.length ?? 0;
+  const shownMinutes = minutes ?? (card ? String(card.minutes) : "");
   return (
     <BottomSheet
       open={Boolean(card)}
       onOpenChange={(open) => {
         if (!open) {
           journey.select(null);
-          setMinutes("");
+          setMinutes(null);
           setConfirming(false);
         }
       }}
@@ -30,10 +31,10 @@ export function CardSheet({ journey }: { journey: Journey }) {
               type="number"
               min={5}
               max={600}
-              value={minutes || card.minutes}
+              value={shownMinutes}
               onChange={(e) => setMinutes(e.target.value)}
             />
-            <Button onClick={() => journey.setMinutes(card.id, Number(minutes || card.minutes))}>Salvar</Button>
+            <Button onClick={() => journey.setMinutes(card.id, Number(shownMinutes))}>Salvar</Button>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="quiet" disabled={card.index === 0} onClick={() => journey.move(card.id, -1)}>

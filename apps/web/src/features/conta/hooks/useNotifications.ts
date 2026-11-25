@@ -12,7 +12,7 @@ export function useNotifications() {
     queryFn: async () => Boolean(await platform.push.current()),
     staleTime: Number.POSITIVE_INFINITY,
   });
-  const available = platform.native || (Boolean(config?.vapidPublicKey) && platform.push.supported());
+  const available = !platform.push.serverManaged || (Boolean(config?.vapidPublicKey) && platform.push.supported());
   const enabled = subscription.isError ? false : (subscription.data ?? null);
   const setEnabled = (on: boolean) => queryClient.setQueryData(["push", "assinatura"], on);
   const [pending, setPending] = useState(false);
@@ -22,7 +22,7 @@ export function useNotifications() {
     setPending(true);
     setError("");
     try {
-      if (platform.native) {
+      if (!platform.push.serverManaged) {
         await platform.push.subscribe("");
         const on = Boolean(await platform.push.current());
         if (!on) setError("O aparelho não deu permissão para avisos. Dá para liberar nas configurações do app.");
@@ -30,12 +30,12 @@ export function useNotifications() {
         return;
       }
       const { vapidPublicKey } = await publicConfig();
-      const subscription = vapidPublicKey ? await platform.push.subscribe(vapidPublicKey) : null;
-      if (!subscription) {
+      const sub = vapidPublicKey ? await platform.push.subscribe(vapidPublicKey) : null;
+      if (!sub) {
         setError("O navegador não deu permissão para avisos. Dá para liberar nas configurações do site.");
         return;
       }
-      await sendJson("/push/assinatura", "POST", subscription);
+      await sendJson("/push/assinatura", "POST", sub);
       setEnabled(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não deu para ligar os avisos.");
@@ -46,10 +46,13 @@ export function useNotifications() {
 
   const turnOff = async () => {
     setPending(true);
+    setError("");
     try {
       const endpoint = await platform.push.unsubscribe();
-      if (endpoint && !platform.native) await sendJson("/push/assinatura", "DELETE", { endpoint });
+      if (endpoint && platform.push.serverManaged) await sendJson("/push/assinatura", "DELETE", { endpoint });
       setEnabled(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não deu para desligar os avisos.");
     } finally {
       setPending(false);
     }

@@ -80,23 +80,26 @@ export function useStudy(search: StudySearch) {
     exam ? initialChoice(data, exam.id, search) : null,
   );
 
-  // Com cronômetro ativo, ele manda no que está sendo estudado.
+  // Com cronômetro ativo, ele manda no concurso/matéria/assunto em estudo.
   const active = timer ?? (choice && exam ? { ...choice, examId: exam.id } : null);
+  const activeExamId = active?.examId ?? exam?.id ?? "";
 
   const [form, setForm] = useState({ minutes: "", date: today(), questions: "", correct: "", note: "" });
   const [error, setError] = useState("");
   const [registering, setRegistering] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
 
-  const subjects = exam ? subjectsInOrder(data, exam.id) : [];
+  const subjects = activeExamId ? subjectsInOrder(data, activeExamId) : [];
   const topics = active?.subjectId ? topicsInOrder(data, active.subjectId) : [];
   const subject = subjects.find((s) => s.id === active?.subjectId);
   const subjectIndex = subjects.findIndex((s) => s.id === active?.subjectId);
   const topic = data.topics.find((t) => t.id === active?.topicId);
   const blockNumeral = active?.cycleItemId
-    ? getCycleItems(data, exam?.id ?? "").findIndex((i) => i.id === active.cycleItemId) + 1
+    ? getCycleItems(data, activeExamId).findIndex((i) => i.id === active.cycleItemId) + 1
     : 0;
 
-  const change = (patch: Partial<Choice>) => {
+  const change = (patch: Partial<Choice & { subjectName?: string }>) => {
     if (timer) timerStore.set({ ...timer, ...patch });
     else setChoice((c) => (c ? { ...c, ...patch } : c));
   };
@@ -109,47 +112,61 @@ export function useStudy(search: StudySearch) {
 
   const openRegister = () => {
     setError("");
-    setForm((f) => ({ ...f, minutes: String(timer ? elapsedMinutes(timer, Date.now()) : minutesValue || 30) }));
+    setForm((f) => ({
+      ...f,
+      date: today(),
+      minutes: String(timer ? elapsedMinutes(timer, Date.now()) : minutesValue || 30),
+    }));
     if (timer?.runningSince) timerStore.set(pauseTimer(timer, Date.now()));
     setRegistering(true);
   };
 
   const register = async () => {
-    if (!exam || !active) return;
+    if (submitting || !active || !activeExamId) return;
     const input = {
-      examId: exam.id,
+      examId: activeExamId,
       subjectId: active.subjectId,
       topicId: active.topicId,
       type: active.type,
       minutes: Number(form.minutes),
       ...(active.cycleItemId ? { cycleItemId: active.cycleItemId } : {}),
-      ...(form.questions ? { questions: Number(form.questions) } : {}),
-      ...(form.correct ? { correct: Number(form.correct) } : {}),
+      ...(form.questions !== "" ? { questions: Number(form.questions) } : {}),
+      ...(form.correct !== "" ? { correct: Number(form.correct) } : {}),
       ...(form.note.trim() ? { note: form.note.trim() } : {}),
     };
     const problem = validateSession(input);
     if (problem) return setError(problem);
-    if (form.date > today()) return setError("A data não pode estar no futuro.");
+    if (!form.date || form.date > today()) return setError("A data não pode estar no futuro.");
 
-    const before = data;
-    const date = today();
-    const after = recordSession(before, input, form.date);
-    const events = celebrationsBetween(before, after, date);
-    const contractsBefore = new Set(dailyContracts(before, exam.id, date).filter((c) => c.done).map((c) => c.id));
-    const contractsDone = dailyContracts(after, exam.id, date)
-      .filter((c) => c.done && !contractsBefore.has(c.id))
-      .map((c) => c.title);
-    const xp = playerXp(after, date).total;
-    store.update(() => markCelebrationsSeen(after, events.map((e) => e.id)));
-    timerStore.set(null);
-    setRegistering(false);
-    celebrationStore.show({
-      xpGained: Math.max(0, xp - playerXp(before, date).total),
-      level: levelInfo(xp),
-      events,
-      contractsDone,
-    });
-    await navigate({ to: "/" });
+    setSubmitting(true);
+    try {
+      const date = today();
+      let payload: Parameters<typeof celebrationStore.show>[0] | null = null;
+      store.update((before) => {
+        const after = recordSession(before, input, form.date);
+        const events = celebrationsBetween(before, after, date);
+        const contractsBefore = new Set(
+          dailyContracts(before, activeExamId, date).filter((c) => c.done).map((c) => c.id),
+        );
+        const contractsDone = dailyContracts(after, activeExamId, date)
+          .filter((c) => c.done && !contractsBefore.has(c.id))
+          .map((c) => c.title);
+        const xp = playerXp(after, date).total;
+        payload = {
+          xpGained: Math.max(0, xp - playerXp(before, date).total),
+          level: levelInfo(xp),
+          events,
+          contractsDone,
+        };
+        return markCelebrationsSeen(after, events.map((e) => e.id));
+      });
+      timerStore.set(null);
+      setRegistering(false);
+      if (payload) celebrationStore.show(payload);
+      await navigate({ to: "/" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return {
@@ -170,20 +187,32 @@ export function useStudy(search: StudySearch) {
     changeType: (type: StudyType) => change({ type }),
     changeTopic: (topicId: string) => change({ topicId }),
     changeSubject: (subjectId: string) =>
-      change({ subjectId, topicId: suggestNextTopic(data, subjectId)?.id ?? "", cycleItemId: undefined, plannedMinutes: undefined }),
+      change({
+        subjectId,
+        subjectName: subjects.find((s) => s.id === subjectId)?.name,
+        topicId: suggestNextTopic(data, subjectId)?.id ?? "",
+        cycleItemId: undefined,
+        plannedMinutes: undefined,
+      }),
     goFree: () =>
       change({ cycleItemId: undefined, plannedMinutes: undefined }),
     start: () =>
       active &&
-      exam &&
-      timerStore.set(startTimer({ ...active, examId: exam.id, subjectName: subject?.name }, Date.now())),
+      activeExamId &&
+      timerStore.set(startTimer({ ...active, examId: activeExamId, subjectName: subject?.name }, Date.now())),
     pause: () => timer && timerStore.set(pauseTimer(timer, Date.now())),
     resume: () => timer && timerStore.set(resumeTimer(timer, Date.now())),
-    discard: () => timerStore.set(null),
+    confirmingDiscard,
+    setConfirmingDiscard,
+    discard: () => {
+      setConfirmingDiscard(false);
+      timerStore.set(null);
+    },
     form,
     setField: (field: keyof typeof form, value: string) => setForm((f) => ({ ...f, [field]: value })),
     preview,
     error,
+    submitting,
     registering,
     setRegistering,
     openRegister,

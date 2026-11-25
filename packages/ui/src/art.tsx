@@ -23,6 +23,7 @@ export function Art({ name, alt = "", className }: { name: ArtKey; alt?: string;
       aria-hidden={alt ? undefined : true}
       width={200}
       height={210}
+      decoding="async"
       className={className}
     />
   );

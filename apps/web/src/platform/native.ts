@@ -1,9 +1,10 @@
 import { SecureStorage } from "@aparajita/capacitor-secure-storage";
-import { type PluginListenerHandle, registerPlugin } from "@capacitor/core";
+import { Capacitor, type PluginListenerHandle, registerPlugin } from "@capacitor/core";
 import { Haptics } from "@capacitor/haptics";
 import { LocalNotifications } from "@capacitor/local-notifications";
-import { clearNativeSyncStorage, nativeSyncStorage } from "./nativeSync";
 import type { Platform } from "./types";
+
+const isAndroid = () => Capacitor.getPlatform() === "android";
 
 /** Plugin próprio do Android: serviço em primeiro plano com o tempo correndo. */
 type StudyTimerPlugin = {
@@ -31,8 +32,8 @@ const granted = async () => (await LocalNotifications.checkPermissions()).displa
 
 export const nativePlatform: Platform = {
   native: true,
-  syncStorage: nativeSyncStorage,
-  clearSyncStorage: clearNativeSyncStorage,
+  syncStorage: async (userId) => (await import("./nativeSync")).nativeSyncStorage(userId),
+  clearSyncStorage: async (userId) => (await import("./nativeSync")).clearNativeSyncStorage(userId),
   preferences: {
     get: (key) => storage()?.getItem(key) ?? null,
     set: (key, value) => storage()?.setItem(key, value),
@@ -62,7 +63,7 @@ export const nativePlatform: Platform = {
   // Notificação local agendada: funciona com o app fechado, sem servidor.
   blockEnd: {
     async schedule(endsAt, subject) {
-      if (!(await granted())) return;
+      if (storage()?.getItem(AVISOS) !== "1" || !(await granted())) return;
       await LocalNotifications.schedule({
         notifications: [
           {
@@ -80,10 +81,13 @@ export const nativePlatform: Platform = {
     },
   },
   studyTimer: {
-    showRunning: (since, accumulatedMs, subject) => StudyTimer.showRunning({ since, accumulatedMs, subject }),
-    showPaused: (accumulatedMs, subject) => StudyTimer.showPaused({ accumulatedMs, subject }),
-    clear: () => StudyTimer.clear(),
+    showRunning: (since, accumulatedMs, subject) =>
+      isAndroid() ? StudyTimer.showRunning({ since, accumulatedMs, subject }) : Promise.resolve(),
+    showPaused: (accumulatedMs, subject) =>
+      isAndroid() ? StudyTimer.showPaused({ accumulatedMs, subject }) : Promise.resolve(),
+    clear: () => (isAndroid() ? StudyTimer.clear() : Promise.resolve()),
     onPause(listener) {
+      if (!isAndroid()) return () => undefined;
       const handle = StudyTimer.addListener("pause", listener);
       return () => void handle.then((h) => h.remove());
     },
@@ -114,6 +118,7 @@ export const nativePlatform: Platform = {
   },
   // No app, os avisos são notificações locais: ligar é só dar permissão.
   push: {
+    serverManaged: false,
     supported: () => true,
     async current() {
       return storage()?.getItem(AVISOS) === "1" && (await granted()) ? "local" : null;
@@ -125,6 +130,9 @@ export const nativePlatform: Platform = {
     },
     async unsubscribe() {
       storage()?.removeItem(AVISOS);
+      await LocalNotifications.cancel({
+        notifications: [{ id: BLOCK_END_ID }, ...REVIEW_IDS.map((id) => ({ id }))],
+      }).catch(() => undefined);
       return null;
     },
   },

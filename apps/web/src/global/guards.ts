@@ -1,12 +1,46 @@
+import { platform } from "@platform/index";
 import { queryOptions } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { authClient } from "./auth";
 import { queryClient } from "./query";
 
+type SessionUser = { id: string; name: string; email: string };
+const CACHED_USER_KEY = "sessao_offline";
+
+function readCachedUser(): SessionUser | null {
+  try {
+    const raw = platform.preferences.get(CACHED_USER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SessionUser>;
+    return parsed.id && parsed.email ? { id: parsed.id, name: parsed.name ?? "", email: parsed.email } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearCachedSessionUser() {
+  platform.preferences.remove(CACHED_USER_KEY);
+}
+
 /** Sessão guardada por alguns minutos: navegar entre telas não refaz a chamada. */
 const sessionQuery = queryOptions({
   queryKey: ["sessao"],
-  queryFn: async () => (await authClient.getSession()).data?.user ?? null,
+  queryFn: async (): Promise<SessionUser | null> => {
+    try {
+      const response = await authClient.getSession();
+      const user = response.data?.user;
+      if (user) {
+        const snapshot = { id: user.id, name: user.name, email: user.email };
+        platform.preferences.set(CACHED_USER_KEY, JSON.stringify(snapshot));
+        return snapshot;
+      }
+      if (!response.error) clearCachedSessionUser();
+      // Falha de rede sem resposta do servidor: deixa abrir offline com o banco local.
+      return response.error && !response.error.status ? readCachedUser() : null;
+    } catch {
+      return readCachedUser();
+    }
+  },
   staleTime: 5 * 60_000,
 });
 
@@ -22,7 +56,7 @@ const hasSession = async () => Boolean(await currentUser());
 export async function requireSession() {
   const user = await currentUser();
   if (!user) throw redirect({ to: "/entrar" });
-  return { user: { id: user.id, name: user.name, email: user.email } };
+  return { user };
 }
 
 /** Para Entrar e Criar conta: com sessão, vai para o app. */

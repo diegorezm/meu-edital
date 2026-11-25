@@ -20,6 +20,7 @@ import {
   updateSubject,
 } from "@meu-edital/domain";
 import { useStore } from "@global/store/useStore";
+import { timerStore } from "@global/timer/timerStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
@@ -97,6 +98,14 @@ export function useSyllabus() {
     cancelDelete: () => setPending(null),
     confirmDelete: async () => {
       if (!pending) return;
+      const timer = timerStore.get();
+      if (timer) {
+        const affected =
+          (pending.kind === "exam" && timer.examId === pending.id) ||
+          (pending.kind === "subject" && timer.subjectId === pending.id) ||
+          (pending.kind === "topic" && topicTreeIds(data, pending.id).includes(timer.topicId));
+        if (affected) timerStore.set(null);
+      }
       if (pending.kind === "exam") store.update((d) => removeExam(d, pending.id));
       if (pending.kind === "subject") store.update((d) => removeSubject(d, pending.id));
       if (pending.kind === "topic") store.update((d) => removeTopicTree(d, pending.id));

@@ -25,7 +25,6 @@ export function ReviewReminders() {
   const key = JSON.stringify(days);
 
   useEffect(() => {
-    if (!platform.native) return;
     void platform.reviewReminders.set(JSON.parse(key));
   }, [key]);
 

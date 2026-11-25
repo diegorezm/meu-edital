@@ -68,6 +68,8 @@ export type Platform = {
   vibrate(pattern: number | number[]): void;
   /** Avisos com o app fechado (assinatura de Web Push na web; permissão de notificação no app). */
   push: {
+    /** Verdadeiro quando o servidor precisa guardar a assinatura (Web Push); falso em notificações locais. */
+    serverManaged: boolean;
     supported(): boolean;
     current(): Promise<string | null>;
     subscribe(vapidPublicKey: string): Promise<PushSubscriptionJSON | null>;

@@ -18,7 +18,11 @@ const loadScript = () =>
     script.src = SCRIPT;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Turnstile indisponível"));
+    script.onerror = () => {
+      loading = undefined;
+      script.remove();
+      reject(new Error("Turnstile indisponível"));
+    };
     document.head.appendChild(script);
   }));
 

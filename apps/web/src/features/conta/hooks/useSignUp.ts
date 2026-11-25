@@ -45,7 +45,10 @@ export function useSignUp() {
       if (!accepted) return form.setError("Aceite os termos para criar a conta.");
       await rememberSignupAcceptance();
       const { error } = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
-      if (error) form.setError(authErrorMessage(error));
+      if (error) {
+        clearSignupAcceptance();
+        form.setError(authErrorMessage(error));
+      }
     });
 
   return {

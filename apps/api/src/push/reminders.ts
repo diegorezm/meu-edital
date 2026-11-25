@@ -15,17 +15,21 @@ export async function sendDueReviewReminders(env: ReminderEnv, date = today()): 
   const users = [...new Set(rows.map((r) => r.userId))];
   let notified = 0;
   for (const userId of users) {
-    const data = await loadAppData(db, userId);
-    if (!data.activeExamId) continue;
-    const due = dueReviews(data, data.activeExamId, date).length;
-    if (!due) continue;
-    const sent = await sendPush(env, userId, {
-      title: due === 1 ? "1 revisão para hoje" : `${due} revisões para hoje`,
-      body: "Uma revisão rápida segura o que você já estudou.",
-      url: "/revisoes",
-      tag: "revisoes",
-    });
-    if (sent) notified += 1;
+    try {
+      const data = await loadAppData(db, userId);
+      if (!data.activeExamId) continue;
+      const due = dueReviews(data, data.activeExamId, date).length;
+      if (!due) continue;
+      const sent = await sendPush(env, userId, {
+        title: due === 1 ? "1 revisão para hoje" : `${due} revisões para hoje`,
+        body: "Uma revisão rápida segura o que você já estudou.",
+        url: "/revisoes",
+        tag: "revisoes",
+      });
+      if (sent) notified += 1;
+    } catch (error) {
+      console.error("Falha ao enviar lembrete de revisões", { userId, error });
+    }
   }
   return notified;
 }

@@ -319,4 +319,58 @@ describe("Oráculo sem aceite dos termos", () => {
     });
     expect(response.status).toBe(403);
   });
+
+  it("permite revogar conexão mesmo sem aceite dos termos", async () => {
+    const student = await studentWithExam();
+    await connect(student.cookie);
+    const list = await call("/api/oraculo/conexoes", { cookie: student.cookie });
+    const { connections } = (await list.json()) as { connections: { id: string }[] };
+    await env.DB.prepare("delete from legal_acceptances where user_id = ?").bind(student.userId).run();
+    const revoked = await call(`/api/oraculo/conexoes/${connections[0].id}`, {
+      method: "DELETE",
+      cookie: student.cookie,
+    });
+    expect(revoked.status).toBe(200);
+  });
+});
+
+describe("hardening OAuth e exclusão de conta", () => {
+  it("escopo vazio ou desconhecido recebe apenas leitura (estudo:ler)", async () => {
+    const student = await studentWithExam();
+    const registered = await fetchWorker("/oauth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ redirect_uris: [REDIRECT], client_name: "Leitor", token_endpoint_auth_method: "none" }),
+    });
+    const { client_id } = (await registered.json()) as { client_id: string };
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)).buffer);
+    const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+    const query = new URLSearchParams({
+      response_type: "code",
+      client_id,
+      redirect_uri: REDIRECT,
+      scope: "invalido:tudo",
+      code_challenge: challenge,
+      code_challenge_method: "S256",
+      resource: `${ORIGIN}/mcp`,
+    });
+    const authorize = await fetchWorker(`/authorize?${query}`, { headers: { cookie: student.cookie } });
+    expect(authorize.headers.get("x-content-type-options")).toBe("nosniff");
+    const consentUrl = new URL(authorize.headers.get("location")!, ORIGIN);
+    expect(consentUrl.searchParams.get("escopos")).toBe("estudo:ler");
+  });
+
+  it("excluir a conta revoga imediatamente os tokens MCP no OAuth", async () => {
+    const student = await studentWithExam();
+    const token = await connect(student.cookie);
+    expect((await mcp(token, "tools/list")).status).toBe(200);
+
+    const deleted = await fetchWorker("/api/auth/delete-user", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: student.cookie, origin: ORIGIN },
+      body: JSON.stringify({ password: student.password }),
+    });
+    expect(deleted.status).toBe(200);
+    expect((await mcp(token, "tools/list")).status).toBe(401);
+  });
 });

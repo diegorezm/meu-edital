@@ -60,11 +60,11 @@ describe("lista de espera", () => {
     expect((await call("/api/lista-de-espera", { cookie })).status).toBe(404);
   });
 
-  it("libera CORS só para o site de divulgação", async () => {
-    const preflight = async (origin: string) => {
+  it("libera CORS só para o site de divulgação nas rotas públicas e sem credenciais", async () => {
+    const preflight = async (path: string, origin: string) => {
       const ctx = createExecutionContext();
       const response = await app.fetch(
-        new Request(`${env.APP_URL}/api/lista-de-espera`, {
+        new Request(`${env.APP_URL}${path}`, {
           method: "OPTIONS",
           headers: { origin, "access-control-request-method": "POST" },
         }),
@@ -72,9 +72,12 @@ describe("lista de espera", () => {
         ctx,
       );
       await waitOnExecutionContext(ctx);
-      return response.headers.get("access-control-allow-origin");
+      return response;
     };
-    expect(await preflight(env.SITE_URL)).toBe(env.SITE_URL);
-    expect(await preflight("https://site-estranho.com")).toBeNull();
+    const allowed = await preflight("/api/lista-de-espera", env.SITE_URL);
+    expect(allowed.headers.get("access-control-allow-origin")).toBe(env.SITE_URL);
+    expect(allowed.headers.get("access-control-allow-credentials")).toBeNull();
+    expect((await preflight("/api/lista-de-espera", "https://site-estranho.com")).headers.get("access-control-allow-origin")).toBeNull();
+    expect((await preflight("/api/me", env.SITE_URL)).headers.get("access-control-allow-origin")).toBeNull();
   });
 });

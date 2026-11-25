@@ -32,10 +32,18 @@ describe("Web Push", () => {
     const { p256dh, auth } = await keys();
     const endpoint = "https://push.exemplo.com/ana-1";
     expect((await call("/api/push/assinatura", { cookie: ana.cookie, body: { endpoint, keys: { p256dh, auth } } })).status).toBe(200);
-    // Bia não consegue apagar a assinatura da Ana.
+    // Bia não consegue apagar nem sobrescrever a assinatura da Ana.
+    const hijack = await call("/api/push/assinatura", { cookie: bia.cookie, body: { endpoint, keys: { p256dh, auth } } });
+    expect(hijack.status).toBe(409);
     await call("/api/push/assinatura", { method: "DELETE", cookie: bia.cookie, body: { endpoint } });
     const left = await env.DB.prepare("select user_id from push_subscriptions where endpoint = ?").bind(endpoint).first<{ user_id: string }>();
     expect(left?.user_id).toBe(ana.userId);
+    // Recusa endpoint HTTP (não-HTTPS).
+    const insecure = await call("/api/push/assinatura", {
+      cookie: ana.cookie,
+      body: { endpoint: "http://push.exemplo.com/inseguro", keys: { p256dh, auth } },
+    });
+    expect(insecure.status).toBe(400);
     await call("/api/push/assinatura", { method: "DELETE", cookie: ana.cookie, body: { endpoint } });
     expect(await env.DB.prepare("select 1 from push_subscriptions where endpoint = ?").bind(endpoint).first()).toBeNull();
     expect((await call("/api/push/assinatura", { body: { endpoint, keys: { p256dh, auth } } })).status).toBe(401);
@@ -75,5 +83,34 @@ describe("Web Push", () => {
     const ok = await call("/api/push/fim-de-bloco", { cookie, body: { endsAt: Date.now() + 60_000, subject: "Português" } });
     expect(ok.status).toBe(200);
     expect((await call("/api/push/fim-de-bloco", { method: "DELETE", cookie })).status).toBe(200);
+  });
+
+  it("falha em uma assinatura não derruba o lembrete dos demais usuários", async () => {
+    const ana = await verifiedUser();
+    const bia = await verifiedUser();
+    for (const student of [ana, bia]) {
+      const exam = startExam(emptyData(), { name: "TRT", hoursPerWeek: 10, subjects: [{ name: "Português", topics: ["Crase"] }] });
+      const topic = exam.topics[0];
+      const studied = recordSession(
+        exam,
+        { examId: exam.activeExamId!, subjectId: topic.subjectId, topicId: topic.id, type: "Teoria", minutes: 30 },
+        addDays(today(), -1),
+      );
+      await call("/api/sync/push", { body: { mutations: diffData(emptyData(), studied) }, cookie: student.cookie });
+    }
+    const { vapidJwk, p256dh, auth } = await keys();
+    await call("/api/push/assinatura", { cookie: ana.cookie, body: { endpoint: "https://push.exemplo.com/quebrado", keys: { p256dh, auth } } });
+    await call("/api/push/assinatura", { cookie: bia.cookie, body: { endpoint: "https://push.exemplo.com/bia-ok", keys: { p256dh, auth } } });
+
+    const sent: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.endsWith("quebrado")) throw new Error("Rede caiu");
+      sent.push(url);
+      return new Response(null, { status: 201 });
+    });
+    const notified = await sendDueReviewReminders({ ...env, VAPID_PRIVATE_KEY: vapidJwk });
+    expect(notified).toBeGreaterThanOrEqual(1);
+    expect(sent).toContain("https://push.exemplo.com/bia-ok");
   });
 });

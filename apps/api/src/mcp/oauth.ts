@@ -10,6 +10,12 @@ import { jsonBody } from "../http/validate";
 
 /** Escopos que uma IA pode pedir. Ler o contexto e propor; nunca escrever direto. */
 export const SCOPES = ["estudo:ler", "estudo:propor"] as const;
+const DEFAULT_SCOPES = ["estudo:ler"] as const;
+
+const allowedScopes = (requested: string[]) => {
+  const valid = requested.filter((s) => (SCOPES as readonly string[]).includes(s));
+  return valid.length ? valid : [...DEFAULT_SCOPES];
+};
 
 const helpers = (env: AppEnv) => (env as AppEnv & { OAUTH_PROVIDER: OAuthHelpers }).OAUTH_PROVIDER;
 
@@ -49,7 +55,7 @@ export const oauthRoutes = new Hono<AppContext>()
       handle,
       cliente: consent.clientName || "Aplicativo de IA",
       destino: consent.clientDomain ?? consent.redirectHost,
-      escopos: authRequest.scope.filter((s) => (SCOPES as readonly string[]).includes(s)).join(" ") || SCOPES.join(" "),
+      escopos: allowedScopes(authRequest.scope).join(" "),
     });
     return withHeaders(c.redirect(`/conectar-ia?${params}`, 302), headers);
   })
@@ -72,11 +78,10 @@ export const oauthRoutes = new Hono<AppContext>()
         }
         const approved = await oauth.approveConsent(c.req.raw, body.handle);
         const client = await oauth.describeConsent(approved.request);
-        const scope = approved.request.scope.filter((s) => (SCOPES as readonly string[]).includes(s));
         const { redirectTo } = await oauth.completeAuthorization({
           request: approved.request,
           userId: user.id,
-          scope: scope.length ? scope : [...SCOPES],
+          scope: allowedScopes(approved.request.scope),
           metadata: { clientName: client.clientName, createdAt: Date.now() },
           props: { userId: user.id, clientName: client.clientName || "IA" },
         });
@@ -91,8 +96,8 @@ export const oauthRoutes = new Hono<AppContext>()
 
 /** Conexões de IA do estudante: listar e revogar (nas configurações do Oráculo). */
 export const connectionRoutes = new Hono<AppContext>()
-  .use(requireUser, requireConsent, rateLimit("API_LIMITER", (c) => c.get("userId")))
-  .get("/", async (c) => {
+  .use(requireUser, rateLimit("API_LIMITER", (c) => c.get("userId")))
+  .get("/", requireConsent, async (c) => {
     const grants = await helpers(c.env).listUserGrants(c.get("userId"), { limit: 50 });
     return c.json({
       connections: grants.items.map((grant) => ({
@@ -103,6 +108,7 @@ export const connectionRoutes = new Hono<AppContext>()
       })),
     });
   })
+  // Revogar acesso continua disponível mesmo sem aceitar novos termos.
   .delete("/:id", async (c) => {
     await helpers(c.env).revokeGrant(c.req.param("id"), c.get("userId"));
     return c.json({ ok: true });

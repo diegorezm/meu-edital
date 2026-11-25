@@ -2,6 +2,7 @@ package app.meuedital;
 
 import android.content.Intent;
 import android.os.Build;
+import android.util.Log;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -22,6 +23,12 @@ public class StudyTimerPlugin extends Plugin {
     @Override
     public void load() {
         instance = this;
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        if (instance == this) instance = null;
+        super.handleOnDestroy();
     }
 
     /** Chamado pelo serviço quando o estudante toca em "Pausar". */
@@ -58,7 +65,12 @@ public class StudyTimerPlugin extends Plugin {
     }
 
     private void startService(Intent intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getContext().startForegroundService(intent);
-        else getContext().startService(intent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) getContext().startForegroundService(intent);
+            else getContext().startService(intent);
+        } catch (RuntimeException error) {
+            // Android 12+ pode recusar FGS quando o app não está em primeiro plano.
+            Log.w("StudyTimerPlugin", "Não foi possível iniciar o serviço do cronômetro", error);
+        }
     }
 }

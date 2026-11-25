@@ -24,11 +24,21 @@ public class StudyTimerService extends Service {
 
     private static final String CHANNEL_ID = "cronometro";
     private static final int NOTIFICATION_ID = 3107;
+    private long lastSince = 0;
+    private long lastAccumulated = 0;
+    private String lastSubject = "Estudo";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) return START_NOT_STICKY;
         if (ACTION_PAUSE_TAPPED.equals(intent.getAction())) {
+            // Atualiza a notificação imediatamente mesmo que a WebView tenha sido reciclada.
+            long elapsed = lastSince > 0 ? Math.max(0, System.currentTimeMillis() - lastSince) : 0;
+            lastAccumulated += elapsed;
+            lastSince = 0;
+            Notification paused = build(false, 0, lastAccumulated, lastSubject);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) manager.notify(NOTIFICATION_ID, paused);
             StudyTimerPlugin.notifyPause();
             return START_NOT_STICKY;
         }
@@ -36,7 +46,10 @@ public class StudyTimerService extends Service {
         long since = intent.getLongExtra(EXTRA_SINCE, 0);
         long accumulated = intent.getLongExtra(EXTRA_ACCUMULATED, 0);
         String subject = intent.getStringExtra(EXTRA_SUBJECT);
-        Notification notification = build(running, since, accumulated, subject == null ? "Estudo" : subject);
+        lastSince = running ? since : 0;
+        lastAccumulated = accumulated;
+        lastSubject = subject == null ? "Estudo" : subject;
+        Notification notification = build(running, since, accumulated, lastSubject);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         } else {

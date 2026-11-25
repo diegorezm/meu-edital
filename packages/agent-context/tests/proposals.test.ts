@@ -188,4 +188,19 @@ describe("propostas", () => {
     expect(proposalSize({ a: "é" })).toBe(10);
     expect(proposalSize({ a: "é" })).toBeLessThan(MAX_PROPOSAL_BYTES);
   });
+
+  it("extractJson lida com múltiplos blocos markdown e renderPrompt escapa cercas", async () => {
+    const { extractJson, renderPrompt, weeklyReviewTask } = await import("../src");
+    const wrapped = "Veja o exemplo:\n```text\nnão é json\n```\nAgora sim:\n```json\n{\"ok\": true}\n```";
+    expect(extractJson(wrapped)).toEqual({ ok: true });
+
+    const data = createSeed();
+    const withTicks = {
+      ...data,
+      exams: data.exams.map((e, i) => (i === 0 ? { ...e, name: "Concurso ```inject```" } : e)),
+    };
+    const prompt = renderPrompt(weeklyReviewTask, withTicks, withTicks.activeExamId!);
+    expect(prompt).not.toContain("Concurso ```inject```");
+    expect(prompt).toContain("\\u0060\\u0060\\u0060inject\\u0060\\u0060\\u0060");
+  });
 });

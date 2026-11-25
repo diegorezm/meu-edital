@@ -4,7 +4,7 @@ Levantamento completo do monorepo realizado em 2026-11-25, cobrindo domínio, sy
 
 ---
 
-## O que já foi resolvido (P0 + P1 de código)
+## O que já foi resolvido (P0 + P1 + P2 de código)
 
 ### P0 (`fix/p0-sync-dominio`)
 - **D1 / Sync (servidor):** chunking de `inArray` em `alreadyApplied` e `foreignIds` (evita estouro do limite de 100 parâmetros do D1 em lotes > 100); `pull()` em `db.batch()` único (snapshot consistente); proteção contra pushes concorrentes duplicados via PK de `sync_mutations` + retry atômico; recusa de `delete` em `userSettings`; `bodyLimit` real em `/api/sync/push` e `/api/proposals`; validação de `Origin` em `/api/sync/ws`; `setWebSocketAutoResponse("ping", "pong")` no `UserHub`.
@@ -17,6 +17,15 @@ Levantamento completo do monorepo realizado em 2026-11-25, cobrindo domínio, sy
 - **Domínio, Oráculo e Sync Client:** correções de `cyclePosition`/`lastCycleSessionId` em `addCycleItem`/`moveCycleItem`/`removeCycleItem`/`removeSubject`/`removeTopicTree`; `recordSession` tratando primeira sessão `"Revisão"`; `updateSession` validando entradas e sem deslocar revisões concluídas; alinhamento de validações (`validateSession`, `updateExam`, `updateSubject`, `recordMockExam`); `weakestSubject` ignorando sessões do próprio dia; pureza de datas em `weekSummary`/`weekHistory`/`weekTargetFor`/`buildCycle`; otimizações O(N) em `allocation.ts` (com doador de maior carga), `topics.ts`, `weeksWithGoal` e `weeklyStreak`; validação e peso padrão em propostas `syllabus`, limites de array/valor, escape de ```` ``` ```` em `renderPrompt` e `extractJson` resiliente; cache por tabela e batch de notificações no `SyncClient`.
 - **Frontend Web, PWA Offline, Timer e Bundle:** Service Worker com cache seguro do app shell (nunca cacheando `/api/*`) + registro automático + fallback de sessão offline em `guards.ts`; `useStudy`/`useMockExams` sem stale closure nem duplo submit, amarrando `examId` do timer e confirmação ao descartar; sincronização do cronômetro entre abas (`storage`) e `visibilitychange`; `useOracle.settle` confirmando status no servidor antes de aplicar e usando `apiUrl("/mcp")`; `StoreProvider` com `beforeunload` e `sync()` ao reconectar WS; `ErrorBoundary` e 404 em `__root.tsx`; tratamento de erro de `/api/config` em `SignUpPage`; `useSubmit` com `catch` e anti-duplo-clique; correções de formulários (`JourneySheets`, `SessionForm`, `ReviewsView`, `SubjectPanel`, `Turnstile`, `useSyllabus`, `useSignUp`); `<Link to>` interno; imports dinâmicos para `browserSync`/`nativeSync`/`nativeShell` e subsets `latin`/`latin-ext` do Fontsource; `useNotifications` e `ReviewReminders` sem checar `platform.native`, `useConsent` via `apiFetch`, `useAccount` via `useSyncState` e `useOnboarding` via `useStoreActions`.
 - **CI/CD:** `permissions` mínimos, build de `apps/web` e `apps/site` no CI, guarda contra forks em `deploy-preview.yml`, filtro `event == 'push'` e smoke test `/api/health` em `deploy-production.yml`.
+
+### P2 (`feat/p2-mobile-site-a11y-ux`)
+- **Acessibilidade e UI:** área de toque mínima de 44 px em `Chip`, `NavItem`, `PerformanceView` (`WeakTag` e expansão) e inputs de `MockExamsView`; anel `:focus-visible` de alto contraste (`ink` + halo claro) visível sobre `bg-teal-strong`; skip-link ("Pular para o conteúdo") e `<main id="conteudo">` em `AppShell`; `aria-expanded`/`aria-haspopup` no menu "Mais".
+- **UX em telas existentes:** `SyncBanner` no `AppShell` (mostrando offline com fila, erro de sync com "Tentar agora" e `rejected` com "Entendi"); exportação LGPD (JSON/CSV) via `apiFetch` + blob (`downloadExport`, funcionando também com Bearer no app nativo); empty states com botão "Começar" em `WeekView`, `MockExamsView`, `PerformanceView` e `ReviewsView`; reordenação de matérias e assuntos (subir e descer) inclusive no mobile + busca de assuntos em `SubjectPanel`; card "Chefe" clicável para `/simulados`.
+- **Mobile Android:** `android:allowBackup="false"`, `custom_url_scheme` alinhado para `meuedital`, `ic_launcher_background` em `#C2A09A`, `StudyTimerPlugin` com `handleOnDestroy()` e `try/catch` em `startForegroundService`, `StudyTimerService` atualizando a notificação pausada diretamente ao tocar "Pausar", e `try/catch` em `loadSessionToken()`.
+- **Site (`apps/site`):** `robots.txt`, `site` no `astro.config.mjs`, `canonical`, `og:type`/`og:url`/`og:image`/`og:site_name`, `twitter:card`, skip-link, `<nav>`, página `/termos/` e link no rodapé, `summary` com `min-height: 44px`, erro visível e validação de e-mail em `Waitlist.astro`.
+- **Testes:** novos casos cobrindo `extractJson` multi-bloco, `renderPrompt` escapando ```` ``` ````, `removeSubject` normalizando ciclo, `recordMockExam` deduplicando matérias e `inFinalStretch`.
+
+> Os itens restantes abaixo dependem de **decisões de produto/desenho aprovado**, **assets binários/credenciais/domínio** ou **infra externa (Mac/Xcode, loja Google/Apple)**.
 
 ---
 
